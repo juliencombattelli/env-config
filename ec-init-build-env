@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Init script based on https://github.com/openembedded/openembedded-core/blob/master/oe-init-build-env
+
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/ec-init-build-env"
+    if [ ! -e "$THIS_SCRIPT" ]; then
+        echo "Error: $THIS_SCRIPT doesn't exist!" >&2
+        echo "Please run this script in ec-init-build-env's directory." >&2
+        exit 1
+    fi
+fi
+if [ -n "$BBSERVER" ]; then
+    unset BBSERVER
+fi
+
+if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
+    echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'" >&2
+    exit 1
+fi
+if [ -z "$ECROOT" ]; then
+    ECROOT=$(dirname "$THIS_SCRIPT")
+    ECROOT=$(readlink -f "$ECROOT")
+fi
+unset THIS_SCRIPT
+
+export BUILDDIR=build
+export BBPATH="$BUILDDIR"
+export PATH="$PATH:$ECROOT/bitbake/bin"
+
+mkdir -p "$BUILDDIR/conf"
+
+sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/bblayers.conf.sample" > "$BUILDDIR/conf/bblayers.conf"
+sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/local.conf.sample" > "$BUILDDIR/conf/local.conf"
+
+unset ECROOT
+
+cd "$BUILDDIR"
