@@ -1,7 +1,5 @@
-DESCRIPTION = "Prints Hello World"
+DESCRIPTION = ""
 PN = 'bash'
 PV = '1'
 
-python do_build() {
-    bb.plain("Building bash!")
-}
+inherit apt-package
