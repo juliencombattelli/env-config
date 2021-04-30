@@ -29,7 +29,7 @@ fi
 unset THIS_SCRIPT
 
 export BUILDDIR=build
-export BBPATH="$BUILDDIR"
+export BBPATH="$(pwd)/$BUILDDIR"
 export PATH="$PATH:$ECROOT/bitbake/bin"
 
 mkdir -p "$BUILDDIR/conf"
