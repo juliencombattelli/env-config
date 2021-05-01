@@ -27,6 +27,13 @@ python base_do_fetch() {
     pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else \
                     distro_pkg_providers
 
+    for pkg in pkg_providers:
+        # if pkg available at the desired version
+            # register it for installation
+            break
+    
+    fetch_from_src(d)
+
     bb.plain("distro_pkg_providers: " + distro_pkg_providers)
     bb.plain("preferred_pkg_providers for " + pn + ": " + str(preferred_pkg_providers))
     bb.plain("pkg_providers for " + pn + ": " + str(pkg_providers))
