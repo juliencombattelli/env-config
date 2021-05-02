@@ -1,0 +1,12 @@
+#!/bin/sh
+
+UNAME="$(uname -a)"
+
+case "$UNAME" in
+    *Microsoft*) echo "WSL1";;
+    *microsoft*) echo "WSL2";;
+    *MINGW64*) echo "MINGW64";;
+    *CYGWIN*) echo "CYGWIN";;
+    *Linux*) echo "Linux";;
+    *) echo "Unknown"; exit 1
+esac
