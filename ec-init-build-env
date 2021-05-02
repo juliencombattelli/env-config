@@ -28,6 +28,8 @@ if [ -z "$ECROOT" ]; then
 fi
 unset THIS_SCRIPT
 
+export ECROOT
+export BB_ENV_EXTRAWHITE="ECROOT"
 export BUILDDIR=build
 export BBPATH="$(pwd)/$BUILDDIR"
 export PATH="$PATH:$ECROOT/bitbake/bin"
@@ -36,7 +38,5 @@ mkdir -p "$BUILDDIR/conf"
 
 sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/bblayers.conf.sample" > "$BUILDDIR/conf/bblayers.conf"
 sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/local.conf.sample" > "$BUILDDIR/conf/local.conf"
-
-unset ECROOT
 
 cd "$BUILDDIR"
