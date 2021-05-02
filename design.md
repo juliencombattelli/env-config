@@ -29,7 +29,7 @@
     - MSYS2: native
     - Windows: native
 
-* DISTRO_PACKAGE_MANAGERS: list of package manager to use by priority order (syspkgmgr > pip > built from source)
+* DISTRO_PKG_PROVIDERS: list of package manager to use by priority order (syspkgmgr > pip > built from source)
     - pip: all
     - apt: Ubuntu-based (Ubuntu1604, Ubuntu1804, Ubuntu2004, KdeNeon)
     - pacman: Arch-based (Manjaro, MSYS2)
