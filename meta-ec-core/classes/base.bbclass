@@ -3,6 +3,8 @@ inherit utility-tasks
 
 BB_DEFAULT_TASK ?= "configure"
 
+DEPENDS += "${DISTRO_PKG_PROVIDERS}"
+
 # Fetch from package manager
 def fetch_from_pkg_mgr(d):
     pass
@@ -27,31 +29,40 @@ python base_do_fetch() {
     pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else \
                     distro_pkg_providers
 
-    for pkg in pkg_providers:
+    # for pkg_provider in pkg_providers:
         # if pkg available at the desired version
             # register it for installation
-            break
-    
-    fetch_from_src(d)
+            # break
 
-    bb.plain("distro_pkg_providers: " + distro_pkg_providers)
-    bb.plain("preferred_pkg_providers for " + pn + ": " + str(preferred_pkg_providers))
-    bb.plain("pkg_providers for " + pn + ": " + str(pkg_providers))
+    # if no pkg_provider able to provide pkg
+    # fetch_from_src(d)
+
+    # bb.plain("distro_pkg_providers: " + distro_pkg_providers)
+    # bb.plain("preferred_pkg_providers for " + pn + ": " + str(preferred_pkg_providers))
+    # bb.plain("pkg_providers for " + pn + ": " + str(pkg_providers))
+
+    bb.plain(f"Fetching {d.getVar('PN')}")
 }
 addtask do_fetch
-do_fetch[nostamp] = "1"
+do_fetch[deptask] = "do_update"
 
-# [deprecated] Install a software locally
-python base_do_install() {
-    bb.plain(f"Install {d.getVar('PN')}")
+# Build a software whose source have been downloaded
+python base_do_compile() {
+    bb.plain(f"Compiling {d.getVar('PN')}")
 }
-addtask do_install
+addtask do_compile
+do_compile[deptask] = "do_install_packages"
 
-# Configure and installed software
+# Install a software that has been built
+python base_do_install() {
+    bb.plain(f"Installing {d.getVar('PN')}")
+}
+addtask do_install after do_compile
+
+# Configure an installed software
 python base_do_configure() {
     bb.plain(f"Configure {d.getVar('PN')}")
 }
-addtask do_configure after do_install do_fetch
-do_configure[nostamp] = "1"
+addtask do_configure after do_install
 
-EXPORT_FUNCTIONS do_install do_configure do_fetch
+EXPORT_FUNCTIONS do_fetch do_compile do_install do_configure

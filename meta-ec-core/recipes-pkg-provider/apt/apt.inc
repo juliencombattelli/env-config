@@ -1,0 +1,1 @@
+# Add here a search function and a register_for_installation
