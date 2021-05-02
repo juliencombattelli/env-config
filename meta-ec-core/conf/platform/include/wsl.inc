@@ -1,0 +1,1 @@
+PKG_INSTALL_append = " wt powershell x11fwd"
