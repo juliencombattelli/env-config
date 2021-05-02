@@ -1,1 +1,1 @@
-DISTRO_PKG_PROVIDERS ?= "apt pip"
+DISTRO_PKG_PROVIDERS_append = " apt"
