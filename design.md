@@ -46,6 +46,8 @@
 Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVIDER_cmake will be set accordingly.
          But ccmake (curses gui) is not available on pip (yet) and is required to be installed from apt.
 
+* PKG_PROVIDER_<pkgprov>_VERSION_PATTERN_<pkg>: defines a version pattern to search for <pkg> using <pkgprov>
+
 ## Tasks
 
 * Poky workflow:
