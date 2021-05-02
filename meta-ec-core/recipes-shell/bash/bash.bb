@@ -1,5 +1,3 @@
 DESCRIPTION = ""
-PN = 'bash'
-PV = '1'
-
-inherit apt-package
+PN = "bash"
+PV = "1"

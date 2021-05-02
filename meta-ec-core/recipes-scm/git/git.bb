@@ -1,5 +1,3 @@
 DESCRIPTION = ""
-PN = 'git'
-PV = '1'
-
-inherit apt-package
+PN = "git"
+PV = "1"
