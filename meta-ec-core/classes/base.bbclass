@@ -1,6 +1,12 @@
 inherit logging
 inherit utility-tasks
 
+def pkg_providers_inc(d):
+    pkg_providers = d.getVar('DISTRO_PKG_PROVIDERS', True)
+    return "".join("recipes-pkg-provider/{p}/{p}.inc ".format(p=p) for p in pkg_providers.split())
+
+require ${@pkg_providers_inc(d)}
+
 BB_DEFAULT_TASK ?= "configure"
 
 DEPENDS += "${DISTRO_PKG_PROVIDERS}"
@@ -29,10 +35,14 @@ python base_do_fetch() {
     pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else \
                     distro_pkg_providers
 
-    # for pkg_provider in pkg_providers:
-        # if pkg available at the desired version
-            # register it for installation
-            # break
+    for pkg_provider in pkg_providers.split():
+        # Use PKG_PROVIDER_<provider>_VERSION_PATTERN_<pkg> if exists, otherwise use the package name
+        pkg_pattern = d.getVar("PKG_PROVIDER_" + pkg_provider + "_VERSION_PATTERN_" + pn)
+        pattern = pkg_pattern if pkg_pattern is not None else \
+                  pn
+        pkg = globals()[pkg_provider + "_search_package"](d, pattern)
+        # register it for installation if pkg found
+        return
 
     # if no pkg_provider able to provide pkg
     # fetch_from_src(d)
