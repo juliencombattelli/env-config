@@ -28,11 +28,19 @@ if [ -z "$ECROOT" ]; then
 fi
 unset THIS_SCRIPT
 
+BITBAKEDIR="$ECROOT/bitbake"
+if [ ! -d $BITBAKEDIR ]; then
+    wget https://github.com/openembedded/bitbake/archive/refs/tags/1.50.0.tar.gz -O /tmp/bitbake-1.50.0.tar.gz
+    tar -xf /tmp/bitbake-1.50.0.tar.gz
+    mv bitbake-1.50.0 bitbake
+    rm /tmp/bitbake-1.50.0.tar.gz
+fi
+
 export ECROOT
 export BB_ENV_EXTRAWHITE="ECROOT"
 export BUILDDIR=build
 export BBPATH="$(pwd)/$BUILDDIR"
-export PATH="$PATH:$ECROOT/bitbake/bin"
+export PATH="$PATH:$BITBAKEDIR/bin"
 
 mkdir -p "$BUILDDIR/conf"
 
