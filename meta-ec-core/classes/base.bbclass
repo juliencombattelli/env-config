@@ -7,7 +7,7 @@ def pkg_providers_inc(d):
 
 require ${@pkg_providers_inc(d)}
 
-BB_DEFAULT_TASK ?= "configure"
+BB_DEFAULT_TASK ?= "build_recipe"
 
 DEPENDS += "${DISTRO_PKG_PROVIDERS}"
 
@@ -75,4 +75,9 @@ python base_do_configure() {
 }
 addtask do_configure after do_install
 
-EXPORT_FUNCTIONS do_fetch do_compile do_install do_configure
+# Default task executed after all others
+python base_do_build_recipe() {
+}
+addtask do_build_recipe after do_configure
+
+EXPORT_FUNCTIONS do_fetch do_compile do_install do_configure do_build_recipe
