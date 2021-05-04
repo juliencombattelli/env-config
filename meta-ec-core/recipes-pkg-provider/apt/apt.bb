@@ -11,5 +11,5 @@ do_update() {
 
 do_install_packages() {
     bbplain "Installing packages using pkg-provider ${PN}"
-    sudo apt install -y toto
+    # sudo apt install -y toto
 }
