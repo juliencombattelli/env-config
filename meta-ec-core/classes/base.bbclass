@@ -3,7 +3,7 @@ inherit utility-tasks
 
 def pkg_providers_inc(d):
     pkg_providers = d.getVar('DISTRO_PKG_PROVIDERS', True)
-    return "".join("recipes-pkg-provider/{p}/{p}.inc ".format(p=p) for p in pkg_providers.split())
+    return "".join("recipes-pkg-provider/{provider}/{provider}.inc ".format(provider=p) for p in pkg_providers.split())
 
 require ${@pkg_providers_inc(d)}
 
@@ -37,7 +37,7 @@ python base_do_fetch() {
 
     for pkg_provider in pkg_providers.split():
         # Use PKG_PROVIDER_<provider>_VERSION_PATTERN_<pkg> if exists, otherwise use the package name
-        pkg_pattern = d.getVar("PKG_PROVIDER_" + pkg_provider + "_VERSION_PATTERN_" + pn)
+        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_VERSION_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
         pattern = pkg_pattern if pkg_pattern is not None else \
                   pn
         pkg = globals()[pkg_provider + "_search_package"](d, pattern)
