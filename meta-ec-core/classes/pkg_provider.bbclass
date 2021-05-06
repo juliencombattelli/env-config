@@ -1,5 +1,10 @@
 # Base class for all pkg_providers
 
+# TODO rework
+# Remove this class and create pkg_providers recipe from this class
+# do_update and do_install_packages should loop on all DISTRO_PKG_PROVIDERS
+# and call the corresponding APIs defined in <pkg_provider>.inc
+
 DEPENDS += "${PKG_INSTALL}"
 
 python pkg_provider_do_update() {

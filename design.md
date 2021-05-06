@@ -57,6 +57,8 @@ fetch -> unpack -> patch -> prepare_recipe_sysroot -> configure -> compile -> in
 * EC workflow:
     - install        -> configure -> deploy
       system_install |
+    - update -> search --yes-> register_for_install -> install_pkgs -> configure -> build_recipe
+                       |--no-> fetch -> compile -> install ---------|
 
 ## Recipes
 
