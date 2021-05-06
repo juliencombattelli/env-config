@@ -1,1 +1,0 @@
-inherit pkg_provider
