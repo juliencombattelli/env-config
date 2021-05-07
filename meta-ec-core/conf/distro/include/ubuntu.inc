@@ -1,1 +1,1 @@
-DISTRO_PKG_PROVIDERS_append = " apt"
+DISTRO_PKG_PROVIDERS_prepend = " apt "
