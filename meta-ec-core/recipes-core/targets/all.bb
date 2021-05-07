@@ -6,6 +6,5 @@ DEPENDS += "${PKG_INSTALL}"
 
 do_build_recipe[deptask] += "do_configure"
 
-do_fetch[noexec] = "1"
-do_compile[noexec] = "1"
+do_install[noexec] = "1"
 do_configure[noexec] = "1"

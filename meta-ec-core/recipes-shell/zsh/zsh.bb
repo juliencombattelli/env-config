@@ -2,14 +2,14 @@ DESCRIPTION = ""
 PN = "zsh"
 PV = "1"
 
-python do_compile() {
-    bb.plain(f"!!! Compiling {d.getVar('PN')}")
+inherit installable
+
+do_build() {
+    bbplain "Zsh do_build"
 }
 
 python do_install() {
-    bb.plain(f"!!! Installing {d.getVar('PN')}")
-}
-
-python do_configure() {
-    bb.plain(f"!!! Configure {d.getVar('PN')}")
+    bb.build.exec_func("installable_do_install", d)
+    if not d.getVar("PACKAGE_INSTALLED"):
+        bb.build.exec_func("do_build", d)
 }
