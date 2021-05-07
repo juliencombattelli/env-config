@@ -10,21 +10,22 @@ require ${@pkg_providers_inc(d)}
 BB_DEFAULT_TASK ?= "build_recipe"
 
 python base_do_register_for_installation() {
-    bb.plain(f"Registering {d.getVar('PN')} for install")
     pn = d.getVar("PN")
     preferred_pkg_providers = d.getVar("PREFERRED_PKG_PROVIDERS_" + pn)
     distro_pkg_providers = d.getVar("DISTRO_PKG_PROVIDERS")
-    pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else \
-                    distro_pkg_providers
+    pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else distro_pkg_providers
     for pkg_provider in pkg_providers.split():
-        # Use PKG_PROVIDER_<provider>_VERSION_PATTERN_<pkg> if exists, otherwise use the package name
         pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_VERSION_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
-        pattern = pkg_pattern if pkg_pattern is not None else \
-                  "^{}$".format(pn)
+        pattern = pkg_pattern if pkg_pattern is not None else pn
         version = d.getVar("PREFERRED_PKG_VERSION_{pkg}".format(pkg=pn))
-        found_pkg = globals()["pkg_provider_{}_search_package".format(pkg_provider)](d, pattern, version)
+        search_package_func = "pkg_provider_{}_search_package".format(pkg_provider)
+        bb.plain(f"Searching for {d.getVar('PN')} with {pkg_provider}")
+        found_pkg, is_installed = globals()[search_package_func](d, "^{}$".format(pattern), version)
         if found_pkg:
-            register_for_installation(d, found_pkg)
+            if is_installed:
+                bb.plain(f"{found_pkg} already installed")
+            else:
+                bb.plain(f"Registering {found_pkg} for installation")
             return
 }
 addtask do_register_for_installation
