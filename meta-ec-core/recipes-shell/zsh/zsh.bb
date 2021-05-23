@@ -16,6 +16,12 @@ python do_install() {
 
 do_configure() {
     bbplain "Configuring zsh and oh-my-zsh"
+    # Disable PAM's password authentication for chsh
+    cp /etc/pam.d/chsh /etc/pam.d/chsh.bak
+    sed -i 's/\(auth\s\+\)required\(\s\+pam_shells.so\)/\1sufficient\2/' /etc/pam.d/chsh
+    # Change shell
     chsh -s zsh
+    # Restore PAM's password authentication for chsh
+    mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
 }
 do_configure[depends] = "oh-my-zsh:do_configure"
