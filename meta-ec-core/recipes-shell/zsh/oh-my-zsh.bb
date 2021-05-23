@@ -5,7 +5,8 @@ PV = "1"
 inherit installable
 
 do_install() {
-    sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended
+    wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+    ./install.sh --unattended
 }
 
 do_configure() {
