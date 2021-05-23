@@ -6,7 +6,7 @@ inherit installable
 
 do_install() {
     wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-    ./install.sh --unattended
+    bash ./install.sh --unattended
 }
 
 do_configure() {
