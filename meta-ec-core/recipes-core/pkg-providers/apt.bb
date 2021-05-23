@@ -21,5 +21,5 @@ addtask do_update_source_list before do_update
 
 python do_update() {
     bb.plain("Updating apt cache")
-    # sudo apt update
+    sudo apt update
 }
