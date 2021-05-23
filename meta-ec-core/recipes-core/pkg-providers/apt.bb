@@ -19,7 +19,8 @@ do_update_source_list() {
 }
 addtask do_update_source_list before do_update
 
-python do_update() {
-    bb.plain("Updating apt cache")
+do_update() {
+    bbplain "Updating apt cache"
     sudo apt update
 }
+addtask do_update
