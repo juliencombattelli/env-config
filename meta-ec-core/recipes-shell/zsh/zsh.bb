@@ -13,3 +13,9 @@ python do_install() {
     if not d.getVar("PACKAGE_INSTALLED"):
         bb.build.exec_func("do_build", d)
 }
+
+do_configure() {
+    bbplain "Configuring zsh and oh-my-zsh"
+    chsh -s zsh
+}
+do_configure[depends] = "oh-my-zsh:do_configure"
