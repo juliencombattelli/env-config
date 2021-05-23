@@ -62,9 +62,6 @@ def pkg_provider_apt_update(d):
     # run_shell_cmd(d, update)
     pass
     
-def pkg_provider_apt_install_packages(d):
-    # Gather all packages from a folder
-    # Join them
-    # install = "sudo apt install --yes <list of packages>"
-    # run_shell_cmd(d, install)
-    pass
+def pkg_provider_apt_install_packages(d, pkg):
+    install = "sudo apt install --yes {}".format(pkg)
+    run_shell_cmd(d, install)

@@ -30,6 +30,8 @@ python installable_do_install() {
                 bb.plain(f"{found_pkg} already installed")
             else:
                 bb.plain(f"Installing {found_pkg}")
+                install_package_func = "pkg_provider_{}_install_packages".format(pkg_provider)
+                globals()[search_package_func](d, found_pkg)
             d.setVar("PACKAGE_INSTALLED", True)
             return
 }
