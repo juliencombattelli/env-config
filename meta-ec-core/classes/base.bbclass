@@ -24,6 +24,7 @@ python base_do_configure() {
     bb.plain(f"Configuring {d.getVar('PN')}")
 }
 addtask do_configure after do_install
+do_configure[depends] = "base-files:do_configure"
 
 python base_do_build_recipe() {
 }
