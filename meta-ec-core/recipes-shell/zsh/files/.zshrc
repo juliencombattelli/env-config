@@ -105,11 +105,9 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# To customize prompt, run `p10k configure` or edit @EC_TARGET_INSTALL_DIR@/p10k.zsh.
-[ -f @EC_TARGET_INSTALL_DIR@/etc/p10k.zsh ] && source @EC_TARGET_INSTALL_DIR@/etc/p10k.zsh
-
-# Update PATH
-export PATH=@EC_TARGET_INSTALL_DIR@/bin:~/.local/bin:~/.diff-so-fancy:$PATH
-
-# CMake environment settings
-export CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+# Source any .sh and .zsh script in @EC_TARGET_INSTALL_DIR@/etc/profile.d
+for f in @EC_TARGET_INSTALL_DIR@/etc/profile.d/*; do
+    if [[ "$f" =~ ^.*\\.(z)?sh$ ]]; then
+        source "$f"
+    fi
+done
