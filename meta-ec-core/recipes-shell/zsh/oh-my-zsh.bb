@@ -4,9 +4,11 @@ PV = "1"
 
 inherit installable
 
+SRC_URI = "https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+SRC_URI[sha256sum] = "b6af836b2662f21081091e0bd851d92b2507abb94ece340b663db7e4019f8c7c"
+
 do_install() {
-    wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-    bash ./install.sh --unattended
+    bash ${WORKDIR}/install.sh --unattended
 }
 do_install[depends] = "zsh:do_install"
 
