@@ -25,17 +25,6 @@ def _apt_vercmp(version, versionspec):
         i = 1
     return _apt_vercmp_op(version, versionspec[i:].strip(), versionspec[0:i] or "==")
 
-def main():
-    pattern = "^clang-[0-9.]+$"
-    version = None
-
-def pkg_provider_apt_search_package_old(d, pattern, version):
-    # TODO rework: using python-apt
-    # Get the package with the more recent "version" number (eg. clang-10 more recent than clang-6.0)
-    # The grep is needed since apt may return alternatives not matching the pattern (eg. vim, vim-gtk, vim-nox)
-    get_pkg_name = f"apt-cache search -n -qq '^{pattern}$' | cut -d' ' -f1 | grep -E '^{pattern}$' | sort -rV | head -n1"
-    pkg_name = run_shell_cmd(d, get_pkg_name)
-
 def pkg_provider_apt_search_package(d, pattern, version):
     import re
     import apt
@@ -57,11 +46,6 @@ def pkg_provider_apt_search_package(d, pattern, version):
             return pkg, cache[pkg].is_installed
     return None, False
 
-def pkg_provider_apt_update(d):
-    # update = "sudo apt update"
-    # run_shell_cmd(d, update)
-    pass
-    
 def pkg_provider_apt_install_packages(d, pkg):
     install = "sudo apt install --yes {}".format(pkg)
     run_shell_cmd(d, install)
