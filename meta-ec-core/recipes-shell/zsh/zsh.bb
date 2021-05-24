@@ -32,6 +32,6 @@ do_configure() {
     sudo mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
 
     bbplain "Updating .zshrc"
-    sed "s/@EC_TARGET_INSTALL_DIR@/${EC_TARGET_INSTALL_DIR}/g" ${WORKDIR}/.zshrc > ~/.zshrc
+    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" ${WORKDIR}/.zshrc > ~/.zshrc
 }
 do_configure[depends] = "oh-my-zsh:do_configure"
