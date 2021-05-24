@@ -3,6 +3,8 @@ inherit utility-tasks
 
 BB_DEFAULT_TASK ?= "build_recipe"
 
+SRC_URI ?= ""
+
 python base_do_fetch() {
     bb.plain(f"Fetching files for {d.getVar('PN')}")
     src_uri = (d.getVar('SRC_URI') or "").split()
