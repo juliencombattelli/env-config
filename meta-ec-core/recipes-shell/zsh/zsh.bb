@@ -20,7 +20,9 @@ python do_install() {
 }
 
 do_configure() {
-    bbplain "Configuring zsh and oh-my-zsh"
+    bbplain "Configuring zsh"
+
+    bbplain "Setting zsh as default shell"
     # Disable PAM's password authentication for chsh
     sudo cp /etc/pam.d/chsh /etc/pam.d/chsh.bak
     sudo sed -i 's/\(auth\s\+\)required\(\s\+pam_shells.so\)/\1sufficient\2/' /etc/pam.d/chsh
