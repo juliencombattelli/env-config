@@ -4,6 +4,11 @@ PV = "1"
 
 inherit installable
 
+FILESPATH_prepend := "${THISDIR}/files:"
+
+SRC_URI = "file://.zshrc"
+SRC_URI[sha256sum] = "b6af836b2662f21081091e0bd851d92b2507abb94ece340b663db7e4019f8c7c"
+
 do_build() {
     bbplain "Zsh do_build"
 }
@@ -23,5 +28,8 @@ do_configure() {
     chsh -s /usr/bin/zsh
     # Restore PAM's password authentication for chsh
     sudo mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
+
+    bbplain "Updating .zshrc"
+    sed "s/@EC_TARGET_INSTALL_DIR@/${EC_TARGET_INSTALL_DIR}/g" ${WORKDIR}/.zshrc > ~/.zshrc
 }
 do_configure[depends] = "oh-my-zsh:do_configure"
