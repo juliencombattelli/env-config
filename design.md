@@ -6,13 +6,13 @@
 ### PLATFORM configuration
 
 * PLATFORM_FEATURES
-    - native: 
+    - native:
     - virtualmachine: ssh-server
     - WSL1:
     - WSL2:
 
 * PLATFORM_EXTRA_FEATURES
-    - native: 
+    - native:
     - virtualmachine: x11fwd
     - WSL1: x11fwd
     - WSL2: x11fwd(?)

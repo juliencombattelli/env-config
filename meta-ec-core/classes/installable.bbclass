@@ -38,4 +38,4 @@ python installable_do_install() {
 addtask do_install before do_configure
 do_install[deptask] = "do_update"
 
-EXPORT_FUNCTIONS do_install 
+EXPORT_FUNCTIONS do_install
