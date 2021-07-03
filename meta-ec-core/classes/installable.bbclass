@@ -19,7 +19,7 @@ python installable_do_install() {
     distro_pkg_providers = d.getVar("DISTRO_PKG_PROVIDERS")
     pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else distro_pkg_providers
     for pkg_provider in pkg_providers.split():
-        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_VERSION_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
+        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
         pattern = pkg_pattern if pkg_pattern is not None else pn
         version = d.getVar("PREFERRED_PKG_VERSION_{pkg}".format(pkg=pn))
         search_package_func = "pkg_provider_{}_search_package".format(pkg_provider)
