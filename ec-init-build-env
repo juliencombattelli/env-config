@@ -28,12 +28,13 @@ if [ -z "$ECROOT" ]; then
 fi
 unset THIS_SCRIPT
 
-BITBAKEDIR="$ECROOT/bitbake"
+BITBAKEVER="1.50.0"
+BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
 if [ ! -d $BITBAKEDIR ]; then
-    wget https://github.com/openembedded/bitbake/archive/refs/tags/1.50.0.tar.gz -O /tmp/bitbake-1.50.0.tar.gz
-    tar -xf /tmp/bitbake-1.50.0.tar.gz
-    mv bitbake-1.50.0 bitbake
-    rm /tmp/bitbake-1.50.0.tar.gz
+    wget "https://github.com/openembedded/bitbake/archive/refs/tags/$BITBAKEVER.tar.gz" \
+        -O "/tmp/bitbake-$BITBAKEVER.tar.gz"
+    tar -xf "/tmp/bitbake-$BITBAKEVER.tar.gz"
+    rm "/tmp/bitbake-$BITBAKEVER.tar.gz"
 fi
 
 export ECROOT
