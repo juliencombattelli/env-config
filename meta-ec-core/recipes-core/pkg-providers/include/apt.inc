@@ -47,5 +47,5 @@ def pkg_provider_apt_search_package(d, pattern, version):
     return None, False
 
 def pkg_provider_apt_install_packages(d, pkg):
-    install = "sudo apt install --yes {}".format(pkg)
+    install = "sudo -E apt install --yes {}".format(pkg)
     run_shell_cmd(d, install)

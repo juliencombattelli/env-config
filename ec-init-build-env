@@ -38,7 +38,7 @@ if [ ! -d $BITBAKEDIR ]; then
 fi
 
 export ECROOT
-export BB_ENV_EXTRAWHITE="ECROOT"
+export BB_ENV_EXTRAWHITE="ECROOT http_proxy https_proxy no_proxy"
 export BUILDDIR=build
 export BBPATH="$(pwd)/$BUILDDIR"
 export PATH="$PATH:$BITBAKEDIR/bin"
