@@ -21,6 +21,6 @@ addtask do_update_source_list before do_update
 
 do_update() {
     bbplain "Updating apt cache"
-    sudo apt update
+    sudo -E apt update
 }
 addtask do_update
