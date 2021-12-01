@@ -21,4 +21,4 @@ do_install() {
         git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
     fi
 }
-do_install[depends] = "zsh:do_install"
+do_install[depends] += "zsh:do_install git:do_build_recipe"
