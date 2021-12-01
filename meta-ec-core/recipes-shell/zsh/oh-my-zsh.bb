@@ -4,8 +4,9 @@ PV = "1"
 
 inherit installable
 
+# TODO point to stable file to not have to update sha256sum at each update
 SRC_URI = "https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
-SRC_URI[sha256sum] = "b6af836b2662f21081091e0bd851d92b2507abb94ece340b663db7e4019f8c7c"
+SRC_URI[sha256sum] = "fa95142f9a4986e01cdd69e4b96c5e4613aff8dcbd7dab6fcca8f7517abd1690"
 
 do_install() {
     bbplain "Installing oh-my-zsh"
