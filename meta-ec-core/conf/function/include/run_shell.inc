@@ -3,7 +3,7 @@ def run_shell_cmd(d, cmd):
     Run a shell command
     """
     import subprocess
-    return subprocess.run(cmd, shell=True, encoding='UTF-8', stdout=subprocess.PIPE)
+    return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
 
 def run_shell_script(d, script):
     """
