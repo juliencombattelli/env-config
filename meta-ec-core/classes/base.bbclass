@@ -14,6 +14,13 @@ python base_do_fetch() {
     fetcher.unpack(rootdir)
 }
 addtask do_fetch
+# Add a dependency between this:do_fetch and other:do_build_recipe for every other recipe in DEPENDS
+# TODO this is currently causing circular dependencies (ie. with zsh and oh-my-zsh)
+# python() {
+#     deps = ['{}:do_build_recipe'.format(pkg) for pkg in d.getVar('DEPENDS').split()]
+#     if deps:
+#         d.appendVarFlag('do_fetch', 'depends', ' '.join(deps))
+# }
 
 python base_do_install() {
     bb.plain("Installing " + d.getVar('PN'))
