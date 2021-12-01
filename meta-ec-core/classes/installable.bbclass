@@ -13,7 +13,7 @@ DEPENDS += "${DISTRO_PKG_PROVIDERS}"
 #   Call pkg_provider_<provider>_search_package function with pattern and version specification
 #   If package found, install it and return
 python installable_do_install() {
-    bb.plain(f"Installing {d.getVar('PN')}")
+    bb.plain("Installing " + d.getVar('PN'))
     pn = d.getVar("PN")
     preferred_pkg_providers = d.getVar("PREFERRED_PKG_PROVIDERS_" + pn)
     distro_pkg_providers = d.getVar("DISTRO_PKG_PROVIDERS")
@@ -23,13 +23,13 @@ python installable_do_install() {
         pattern = pkg_pattern if pkg_pattern is not None else pn
         version = d.getVar("PREFERRED_PKG_VERSION_{pkg}".format(pkg=pn))
         search_package_func = "pkg_provider_{}_search_package".format(pkg_provider)
-        bb.plain(f"Searching for {d.getVar('PN')} with {pkg_provider}")
+        bb.plain("Searching for " + d.getVar('PN') + " with " + pkg_provider)
         found_pkg, is_installed = globals()[search_package_func](d, "^{}$".format(pattern), version)
         if found_pkg:
             if is_installed:
-                bb.plain(f"{found_pkg} already installed")
+                bb.plain(found_pkg + " already installed")
             else:
-                bb.plain(f"Installing {found_pkg}")
+                bb.plain("Installing " + found_pkg)
                 install_package_func = "pkg_provider_{}_install_packages".format(pkg_provider)
                 globals()[install_package_func](d, found_pkg)
             d.setVar("PACKAGE_INSTALLED", True)
