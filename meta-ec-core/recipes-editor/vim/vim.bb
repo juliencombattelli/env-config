@@ -19,4 +19,4 @@ do_configure() {
     cp -r "${WORKDIR}"/vimrc $HOME/.vimrc
     vim +PluginInstall +qall &>/dev/null
 }
-
+do_configure[depends] = "git:do_build_recipe"
