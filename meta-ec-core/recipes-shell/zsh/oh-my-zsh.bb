@@ -13,7 +13,7 @@ do_install() {
         bbplain "oh-my-zsh already installed. Updating."
         git -C ${ZSH:-$HOME/.oh-my-zsh} pull
     else
-        bbplain "Installing oh-my-zsh"
+        bbplain "Installing oh-my-zsh."
         bash ${WORKDIR}/install.sh --unattended
 
         bbplain "Installing oh-my-zsh plugins."
