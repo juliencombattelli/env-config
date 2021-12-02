@@ -17,13 +17,13 @@ python do_install() {
             if d.getVar("PLATFORM").startswith("wsl") and d.getVar("DISTRO").startswith("ubuntu"):
                 bb.build.exec_func("do_compile", d)
             else:
-                bb.error("Building ZSH is only supported on Ubuntu in WSL")
+                bb.error("Building ZSH is only supported on Ubuntu in WSL.")
 }
 # In case build from source is required
 do_install[depends] = "make:do_build_recipe gcc:do_build_recipe"
 
 do_compile() {
-    bbplain "Building ZSH from sources"
+    bbplain "Building ZSH from sources."
     cd ${WORKDIR}
     wget https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz
     tar -xf zsh-5.8.tar.xz
@@ -36,9 +36,9 @@ do_compile() {
 }
 
 do_configure() {
-    bbplain "Configuring zsh"
+    bbplain "Configuring zsh."
 
-    bbplain "Setting zsh as default shell"
+    bbplain "Setting zsh as default shell."
     # Disable PAM's password authentication for chsh
     sudo cp /etc/pam.d/chsh /etc/pam.d/chsh.bak
     sudo sed -i 's/\(auth\s\+\)required\(\s\+pam_shells.so\)/\1sufficient\2/' /etc/pam.d/chsh
@@ -47,7 +47,7 @@ do_configure() {
     # Restore PAM's password authentication for chsh
     sudo mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
 
-    bbplain "Updating .zshrc"
+    bbplain "Updating zshrc."
     sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" ${WORKDIR}/.zshrc > ~/.zshrc
 }
 do_configure[depends] = "oh-my-zsh:do_configure"

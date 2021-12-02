@@ -3,7 +3,7 @@
 # TODO rework
 # Remove this class and create pkg_providers recipe from this class
 python pkg_provider_do_update() {
-    bb.plain("Updating pkg-provider " + d.getVar('PN'))
+    bb.plain("Updating pkg-provider " + d.getVar('PN') + ".")
 }
 addtask do_update
 

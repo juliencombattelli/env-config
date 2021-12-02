@@ -10,17 +10,17 @@ python do_fetch_source_list() {
 addtask do_fetch_source_list before do_update_source_list
 
 do_update_source_list() {
-    bbplain "Updating apt source lists"
+    bbplain "Updating apt source lists (stubbed)."
     bbplain ${WORKDIR}/*.list
     # sudo cp ${WORKDIR}/*.list /etc/apt/sources.list.d/
-    bbplain "Adding archive keys"
+    bbplain "Adding archive keys (stubbed)."
     bbplain ${WORKDIR}/*.key
     # sudo apt-key add ${WORKDIR}/*.key
 }
 addtask do_update_source_list before do_update
 
 do_update() {
-    bbplain "Updating apt cache"
+    bbplain "Updating apt cache."
     sudo -E apt update
 }
 addtask do_update
