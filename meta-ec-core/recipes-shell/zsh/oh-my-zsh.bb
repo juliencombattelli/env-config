@@ -4,7 +4,7 @@ PV = "1"
 
 inherit installable
 
-SRC_URI = "https://github.com/ohmyzsh/ohmyzsh/blob/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh"
+SRC_URI = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh"
 SRC_URI[sha256sum] = "6ad30a2c638fea177a2f6701cbbf5e5e7dc7f44711e89708c89f4735be8320cd"
 
 do_install() {
