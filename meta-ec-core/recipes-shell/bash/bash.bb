@@ -4,7 +4,7 @@ PV = "1"
 
 inherit installable
 
-FILESPATH_prepend := "${THISDIR}/files:"
+FILESPATH:prepend := "${THISDIR}/files:"
 
 SRC_URI = "file://.bashrc"
 

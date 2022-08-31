@@ -28,7 +28,7 @@ if [ -z "$ECROOT" ]; then
 fi
 unset THIS_SCRIPT
 
-BITBAKEVER="1.50.0"
+BITBAKEVER="1.52.4"
 BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
 if [ ! -d $BITBAKEDIR ]; then
     wget "https://github.com/openembedded/bitbake/archive/refs/tags/$BITBAKEVER.tar.gz" \
