@@ -4,7 +4,7 @@ PV = "1"
 
 inherit installable
 
-FILESPATH_prepend := "${THISDIR}/files:"
+FILESPATH:prepend := "${THISDIR}/files:"
 
 SRC_URI = "file://.zshrc"
 SRC_URI[sha256sum] = "b6af836b2662f21081091e0bd851d92b2507abb94ece340b663db7e4019f8c7c"
