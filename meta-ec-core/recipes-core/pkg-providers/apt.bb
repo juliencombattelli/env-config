@@ -1,4 +1,5 @@
-inherit pkg_provider
+# apt is always installed in Ubuntu-based distros
+do_install[noexec] = "1"
 
 python do_fetch_source_list() {
     src_uri = (d.getVar("SRC_URI") or "").split()
@@ -40,3 +41,5 @@ do_update() {
     sudo -E apt update
 }
 addtask do_update
+
+do_configure[noexec] = "1"
