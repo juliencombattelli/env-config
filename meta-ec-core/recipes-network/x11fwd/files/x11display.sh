@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export DISPLAY=@X11_DISPLAY@
+export LIBGL_ALWAYS_INDIRECT=1
