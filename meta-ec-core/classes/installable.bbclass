@@ -18,6 +18,7 @@ python installable_do_install() {
     preferred_pkg_providers = d.getVar("PREFERRED_PKG_PROVIDERS_" + pn)
     distro_pkg_providers = d.getVar("DISTRO_PKG_PROVIDERS")
     pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else distro_pkg_providers
+    is_installed = False
     for pkg_provider in pkg_providers.split():
         pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
         pattern = pkg_pattern if pkg_pattern is not None else pn
@@ -26,6 +27,7 @@ python installable_do_install() {
         bb.plain("Searching for " + d.getVar('PN') + " with " + pkg_provider)
         found_pkg, is_installed = globals()[search_package_func](d, "^{}$".format(pattern), version)
         if found_pkg:
+            bb.plain("Found candidate " + found_pkg + " for package " + d.getVar('PN') + " using " + pkg_provider)
             if is_installed:
                 bb.plain(found_pkg + " already installed.")
             else:
@@ -34,6 +36,8 @@ python installable_do_install() {
                 globals()[install_package_func](d, found_pkg)
             d.setVar("PACKAGE_INSTALLED", True)
             return
+    if not is_installed:
+        bb.error("Unable to install " + d.getVar('PN') + " with any package provider")
 }
 addtask do_install before do_configure
 do_install[deptask] = "do_update"
