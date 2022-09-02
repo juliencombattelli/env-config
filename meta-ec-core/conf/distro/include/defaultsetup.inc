@@ -8,4 +8,4 @@ DISTRO_PKG_PROVIDERS ?= "pip"
 # Space-separated list of packages to install on the given distribution.
 # Use =/+=/=+ to overwrite the list, _append/_prepend to modify it.
 # Default: all the packages I regularly use on all environments.
-PKG_INSTALL ?= "base-files vim vscode ssh git diff-so-fancy bash zsh cmake gcc gdb make clang-format clang-tidy clang"
+PKG_INSTALL ?= "base-files vim vscode ssh git diff-so-fancy bash zsh cmake gcc gdb gdb-dashboard make clang-format clang-tidy clang"
