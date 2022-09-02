@@ -1,4 +1,4 @@
-PKG_INSTALL_append = " wt powershell x11fwd"
+PKG_INSTALL:append = " wt powershell x11fwd"
 
 # Those packages must be installed from Windows
 PREFERRED_PKG_PROVIDERS_wt = ""
