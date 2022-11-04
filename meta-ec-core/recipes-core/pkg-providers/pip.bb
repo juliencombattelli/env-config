@@ -1,6 +1,5 @@
-
+BB_STRICT_CHECKSUM = "0"
 SRC_URI = "https://bootstrap.pypa.io/get-pip.py"
-SRC_URI[sha256sum] = "5aefe6ade911d997af080b315ebcb7f882212d070465df544e1175ac2be519b4"
 
 do_install() {
     bbplain "Installing pip."
