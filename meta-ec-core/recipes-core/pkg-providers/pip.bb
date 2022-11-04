@@ -3,7 +3,7 @@ SRC_URI = "https://bootstrap.pypa.io/get-pip.py"
 
 do_install() {
     bbplain "Installing pip."
-    if !python3 -m pip --version; then
+    if ! python3 -m pip --version; then
         python3 ${WORKDIR}/get-pip.py
     else
         bbplain "pip already installed."
