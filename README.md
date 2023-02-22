@@ -13,7 +13,7 @@ echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER > /dev/null
 # Source the env-config init script
 source ./ec-init-build-env
 # Run bitbake to perform the software installation and configuration
-bitbake world
+bitbake all
 # Restore the password authentication for sudo
 sudo rm /etc/sudoers.d/$USER
 ```
