@@ -5,6 +5,22 @@ filetype off
 syntax on
 set number
 set showmatch
+set cursorline
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Cursor shape settings
+let &t_SI = "\<Esc>[6 q" " INSERT mode
+let &t_SR = "\<Esc>[4 q" " REPLACE mode
+let &t_EI = "\<Esc>[2 q" " Others
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Scrolling settings
+set mouse=a
+map <ScrollWheelUp> <C-Y>
+map <ScrollWheelDown> <C-E>
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Spacing settings
 set expandtab
 set shiftwidth=4
 set softtabstop=4
@@ -32,6 +48,7 @@ Plugin 'itchyny/lightline.vim'
 Plugin 'edkolev/tmuxline.vim'
 Plugin 'tomasiser/vim-code-dark'
 Plugin 'scrooloose/nerdtree'
+"Plugin 'chrisbra/Colorizer'
 
 call vundle#end()
 filetype plugin indent on
