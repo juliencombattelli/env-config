@@ -27,14 +27,18 @@ python do_fetch_source_list() {
 addtask do_fetch_source_list before do_update_source_list
 
 do_update_source_list() {
-    bbplain "Updating apt source lists."
-    sudo cp ${WORKDIR}/list/* /etc/apt/sources.list.d/
+    if [ -d ${WORKDIR}/list ] && [ -n "$(ls -A ${WORKDIR}/list)" ]; then
+        bbplain "Updating apt source lists."
+        sudo cp ${WORKDIR}/list/* /etc/apt/sources.list.d/
+    fi
 }
 addtask do_update_source_list before do_update_keyring
 
 do_update_keyring() {
-    bbplain "Adding public keys into apt."
-    sudo apt-key add ${WORKDIR}/key/*
+    if [ -d ${WORKDIR}/key ] && [ -n "$(ls -A ${WORKDIR}/key)" ]; then
+        bbplain "Adding public keys into apt."
+        sudo apt-key add ${WORKDIR}/key/*
+    fi
 }
 addtask do_update_keyring before do_update
 
