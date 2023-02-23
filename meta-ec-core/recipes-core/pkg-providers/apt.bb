@@ -46,6 +46,9 @@ do_update() {
     bbplain "Updating apt cache."
     sudo -E apt update
 }
-addtask do_update
+addtask do_update before do_configure
+
+# Always consider do_update as out-of-date
+do_update[nostamp] = "1"
 
 do_configure[noexec] = "1"
