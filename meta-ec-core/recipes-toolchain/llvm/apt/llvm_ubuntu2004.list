@@ -1,9 +1,0 @@
-# i386 not available
-deb http://apt.llvm.org/focal/ llvm-toolchain-focal main
-deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main
-# 11
-deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main
-deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main
-# 12
-deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main
-deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main
