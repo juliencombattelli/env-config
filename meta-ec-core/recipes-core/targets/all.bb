@@ -2,7 +2,7 @@ DESCRIPTION = "Install and deploy the configuration of all packages in PKG_INSTA
 PN = "all"
 PV = "1"
 
-DEPENDS += "${DISTRO_PKG_PROVIDERS} ${PKG_INSTALL}"
+DEPENDS += "${PKG_INSTALL}"
 
 do_build_recipe[deptask] += "do_configure"
 
