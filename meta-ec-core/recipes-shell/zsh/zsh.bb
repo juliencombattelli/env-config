@@ -28,7 +28,7 @@ do_compile() {
     wget https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz
     tar -xf zsh-5.8.tar.xz
     cd zsh-5.8
-    sudo apt install build-essential libncurses5-dev
+    sudo -E apt-get install -y build-essential libncurses5-dev
     ./configure --with-tcsetpgrp
     make -j$(nproc)
     sudo make install
