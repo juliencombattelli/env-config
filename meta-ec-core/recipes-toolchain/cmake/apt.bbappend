@@ -12,5 +12,5 @@ do_update_keyring:append() {
 }
 
 do_update:append() {
-    sudo apt-get install kitware-archive-keyring
+    sudo -E apt-get install kitware-archive-keyring
 }
