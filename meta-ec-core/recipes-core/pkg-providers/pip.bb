@@ -19,15 +19,12 @@ do_install() {
     else
         bbplain "pip already installed."
     fi
-
-    bbplain "Installing pypisearch."
-    python3 -m pip install pypisearch
 }
 addtask do_install before do_update
 
-do_update() {
-    bbplain "Updating pip."
-    python3 -m pip install --upgrade pip
+python do_update() {
+    # pip does not need any update after its installation
+    pass
 }
 addtask do_update before do_configure
 

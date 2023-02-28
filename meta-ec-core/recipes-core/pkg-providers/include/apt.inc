@@ -25,9 +25,12 @@ def _apt_vercmp(version, versionspec):
         i = 1
     return _apt_vercmp_op(version, versionspec[i:].strip(), versionspec[0:i] or "==")
 
-def pkg_provider_apt_search_package(d, pattern, version):
+def pkg_provider_apt_search_package(d, pattern, wholeword, version):
     import re
     import apt
+
+    if wholeword:
+        pattern = "^{}$".format(pattern)
 
     search_pattern = re.compile(pattern)
 
@@ -43,9 +46,10 @@ def pkg_provider_apt_search_package(d, pattern, version):
 
     for pkg in sorted([pkg.name for pkg in cache], key=natural_sort_key, reverse=True):
         if version is None or _apt_vercmp(cache[pkg].versions[0], version):
-            return pkg, cache[pkg].is_installed
-    return None, False
+            return pkg, version, cache[pkg].is_installed
+    return None, None, False
 
-def pkg_provider_apt_install_packages(d, pkg):
+def pkg_provider_apt_install_packages(d, pkg, _):
+    # Version argument is not used with apt for now
     install = "sudo -E apt install --yes {}".format(pkg)
     run_shell_cmd(d, install)
