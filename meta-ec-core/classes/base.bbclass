@@ -1,6 +1,32 @@
 inherit logging
 inherit utility-tasks
 
+# Python modules automatically imported
+EC_IMPORTS += "os sys time re json"
+
+def ec_import(d): # Based on Poky's oe_import()
+    import sys
+
+    bbpath = d.getVar("BBPATH").split(":")
+    sys.path[0:0] = [os.path.join(dir, "lib") for dir in bbpath]
+
+    def inject(name, value):
+        """Make a python object accessible from the metadata"""
+        if hasattr(bb.utils, "_context"):
+            bb.utils._context[name] = value
+        else:
+            __builtins__[name] = value
+
+    for toimport in d.getVar("EC_IMPORTS").split():
+        try:
+            imported = __import__(toimport)
+            inject(toimport.split(".", 1)[0], imported)
+        except AttributeError as e:
+            bb.error("Error importing python modules: %s" % str(e))
+    return ""
+
+EC_IMPORTED := "${@ec_import(d)}"
+
 BB_DEFAULT_TASK ?= "build_recipe"
 
 SRC_URI ?= ""

@@ -1,5 +1,4 @@
 python () {
-    import sys
     d.setVar('PYTHON_VERSION', '{}.{}'.format(sys.version_info.major, sys.version_info.minor))
 }
 

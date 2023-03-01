@@ -1,7 +1,5 @@
 # Return the currently installed version of the given package, or None if it is not installed
 def _pip_is_pkg_installed(d, pkg):
-    import json
-    import sys
     list_command = "{python} -m pip list --format=json".format(python=sys.executable)
     list = run_shell_cmd(d, list_command)
     if list.returncode == 0:
@@ -15,8 +13,6 @@ def _pip_is_pkg_installed(d, pkg):
 
 # Return the available version of the given package, or None if it is not available
 def _pip_is_pkg_available(d, pkg, version_spec):
-    import re
-    import sys
     from distutils.version import LooseVersion
     index_command = "{python} -m pip index versions {pkg}".format(python=sys.executable, pkg=pkg)
     index = run_shell_cmd(d, index_command)
@@ -49,7 +45,6 @@ def pkg_provider_pip_search_package(d, pkg, _, version):
     return pkg, version, is_installed
 
 def pkg_provider_pip_install_packages(d, pkg, version):
-    import sys
     version_spec = version or ""
     install_command = "{python} -m pip install {pkg}{version}".format(
         python=sys.executable, pkg=pkg, version=version_spec)
