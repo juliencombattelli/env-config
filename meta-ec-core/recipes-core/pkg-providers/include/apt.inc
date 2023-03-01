@@ -26,7 +26,6 @@ def _apt_vercmp(version, versionspec):
     return _apt_vercmp_op(version, versionspec[i:].strip(), versionspec[0:i] or "==")
 
 def pkg_provider_apt_search_package(d, pattern, wholeword, version):
-    import re
     import apt
 
     if wholeword:
