@@ -49,6 +49,7 @@ Plugin 'edkolev/tmuxline.vim'
 Plugin 'tomasiser/vim-code-dark'
 Plugin 'scrooloose/nerdtree'
 "Plugin 'chrisbra/Colorizer'
+Plugin 'Yggdroot/indentLine'
 
 call vundle#end()
 filetype plugin indent on
