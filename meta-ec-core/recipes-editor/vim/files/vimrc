@@ -6,6 +6,7 @@ syntax on
 set number
 set showmatch
 set cursorline
+set hlsearch
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Cursor shape settings
@@ -24,7 +25,6 @@ map <ScrollWheelDown> <C-E>
 set expandtab
 set shiftwidth=4
 set softtabstop=4
-set cursorline
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Indent settings
