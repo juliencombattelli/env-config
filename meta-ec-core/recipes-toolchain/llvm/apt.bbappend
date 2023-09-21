@@ -10,5 +10,5 @@ include apt/llvm_${DISTRO}.inc
 do_update:append() {
     chmod +x ${WORKDIR}/llvm.sh
     # Install current stable version
-    sudo ${WORKDIR}/llvm.sh
+    sudo -E ${WORKDIR}/llvm.sh
 }
