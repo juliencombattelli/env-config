@@ -14,6 +14,8 @@ MIRRORS = " https://bootstrap.pypa.io/pip/.*/ https://bootstrap.pypa.io/ "
 do_install() {
     bbplain "Installing pip."
     if ! python3 -m pip --version; then
+        # TODO use export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt on Ubuntu to avoid certificate check errors
+        # Or better install python3-pip using apt
         python3 ${WORKDIR}/get-pip.py
     else
         bbplain "pip already installed."
