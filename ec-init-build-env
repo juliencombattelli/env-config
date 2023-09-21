@@ -36,12 +36,13 @@ export ECROOT
 
 # Handle arguments
 function help {
-    echo "Usage: source $0 [--proxy-server SERVER [--proxy-port PORT] [--proxy-user USER]]"
+    echo "Usage: source ec-init-build-env [--proxy-server SERVER [--proxy-port PORT] [--proxy-user USER] [--no-proxy NOPROXY]]"
 }
 EC_PROXY_SERVER=""
 EC_PROXY_PORT=""
 EC_PROXY_USER=""
 EC_PROXY_PASSWORD=""
+EC_NO_PROXY=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     --proxy-server)
@@ -56,6 +57,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --proxy-user)
       EC_PROXY_USER="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --no-proxy)
+      EC_NO_PROXY="$2"
       shift # past argument
       shift # past value
       ;;
@@ -100,6 +106,7 @@ sed -ie "s|@EC_PROXY_SERVER@|$EC_PROXY_SERVER|g" "$BUILDDIR/conf/proxy.sh"
 sed -ie "s|@EC_PROXY_PORT@|$EC_PROXY_PORT|g" "$BUILDDIR/conf/proxy.sh"
 sed -ie "s|@EC_PROXY_USER@|$EC_PROXY_USER|g" "$BUILDDIR/conf/proxy.sh"
 sed -ie "s|@EC_PROXY_PASSWORD@|$EC_PROXY_PASSWORD|g" "$BUILDDIR/conf/proxy.sh"
+sed -ie "s|@EC_NO_PROXY@|$EC_NO_PROXY|g" "$BUILDDIR/conf/proxy.sh"
 source "$BUILDDIR/conf/proxy.sh"
 
 # Export variables for proxy authentication used in the BitBake recipes
@@ -107,6 +114,7 @@ export EC_PROXY_SERVER
 export EC_PROXY_PORT
 export EC_PROXY_USER
 export EC_PROXY_PASSWORD
+export EC_NO_PROXY
 
 # Download BitBake
 BITBAKEVER="1.52.4"
