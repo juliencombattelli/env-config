@@ -4,6 +4,7 @@ PROXY_SERV="@EC_PROXY_SERVER@"
 PROXY_PORT="@EC_PROXY_PORT@"
 PROXY_USER="@EC_PROXY_USER@"
 PROXY_PASS="@EC_PROXY_PASSWORD@"
+NO_PROXY="@EC_NO_PROXY@"
 
 if [ -z "$PROXY_SERV" ]; then
     # No proxy server defined, nothing to do
@@ -37,5 +38,5 @@ if proxy_reachable; then
     alias apt="apt -o=\"Acquire::http::proxy=$PROXY_URL\" -o=\"Acquire::https::proxy=$PROXY_URL\""
     export {http,https,ftp,rsync}_proxy=$PROXY_URL
     export {HTTP,HTTPS,FTP,RSYNC}_PROXY=$PROXY_URL
-    export no_proxy="localhost,127.0.0.1,.local" # TODO use EC_NO_PROXY
+    export no_proxy="localhost,127.0.0.1,.local,$NO_PROXY"
 fi
