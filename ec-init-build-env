@@ -2,11 +2,12 @@
 
 # Init script based on https://github.com/openembedded/openembedded-core/blob/master/oe-init-build-env
 
+# Get current script location
 if [ -n "$BASH_SOURCE" ]; then
     THIS_SCRIPT=$BASH_SOURCE
 elif [ -n "$ZSH_NAME" ]; then
     THIS_SCRIPT=$0
-else
+else # Use by other shells /!\ NOT ACTIVELY TESTED /!\
     THIS_SCRIPT="$(pwd)/ec-init-build-env"
     if [ ! -e "$THIS_SCRIPT" ]; then
         echo "Error: $THIS_SCRIPT doesn't exist!" >&2
@@ -14,38 +15,135 @@ else
         exit 1
     fi
 fi
+
+# Unset BBSERVER if already set
 if [ -n "$BBSERVER" ]; then
     unset BBSERVER
 fi
 
+# Ensure the script is sourced
 if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
     echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'" >&2
     exit 1
 fi
+
+# Set env-config root directory
 if [ -z "$ECROOT" ]; then
     ECROOT=$(dirname "$THIS_SCRIPT")
     ECROOT=$(readlink -f "$ECROOT")
 fi
-unset THIS_SCRIPT
-
-BITBAKEVER="1.52.4"
-BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
-if [ ! -d $BITBAKEDIR ]; then
-    wget "https://github.com/openembedded/bitbake/archive/refs/tags/$BITBAKEVER.tar.gz" \
-        -O "/tmp/bitbake-$BITBAKEVER.tar.gz"
-    tar -xf "/tmp/bitbake-$BITBAKEVER.tar.gz" -C "$ECROOT"
-    rm "/tmp/bitbake-$BITBAKEVER.tar.gz"
-fi
-
 export ECROOT
-export BB_ENV_EXTRAWHITE="ECROOT http_proxy https_proxy no_proxy"
+
+# Handle arguments
+function help {
+    echo "Usage: source $0 [--proxy-server SERVER [--proxy-port PORT] [--proxy-user USER]]"
+}
+EC_PROXY_SERVER=""
+EC_PROXY_PORT=""
+EC_PROXY_USER=""
+EC_PROXY_PASSWORD=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --proxy-server)
+      EC_PROXY_SERVER="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --proxy-port)
+      EC_PROXY_PORT="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --proxy-user)
+      EC_PROXY_USER="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -h|--help)
+      help
+      return 0
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      help
+      return 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+# Export main BitBake environment variable
+export BB_ENV_EXTRAWHITE="ECROOT EC_PROXY_SERVER EC_PROXY_PORT EC_PROXY_USER EC_PROXY_PASSWORD http_proxy https_proxy no_proxy"
 export BUILDDIR=build
 export BBPATH="$(pwd)/$BUILDDIR"
 export PATH="$PATH:$BITBAKEDIR/bin"
 
+# Create BitBake configuration directory
 mkdir -p "$BUILDDIR/conf"
 
+# Create the BitBake configuration from the template files
 sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/bblayers.conf.sample" > "$BUILDDIR/conf/bblayers.conf"
 sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/local.conf.sample" > "$BUILDDIR/conf/local.conf"
 
+# Create and source proxy configuration
+# The proxy.sh script is both used to allow BitBake to access Internet and later
+# deployed into the user configuration from the base-files recipe
+cp "$ECROOT/meta-ec-core/recipes-core/base-files/files/etc/profile.d/proxy.sh" "$BUILDDIR/conf/proxy.sh"
+if [ -n "${EC_PROXY_ASK_PASSWORD}" ]; then
+    echo "Proxy password for $EC_PROXY_SERVER"
+    read -s EC_PROXY_PASSWORD
+fi
+sed -ie "s|@EC_PROXY_SERVER@|$EC_PROXY_SERVER|g" "$BUILDDIR/conf/proxy.sh"
+sed -ie "s|@EC_PROXY_PORT@|$EC_PROXY_PORT|g" "$BUILDDIR/conf/proxy.sh"
+sed -ie "s|@EC_PROXY_USER@|$EC_PROXY_USER|g" "$BUILDDIR/conf/proxy.sh"
+sed -ie "s|@EC_PROXY_PASSWORD@|$EC_PROXY_PASSWORD|g" "$BUILDDIR/conf/proxy.sh"
+source "$BUILDDIR/conf/proxy.sh"
+
+# Export variables for proxy authentication used in the BitBake recipes
+export EC_PROXY_SERVER
+export EC_PROXY_PORT
+export EC_PROXY_USER
+export EC_PROXY_PASSWORD
+
+# Download BitBake
+BITBAKEVER="1.52.4"
+BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
+if [ ! -d $BITBAKEDIR ]; then
+    # Check Internet connection before any download attempt
+    printf "Checking Internet connection... "
+    CURL_OUTPUT=$(curl --silent --show-error http://github.com 2>&1) # TODO use wget spider mode
+    if [ $? = 0 ]; then
+        echo "Done."
+    else
+        echo "Error."
+        echo "$CURL_OUTPUT"
+        echo ""
+        echo "If you are behind a corporate proxy, please use the proxy arguments:"
+        help
+        echo "Exiting."
+        return 1
+    fi
+    # Download BitBake
+    printf "Downloading BitBake... "
+    if ! wget --quiet "https://github.com/openembedded/bitbake/archive/refs/tags/$BITBAKEVER.tar.gz" \
+        --output-document "/tmp/bitbake-$BITBAKEVER.tar.gz"; then
+        echo "Failed to download BitBake. Exiting."
+        return 1
+    fi
+    echo "Done."
+    # Extract BitBake
+    printf "Extracting BitBake... "
+    if ! tar -xf "/tmp/bitbake-$BITBAKEVER.tar.gz" -C "$ECROOT"; then
+        echo "Failed to extract BitBake. Exiting."
+        return 1
+    fi
+    echo "Done."
+    # Remove archive
+    rm "/tmp/bitbake-$BITBAKEVER.tar.gz"
+fi
+
+# Change directory to build folder
 cd "$BUILDDIR"
