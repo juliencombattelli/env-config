@@ -49,6 +49,9 @@ Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVI
 * PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN_<pkg>: defines a version pattern to search for <pkg> using <pkgprov>
   The pattern syntax depends on what <pkg> supports. As an example, apt package provider supports regex, but pip don't.
 
+* ALIAS[<aliasname>] = "<command>": defines an alias <aliasname> using <command> as value.
+  Aliases are created in the base-files recipe.
+
 ## Tasks
 
 * Poky workflow:
