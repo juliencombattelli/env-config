@@ -85,7 +85,6 @@ done
 export BB_ENV_EXTRAWHITE="ECROOT EC_PROXY_SERVER EC_PROXY_PORT EC_PROXY_USER EC_PROXY_PASSWORD http_proxy https_proxy no_proxy"
 export BUILDDIR=build
 export BBPATH="$(pwd)/$BUILDDIR"
-export PATH="$PATH:$BITBAKEDIR/bin"
 
 # Create BitBake configuration directory
 mkdir -p "$BUILDDIR/conf"
@@ -119,6 +118,7 @@ export EC_NO_PROXY
 # Download BitBake
 BITBAKEVER="1.52.4"
 BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
+export PATH="$PATH:$BITBAKEDIR/bin"
 if [ ! -d $BITBAKEDIR ]; then
     # Check Internet connection before any download attempt
     printf "Checking Internet connection... "
