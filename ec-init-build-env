@@ -115,25 +115,26 @@ export EC_PROXY_USER
 export EC_PROXY_PASSWORD
 export EC_NO_PROXY
 
+# Check Internet connection before any download attempt
+printf "Checking Internet connection... "
+CURL_OUTPUT=$(curl --silent --show-error http://github.com 2>&1) # TODO use wget spider mode
+if [ $? = 0 ]; then
+    echo "Done."
+else
+    echo "Error."
+    echo "$CURL_OUTPUT"
+    echo ""
+    echo "If you are behind a corporate proxy, please use the proxy arguments:"
+    help
+    echo "Exiting."
+    return 1
+fi
+
 # Download BitBake
 BITBAKEVER="1.52.4"
 BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
 export PATH="$PATH:$BITBAKEDIR/bin"
 if [ ! -d $BITBAKEDIR ]; then
-    # Check Internet connection before any download attempt
-    printf "Checking Internet connection... "
-    CURL_OUTPUT=$(curl --silent --show-error http://github.com 2>&1) # TODO use wget spider mode
-    if [ $? = 0 ]; then
-        echo "Done."
-    else
-        echo "Error."
-        echo "$CURL_OUTPUT"
-        echo ""
-        echo "If you are behind a corporate proxy, please use the proxy arguments:"
-        help
-        echo "Exiting."
-        return 1
-    fi
     # Download BitBake
     printf "Downloading BitBake... "
     if ! wget --quiet "https://github.com/openembedded/bitbake/archive/refs/tags/$BITBAKEVER.tar.gz" \
