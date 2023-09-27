@@ -52,11 +52,13 @@ python base_do_install() {
     bb.plain("Installing " + d.getVar('PN') + ".")
 }
 addtask do_install after do_fetch
+do_install[dirs] = "${B}"
 
 python base_do_configure() {
     bb.plain("Configuring " + d.getVar('PN') + ".")
 }
 addtask do_configure after do_install
+do_configure[dirs] = "${B}"
 do_configure[depends] = "base-files:do_configure"
 
 python base_do_build_recipe() {
