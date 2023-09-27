@@ -10,7 +10,7 @@ DISTRO_PKG_PROVIDERS ?= "pip"
 # Default: all the packages I regularly use on all environments.
 PKG_INSTALL ?= " \
     base-files \
-    vim vscode \
+    neovim vim vscode \
     ssh \
     git diff-so-fancy \
     bash zsh \
