@@ -15,7 +15,7 @@
     - native:
     - virtualmachine: x11fwd
     - WSL1: x11fwd
-    - WSL2: x11fwd(?)
+    - WSL2: x11fwd(? may not be needed with WSLg)
 
 ### DISTRO configuration
 
@@ -41,7 +41,7 @@
     - use case: zsh-syntax-highlight is available with a simple git clone or via apt
 
 * PREFERRED_PKG_VERSION_<pkg>: use a specific version (version range?) for pkg
-    - use case: Zsh<5.8 has a bug in WSL...
+    - use case: Zsh<5.8 has a bug in WSL and version 5.8+ must be recompiled...
 
 Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVIDER_cmake will be set accordingly.
          But ccmake (curses gui) is not available on pip (yet) and is required to be installed from apt.
@@ -50,7 +50,9 @@ Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVI
   The pattern syntax depends on what <pkg> supports. As an example, apt package provider supports regex, but pip don't.
 
 * ALIAS[<aliasname>] = "<command>": defines an alias <aliasname> using <command> as value.
-  Aliases are created in the base-files recipe.
+  The aliases should be defined in a distro config file as the name of the targeted
+  command may be distro-dependant.
+  The alias shell file is generated in the base-files recipe.
 
 ## Tasks
 
