@@ -13,6 +13,10 @@ Here is a non-exhaustive list of tasks with their role:
 * do_install: Install the software provided by the recipe.
 * do_configure: Perform initial configuration of the software provided by the recipe (like deploying *rc files).
 
+As a reference, here is a link to the
+[Bitbake documentation](https://docs.yoctoproject.org/bitbake/1.52/singleindex.html)
+currently used.
+
 ## Quick start
 
 To install the environment, download this meta-layer and all other layers needed, and run the following commands:
