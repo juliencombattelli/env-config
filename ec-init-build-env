@@ -36,13 +36,14 @@ export ECROOT
 
 # Handle arguments
 function help {
-    echo "Usage: source ec-init-build-env [--proxy-server SERVER [--proxy-port PORT] [--proxy-user USER] [--no-proxy NOPROXY]]"
+    echo "Usage: source ec-init-build-env [--proxy-server SERVER [--proxy-port PORT] [--proxy-user USER] [--no-proxy NOPROXY]] [--with-poky]"
 }
 EC_PROXY_SERVER=""
 EC_PROXY_PORT=""
 EC_PROXY_USER=""
 EC_PROXY_PASSWORD=""
 EC_NO_PROXY=""
+EC_DOWNLOAD_POKY=false
 while [[ $# -gt 0 ]]; do
   case $1 in
     --proxy-server)
@@ -64,6 +65,10 @@ while [[ $# -gt 0 ]]; do
       EC_NO_PROXY="$2"
       shift # past argument
       shift # past value
+      ;;
+    --with-poky)
+      EC_DOWNLOAD_POKY=true
+      shift # past argument
       ;;
     -h|--help)
       help
@@ -130,8 +135,11 @@ else
     return 1
 fi
 
-# Download BitBake
+# BitBake and associated Poky version
 BITBAKEVER="1.52.4"
+POKYVER="honister-3.4.4"
+
+# Download BitBake
 BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
 export PATH="$PATH:$BITBAKEDIR/bin"
 if [ ! -d $BITBAKEDIR ]; then
@@ -152,6 +160,16 @@ if [ ! -d $BITBAKEDIR ]; then
     echo "Done."
     # Remove archive
     rm "/tmp/bitbake-$BITBAKEVER.tar.gz"
+fi
+
+# Download Poky
+if [ "${EC_DOWNLOAD_POKY}" = true ] && [ ! -d $ECROOT/poky ]; then
+    printf "Downloading Poky... "
+    if ! git clone https://git.yoctoproject.org/poky -b "$POKYVER" --depth 1 2>/dev/null; then
+        echo "Failed to download Poky. Exiting."
+        return 1
+    fi
+    echo "Done."
 fi
 
 # Change directory to build folder
