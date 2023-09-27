@@ -34,7 +34,7 @@ python create_aliases() {
     aliasfile = d.getVar("EC_TARGET_INSTALL_DIR") + "/etc/profile.d/aliases.sh"
     with open(aliasfile, "w", encoding="utf-8") as f:
         for alias,command in aliases.items():
-            f.write("alias {}={}\n".format(alias, command))
+            f.write('alias {}="{}"\n'.format(alias, command))
 }
 
 python do_configure() {
