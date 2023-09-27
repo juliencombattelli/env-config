@@ -30,3 +30,10 @@ bitbake all
 # Restore the password authentication for sudo
 sudo rm /etc/sudoers.d/$USER
 ```
+
+As shown above, env-config may need administrator privileges.
+However, due to BitBake design, it will not prompt the user for a password when using sudo.
+To work around this issue, it is recommended to temporarily disable password authentication
+for the user by setting the NOPASSWD option in a sudoers file in /etc/sudoers.d/ directory.
+Once the installation of env-config is completed, remove this sudoers file.
+WARNING: try to minimize the operations done in super user as it can be destructive.
