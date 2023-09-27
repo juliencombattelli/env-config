@@ -14,6 +14,6 @@ PKG_INSTALL ?= " \
     ssh \
     git diff-so-fancy \
     bash zsh \
-    bat exa fd ripgrep \
+    bat exa fd nvimpager ripgrep \
     cmake gcc gdb gdb-dashboard make ninja clang-format clang-tidy clang \
 "
