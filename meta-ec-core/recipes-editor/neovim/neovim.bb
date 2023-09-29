@@ -25,13 +25,13 @@ do_install() {
         do_compile
     else
         # Install the appimage for the current user if working
-        install -m 755 "${WORKDIR}/nvim.appimage" "$HOME/.local/bin/nvim"
+        sudo install -m 755 "${WORKDIR}/nvim.appimage" "/usr/local/bin/nvim"
     fi
 }
 
 do_compile() {
-    make CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX=$HOME/.local
-    make install
+    make CMAKE_BUILD_TYPE=Release
+    sudo make install
 }
 
 do_configure() {
