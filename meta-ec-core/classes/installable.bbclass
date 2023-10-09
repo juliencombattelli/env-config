@@ -18,12 +18,15 @@
 # def pkg_provider_<provider>_install_package(d, pkg, version)
 # Takes the following parameters:
 #   - d: BitBake's global data dictionnary
-#   - the package name to be installed
-#   - the package version (or None if irrelevant for installation)
+#   - pkg: the package name to be installed
+#   - version: the package version (or None if irrelevant for installation)
 # Returns:
 #   - whether the installation failed or succeeded
 
 def pkg_providers_inc(d):
+    '''
+    Return a list of space separated paths to the currently used package providers.
+    '''
     pkg_providers = d.getVar('DISTRO_PKG_PROVIDERS', True)
     return "".join("recipes-core/pkg-providers/include/{}.inc ".format(p) for p in pkg_providers.split())
 
