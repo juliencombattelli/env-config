@@ -65,4 +65,77 @@ python base_do_build_recipe() {
 }
 addtask do_build_recipe after do_configure
 
+# Pre-build configuration output
+BUILDCFG_HEADER = "Build Configuration${@" (mc:${BB_CURRENT_MC})" if d.getVar("BBMULTICONFIG") else ""}:"
+BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM"
+BUILDCFG_FUNCS = "buildcfg_vars get_layers_branch_rev"
+
+def buildcfg_vars(d):
+    statusvars = d.getVar('BUILDCFG_VARS').split()
+    for var in statusvars:
+        value = d.getVar(var)
+        if value is not None:
+            yield '%-20s = "%s"' % (var, value)
+
+def base_get_metadata_git_branch(path, d):
+    import bb.process
+
+    try:
+        rev, _ = bb.process.run('git rev-parse --abbrev-ref HEAD', cwd=path)
+    except bb.process.ExecutionError:
+        rev = '<unknown>'
+    return rev.strip()
+
+def base_get_metadata_git_revision(path, d):
+    import bb.process
+
+    try:
+        rev, _ = bb.process.run('git rev-parse HEAD', cwd=path)
+    except bb.process.ExecutionError:
+        rev = '<unknown>'
+    return rev.strip()
+
+def get_layers_branch_rev(d):
+    layers = (d.getVar("BBLAYERS") or "").split()
+    layers_branch_rev = ["%-20s = \"%s:%s\"" % (os.path.basename(i), \
+        base_get_metadata_git_branch(i, None).strip(), \
+        base_get_metadata_git_revision(i, None)) \
+            for i in layers]
+    i = len(layers_branch_rev)-1
+    p1 = layers_branch_rev[i].find("=")
+    s1 = layers_branch_rev[i][p1:]
+    while i > 0:
+        p2 = layers_branch_rev[i-1].find("=")
+        s2= layers_branch_rev[i-1][p2:]
+        if s1 == s2:
+            layers_branch_rev[i-1] = layers_branch_rev[i-1][0:p2]
+            i -= 1
+        else:
+            i -= 1
+            p1 = layers_branch_rev[i].find("=")
+            s1= layers_branch_rev[i][p1:]
+    return layers_branch_rev
+
+addhandler base_eventhandler
+base_eventhandler[eventmask] = "bb.event.BuildStarted"
+python base_eventhandler() {
+    import bb.runqueue
+    if isinstance(e, bb.event.BuildStarted):
+        d.setVar('BB_VERSION', bb.__version__)
+        localdata = bb.data.createCopy(d)
+        statuslines = []
+        for func in localdata.getVar('BUILDCFG_FUNCS').split():
+            g = globals()
+            if func not in g:
+                bb.warn("Build configuration function '%s' does not exist" % func)
+            else:
+                flines = g[func](localdata)
+                if flines:
+                    statuslines.extend(flines)
+
+        statusheader = d.getVar('BUILDCFG_HEADER')
+        if statusheader:
+            bb.plain('\n%s\n%s\n' % (statusheader, '\n'.join(statuslines)))
+}
+
 EXPORT_FUNCTIONS do_fetch do_install do_configure do_build_recipe
