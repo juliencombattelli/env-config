@@ -5,7 +5,6 @@ inherit utility-tasks
 ### Import python modules and make them available for all recipes.
 ################################################################################
 
-# Python modules automatically imported
 EC_IMPORTS += "os sys time re json ec.siginfo"
 
 def ec_import(d): # Based on Poky's oe_import()
@@ -30,10 +29,6 @@ def ec_import(d): # Based on Poky's oe_import()
     return ""
 
 EC_IMPORTED := "${@ec_import(d)}"
-
-BB_DEFAULT_TASK ?= "complete"
-
-SRC_URI ?= ""
 
 ################################################################################
 ### Task start (first task executed for a given recipe).
