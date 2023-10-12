@@ -1,6 +1,10 @@
 inherit logging
 inherit utility-tasks
 
+################################################################################
+### Import python modules and make them available for all recipes.
+################################################################################
+
 # Python modules automatically imported
 EC_IMPORTS += "os sys time re json ec.siginfo"
 
@@ -27,9 +31,29 @@ def ec_import(d): # Based on Poky's oe_import()
 
 EC_IMPORTED := "${@ec_import(d)}"
 
-BB_DEFAULT_TASK ?= "build_recipe"
+BB_DEFAULT_TASK ?= "complete"
 
 SRC_URI ?= ""
+
+################################################################################
+### Task start (first task executed for a given recipe).
+################################################################################
+
+python base_do_start() {
+    bb.plain("Starting to build recipe " + d.getVar('PN') + ".")
+}
+addtask do_start
+# Add a dependency between this:do_start (first recipe) and
+# other:do_complete (last recipe) for every other recipes in DEPENDS
+python() {
+    deps = ['{}:do_complete'.format(pkg) for pkg in d.getVar('DEPENDS').split()]
+    if deps:
+        d.appendVarFlag('do_fetch', 'depends', ' '.join(deps))
+}
+
+################################################################################
+### Task fetch (fetch files from SCR_URI).
+################################################################################
 
 python base_do_fetch() {
     bb.plain("Fetching files for " + d.getVar('PN') + ".")
@@ -39,20 +63,21 @@ python base_do_fetch() {
     rootdir = d.getVar('WORKDIR')
     fetcher.unpack(rootdir)
 }
-addtask do_fetch
-# Add a dependency between this:do_fetch (first recipe) and other:do_build_recipe
-# (last recipe) for every other recipes in DEPENDS
-python() {
-    deps = ['{}:do_build_recipe'.format(pkg) for pkg in d.getVar('DEPENDS').split()]
-    if deps:
-        d.appendVarFlag('do_fetch', 'depends', ' '.join(deps))
-}
+addtask do_fetch after do_start
+
+################################################################################
+### Task install (install the package content into the filesystem).
+################################################################################
 
 python base_do_install() {
     bb.plain("Installing " + d.getVar('PN') + ".")
 }
 addtask do_install after do_fetch
 do_install[dirs] = "${B}"
+
+################################################################################
+### Task configure (deploy and apply the package configuration).
+################################################################################
 
 python base_do_configure() {
     bb.plain("Configuring " + d.getVar('PN') + ".")
@@ -61,11 +86,19 @@ addtask do_configure after do_install
 do_configure[dirs] = "${B}"
 do_configure[depends] = "base-files:do_configure"
 
-python base_do_build_recipe() {
-}
-addtask do_build_recipe after do_configure
+################################################################################
+### Task complete (last task executed for a given recipe).
+################################################################################
 
-# Pre-build configuration output
+python base_do_complete() {
+    bb.plain("Finishing to build recipe " + d.getVar('PN') + ".")
+}
+addtask do_complete after do_configure
+
+################################################################################
+### Pre-build configuration output.
+################################################################################
+
 BUILDCFG_HEADER = "Build Configuration${@" (mc:${BB_CURRENT_MC})" if d.getVar("BBMULTICONFIG") else ""}:"
 BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM"
 BUILDCFG_FUNCS = "buildcfg_vars get_layers_branch_rev"
@@ -138,4 +171,8 @@ python base_eventhandler() {
             bb.plain('\n%s\n%s\n' % (statusheader, '\n'.join(statuslines)))
 }
 
-EXPORT_FUNCTIONS do_fetch do_install do_configure do_build_recipe
+################################################################################
+### Export base class functions.
+################################################################################
+
+EXPORT_FUNCTIONS do_start do_fetch do_install do_configure do_complete
