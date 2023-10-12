@@ -22,4 +22,4 @@ do_configure() {
     # listchars are commented by default as they seem to break vim for plugin installation
     sed -i 's/^" set listchars/set listchars/g' $HOME/.vimrc
 }
-do_configure[depends] = "git:do_build_recipe"
+do_configure[depends] = "git:do_complete"

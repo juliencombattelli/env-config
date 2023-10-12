@@ -21,4 +21,4 @@ do_install() {
         git clone https://github.com/zsh-users/zsh-completions.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-completions
     fi
 }
-do_install[depends] += "zsh:do_install git:do_build_recipe"
+do_install[depends] += "zsh:do_install git:do_complete"

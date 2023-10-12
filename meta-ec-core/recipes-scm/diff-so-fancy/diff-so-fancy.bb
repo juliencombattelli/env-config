@@ -11,4 +11,4 @@ do_install() {
         git clone https://github.com/so-fancy/diff-so-fancy ${EC_TARGET_INSTALL_DIR}/share/diff-so-fancy
     fi
 }
-do_install[depends] = "git:do_build_recipe"
+do_install[depends] = "git:do_complete"

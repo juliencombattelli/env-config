@@ -20,7 +20,7 @@ python do_install() {
                 bb.error("Building ZSH is only supported on Ubuntu in WSL.")
 }
 # In case build from source is required
-do_install[depends] = "make:do_build_recipe gcc:do_build_recipe"
+do_install[depends] = "make:do_complete gcc:do_complete"
 
 do_compile() {
     bbplain "Building ZSH from sources."

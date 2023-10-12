@@ -8,10 +8,11 @@ Based on BitBake, it provides an easy way to be installed and extended.
 Although env-config uses BitBake, this is *NOT* a Yocto-related project.
 Some tasks may have names usually used in Yocto (like do_install, do_configure) but have a different meaning.
 Here is a non-exhaustive list of tasks with their role:
-* do_build_recipe: The default task for all recipes. This task depends on all other normal tasks required to build a recipe.
+* do_start: The first task executed for all recipes.
 * do_fetch: Fetch the files needed to build the recipe.
 * do_install: Install the software provided by the recipe.
 * do_configure: Perform initial configuration of the software provided by the recipe (like deploying *rc files).
+* do_complete: The default and last task for all recipes. This task depends on all other normal tasks required to build a recipe.
 
 As a reference, here is a link to the
 [Bitbake documentation](https://docs.yoctoproject.org/bitbake/1.52/singleindex.html)
