@@ -1,3 +1,4 @@
+- [ ] Split base-files into multiple recipes
 - [ ] Add an option to disable sudo operations
 - [ ] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
 - [ ] Check if binary is in path with appropriate version before installing it
