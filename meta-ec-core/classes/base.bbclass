@@ -2,7 +2,7 @@ inherit logging
 inherit utility-tasks
 
 # Python modules automatically imported
-EC_IMPORTS += "os sys time re json"
+EC_IMPORTS += "os sys time re json ec.siginfo"
 
 def ec_import(d): # Based on Poky's oe_import()
     import sys
