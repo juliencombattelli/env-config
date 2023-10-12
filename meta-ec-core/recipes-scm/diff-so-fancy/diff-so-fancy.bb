@@ -36,6 +36,6 @@ python do_configure() {
     bb.build.exec_func("update_gitconfig_interactive_diffFilter", d)
     if with_nvimpager(d):
         bb.build.exec_func("update_gitconfig_core_pager_with_nvimpager", d)
-    else
+    else:
         bb.build.exec_func("update_gitconfig_core_pager", d)
 }
