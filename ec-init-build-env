@@ -106,11 +106,11 @@ if [ -n "${EC_PROXY_ASK_PASSWORD}" ]; then
     echo "Proxy password for $EC_PROXY_SERVER"
     read -s EC_PROXY_PASSWORD
 fi
-sed -ie "s|@EC_PROXY_SERVER@|$EC_PROXY_SERVER|g" "$BUILDDIR/conf/proxy.sh"
-sed -ie "s|@EC_PROXY_PORT@|$EC_PROXY_PORT|g" "$BUILDDIR/conf/proxy.sh"
-sed -ie "s|@EC_PROXY_USER@|$EC_PROXY_USER|g" "$BUILDDIR/conf/proxy.sh"
-sed -ie "s|@EC_PROXY_PASSWORD@|$EC_PROXY_PASSWORD|g" "$BUILDDIR/conf/proxy.sh"
-sed -ie "s|@EC_NO_PROXY@|$EC_NO_PROXY|g" "$BUILDDIR/conf/proxy.sh"
+sed -i "s|@EC_PROXY_SERVER@|$EC_PROXY_SERVER|g" "$BUILDDIR/conf/proxy.sh"
+sed -i "s|@EC_PROXY_PORT@|$EC_PROXY_PORT|g" "$BUILDDIR/conf/proxy.sh"
+sed -i "s|@EC_PROXY_USER@|$EC_PROXY_USER|g" "$BUILDDIR/conf/proxy.sh"
+sed -i "s|@EC_PROXY_PASSWORD@|$EC_PROXY_PASSWORD|g" "$BUILDDIR/conf/proxy.sh"
+sed -i "s|@EC_NO_PROXY@|$EC_NO_PROXY|g" "$BUILDDIR/conf/proxy.sh"
 source "$BUILDDIR/conf/proxy.sh"
 
 # Export variables for proxy authentication used in the BitBake recipes
