@@ -1,6 +1,7 @@
 - [ ] Add an option to disable sudo operations
 - [ ] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
 - [ ] Check if binary is in path with appropriate version before installing it
+- [ ] Add support for docker containers and GCP
 - [ ] Generate the file hierarchy in a dedicated directory, then deploy into the filesystem
   - => No hardcoded path in recipe
     - [ ] Sanitize-path script to detect hardcoded paths

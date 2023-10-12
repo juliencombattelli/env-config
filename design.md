@@ -1,7 +1,7 @@
 ## Global configuration
 
-* PLATFORM (supported: native, virtualmachine, WSL1, WSL2)
-* DISTRO (supported: Ubuntu1604, Ubuntu1804, Ubuntu2004, KdeNeon, Manjaro, Cygwin, MSYS2, Windows)
+* PLATFORM (supported: native, virtualmachine, WSL1, WSL2, dockercontainer, gcpworkstation)
+* DISTRO (supported: Ubuntu1604, Ubuntu1804, Ubuntu2004, Ubuntu2204, KdeNeon, Manjaro, Cygwin, MSYS2, Windows)
 
 ### PLATFORM configuration
 
@@ -10,6 +10,8 @@
     - virtualmachine: ssh-server
     - WSL1:
     - WSL2:
+    - dockercontainer:
+    - gcpworkstation:
 
 * PLATFORM_EXTRA_FEATURES
     - native:
@@ -23,6 +25,7 @@
     - Ubuntu1604: native, virtualmachine, WSL1, WSL2
     - Ubuntu1804: native, virtualmachine, WSL1, WSL2
     - Ubuntu2004: native, virtualmachine, WSL1, WSL2
+    - Ubuntu2204: native, virtualmachine, WSL1, WSL2
     - KdeNeon: native, virtualmachine
     - Manjaro: native, virtualmachine
     - Cygwin: native
@@ -44,15 +47,23 @@
     - use case: Zsh<5.8 has a bug in WSL and version 5.8+ must be recompiled...
 
 Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVIDER_cmake will be set accordingly.
-         But ccmake (curses gui) is not available on pip (yet) and is required to be installed from apt.
+      But ccmake (curses gui) is not available on pip (yet) and is required to be installed from apt.
 
-* PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN_<pkg>: defines a version pattern to search for <pkg> using <pkgprov>
+* PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN_<pkg>: defines a package name pattern for <pkg> to search for using <pkgprov>
   The pattern syntax depends on what <pkg> supports. As an example, apt package provider supports regex, but pip don't.
+
+* PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg>: defines a package name pattern for <pkg> that should be ignore when searching the package using <pkgprov>
+  The pattern syntax depends on what <pkg> supports. As an example, apt package provider supports regex, but pip don't.
+  - use case: pip provides exa which is not related to the ls replacement from ogham/exa
 
 * ALIAS[<aliasname>] = "<command>": defines an alias <aliasname> using <command> as value.
   The aliases should be defined in a distro config file as the name of the targeted
   command may be distro-dependant.
   The alias shell file is generated in the base-files recipe.
+
+* DISABLE_SUDO: disables all operations requiring the use of sudo.
+  - use case: needed on platforms where root access might be restricted (eg. GCP when CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO is true).
+Note: sudo operations in all recipes should use special functions automatically checking this flag. Sudo should never be used directly.
 
 ## Tasks
 
