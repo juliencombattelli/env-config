@@ -7,7 +7,7 @@ def run_shell_cmd(d, cmd):
 
 def run_shell_script(d, script):
     """
-    Run a shell script located in meta-ec-core/files/
+    Run a shell script located in meta-ec-core/scripts/
     """
-    cmd = 'sh ' + d.getVar('ECROOT') + '/meta-ec-core/files/' + script
+    cmd = 'sh ' + d.getVar('ECROOT') + '/meta-ec-core/scripts/' + script
     return run_shell_cmd(d, cmd)
