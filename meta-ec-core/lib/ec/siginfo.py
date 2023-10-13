@@ -1,3 +1,4 @@
+# Based on poky/meta/lib/oe/sstatesig.py
 
 def find_siginfo(pn, taskname, taskhashlist, d):
     """ Find signature data files for comparison purposes """
