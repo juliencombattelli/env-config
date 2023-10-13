@@ -48,6 +48,9 @@ python installable_do_install() {
     pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else distro_pkg_providers
     is_installed = False
     for pkg_provider in pkg_providers.split():
+        excluded_pkg_providers = d.getVar("EXCLUDELIST_PKG_PROVIDERS_{pkg}".format(pkg=pn)) or ""
+        if pkg_provider in excluded_pkg_providers.split():
+            continue
         pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
         pattern = pkg_pattern if pkg_pattern is not None else pn
         pattern_is_whole_word = False if pkg_pattern is not None else True # If using ${PN} as pattern, then search in wholeword mode

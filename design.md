@@ -43,6 +43,9 @@
 * PREFERRED_PKG_PROVIDERS_<pkg>: overrides the DISTRO_PACKAGE_MANAGERS priority list for a particular pkg and use the specified pkgmanagers
     - use case: zsh-syntax-highlight is available with a simple git clone or via apt
 
+* EXCLUDELIST_PKG_PROVIDERS_<pkg>: ignore the given package providers for the given package
+  - use case: exa and bat are not provided through pip
+
 * PREFERRED_PKG_VERSION_<pkg>: use a specific version (version range?) for pkg
     - use case: Zsh<5.8 has a bug in WSL and version 5.8+ must be recompiled...
 
