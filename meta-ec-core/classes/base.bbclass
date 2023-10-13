@@ -91,11 +91,17 @@ python base_do_complete() {
 addtask do_complete after do_configure
 
 ################################################################################
+### Export base class functions.
+################################################################################
+
+EXPORT_FUNCTIONS do_start do_fetch do_install do_configure do_complete
+
+################################################################################
 ### Pre-build configuration output.
 ################################################################################
 
 BUILDCFG_HEADER = "Build Configuration${@" (mc:${BB_CURRENT_MC})" if d.getVar("BBMULTICONFIG") else ""}:"
-BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM"
+BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM DISABLE_SUDO"
 BUILDCFG_FUNCS = "buildcfg_vars get_layers_branch_rev"
 
 def buildcfg_vars(d):
@@ -167,7 +173,17 @@ python base_eventhandler() {
 }
 
 ################################################################################
-### Export base class functions.
+### Helper functions.
 ################################################################################
 
-EXPORT_FUNCTIONS do_start do_fetch do_install do_configure do_complete
+# Sudo wrapper to catch all calls to sudo from shell functions and inhibit them
+# when DISABLE_SUDO is set
+sudo() {
+    bbplain "Entering sudo wrapper"
+    if [ "${DISABLE_SUDO}" = "1" ]; then
+        bbplain "sudo disabled, skipping command \"sudo $@\""
+    else
+        # Use env to desambiguate between the wrapper and the real command
+        env sudo "$@"
+    fi
+}
