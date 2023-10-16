@@ -35,9 +35,9 @@ EC_IMPORTED := "${@ec_import(d)}"
 ################################################################################
 
 python base_do_start() {
-    bb.plain("Starting to build recipe " + d.getVar('PN') + ".")
 }
 addtask do_start
+do_start[noexec] = "1"
 
 # Build dependencies
 # Task this:do_start may run only after all other:do_complete tasks for all
@@ -88,9 +88,9 @@ do_configure[depends] = "base-files:do_configure"
 ################################################################################
 
 python base_do_complete() {
-    bb.plain("Finishing to build recipe " + d.getVar('PN') + ".")
 }
 addtask do_complete after do_configure
+do_complete[noexec] = "1"
 
 # Runtime dependencies
 # Task this:do_complete may run only after all other:do_complete tasks for all
