@@ -190,7 +190,6 @@ python base_eventhandler() {
 # Sudo wrapper to catch all calls to sudo from shell functions and inhibit them
 # when DISABLE_SUDO is set
 sudo() {
-    bbplain "Entering sudo wrapper"
     if [ "${DISABLE_SUDO}" = "1" ]; then
         bbplain "sudo disabled, skipping command \"sudo $@\""
     else
