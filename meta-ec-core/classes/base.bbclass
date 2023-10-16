@@ -38,12 +38,14 @@ python base_do_start() {
     bb.plain("Starting to build recipe " + d.getVar('PN') + ".")
 }
 addtask do_start
-# Add a dependency between this:do_start (first recipe) and
-# other:do_complete (last recipe) for every other recipes in DEPENDS
+
+# Build dependencies
+# Task this:do_start may run only after all other:do_complete tasks for all
+# recipes in DEPENDS have finished
 python() {
     deps = ['{}:do_complete'.format(pkg) for pkg in d.getVar('DEPENDS').split()]
     if deps:
-        d.appendVarFlag('do_fetch', 'depends', ' '.join(deps))
+        d.appendVarFlag('do_start', 'depends', ' '.join(deps))
 }
 
 ################################################################################
@@ -89,6 +91,15 @@ python base_do_complete() {
     bb.plain("Finishing to build recipe " + d.getVar('PN') + ".")
 }
 addtask do_complete after do_configure
+
+# Runtime dependencies
+# Task this:do_complete may run only after all other:do_complete tasks for all
+# recipes in RDEPENDS have finished
+python() {
+    deps = ['{}:do_complete'.format(pkg) for pkg in d.getVar('RDEPENDS').split()]
+    if deps:
+        d.appendVarFlag('do_complete', 'rdepends', ' '.join(deps))
+}
 
 ################################################################################
 ### Export base class functions.
