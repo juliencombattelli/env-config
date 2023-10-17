@@ -4,8 +4,6 @@ PV = "1"
 
 inherit installable
 
-FILESPATH:prepend := "${THISDIR}/files:"
-
 SRC_URI = "file://vimrc"
 
 do_configure() {

@@ -2,9 +2,9 @@ DESCRIPTION = ""
 PN = "bash"
 PV = "1"
 
-inherit installable
+DEPENDS = "dircolors"
 
-FILESPATH:prepend := "${THISDIR}/files:"
+inherit installable
 
 SRC_URI = "file://.bashrc"
 
