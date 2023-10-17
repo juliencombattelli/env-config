@@ -2,6 +2,8 @@ DESCRIPTION = ""
 PN = "oh-my-zsh"
 PV = "1"
 
+DEPENDS = "zsh git"
+
 inherit installable
 
 SRC_URI = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh"
@@ -21,4 +23,3 @@ do_install() {
         git clone https://github.com/zsh-users/zsh-completions.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-completions
     fi
 }
-do_install[depends] += "zsh:do_install git:do_complete"

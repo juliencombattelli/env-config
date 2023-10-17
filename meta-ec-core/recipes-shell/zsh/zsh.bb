@@ -2,9 +2,12 @@ DESCRIPTION = ""
 PN = "zsh"
 PV = "1"
 
-inherit installable
+# In case build from source is required
+DEPENDS = "make gcc"
 
-FILESPATH:prepend := "${THISDIR}/files:"
+DEPENDS += "dircolors"
+
+inherit installable
 
 SRC_URI = "file://.zshrc"
 SRC_URI[sha256sum] = "b6af836b2662f21081091e0bd851d92b2507abb94ece340b663db7e4019f8c7c"
@@ -19,8 +22,6 @@ python do_install() {
             else:
                 bb.error("Building ZSH is only supported on Ubuntu in WSL.")
 }
-# In case build from source is required
-do_install[depends] = "make:do_complete gcc:do_complete"
 
 do_compile() {
     bbplain "Building ZSH from sources."
@@ -51,4 +52,3 @@ do_configure() {
     bbplain "Updating zshrc."
     sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" ${WORKDIR}/.zshrc > ~/.zshrc
 }
-do_configure[depends] = "oh-my-zsh:do_configure"
