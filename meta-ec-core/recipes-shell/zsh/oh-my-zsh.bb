@@ -6,8 +6,11 @@ DEPENDS = "zsh git"
 
 inherit installable
 
-SRC_URI = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh"
-SRC_URI[sha256sum] = "6ad30a2c638fea177a2f6701cbbf5e5e7dc7f44711e89708c89f4735be8320cd"
+SRC_URI:append = " \
+    file://p10k.zsh \
+    https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh;name=omz \
+"
+SRC_URI[omz.sha256sum] = "6ad30a2c638fea177a2f6701cbbf5e5e7dc7f44711e89708c89f4735be8320cd"
 
 do_install() {
     if [ -d ${ZSH:-$HOME/.oh-my-zsh} ]; then
@@ -22,4 +25,15 @@ do_install() {
         git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
         git clone https://github.com/zsh-users/zsh-completions.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-completions
     fi
+}
+
+do_configure() {
+    # OMZ automatically backup the zshrc file before installation
+    # Restore the backed up one as it is the one from env-config
+    if [ -f $HOME/.zshrc.pre-oh-my-zsh ]; then
+        mv $HOME/.zshrc.pre-oh-my-zsh $HOME/.zshrc
+    fi
+
+    # Install additional files
+    cp "${WORKDIR}"/p10k.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
 }
