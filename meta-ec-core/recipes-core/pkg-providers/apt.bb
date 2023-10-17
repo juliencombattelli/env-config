@@ -24,7 +24,10 @@ python do_fetch_source_list() {
     rootdir = d.getVar("WORKDIR")
     fetcher.unpack(rootdir)
 }
-addtask do_fetch_source_list before do_update_source_list
+
+python do_fetch() {
+    bb.build.exec_func("do_fetch_source_list", d)
+}
 
 do_update_source_list() {
     if [ -d ${WORKDIR}/list ] && [ -n "$(ls -A ${WORKDIR}/list)" ]; then
@@ -32,7 +35,7 @@ do_update_source_list() {
         sudo cp ${WORKDIR}/list/* /etc/apt/sources.list.d/
     fi
 }
-addtask do_update_source_list before do_update_keyring
+addtask do_update_source_list after do_fetch before do_update_keyring
 
 do_update_keyring() {
     if [ -d ${WORKDIR}/key ] && [ -n "$(ls -A ${WORKDIR}/key)" ]; then
