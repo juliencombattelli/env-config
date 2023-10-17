@@ -2,7 +2,7 @@ DESCRIPTION = ""
 PN = "bash"
 PV = "1"
 
-DEPENDS = "dircolors"
+DEPENDS += "shell-common dircolors"
 
 inherit installable
 

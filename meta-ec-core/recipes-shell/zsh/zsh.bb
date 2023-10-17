@@ -5,7 +5,7 @@ PV = "1"
 # In case build from source is required
 DEPENDS = "make gcc"
 
-DEPENDS += "dircolors"
+DEPENDS += "shell-common dircolors"
 
 inherit installable
 
