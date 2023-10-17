@@ -12,5 +12,6 @@ do_update_keyring:append() {
 }
 
 do_update:append() {
+    bbplain "Installing Kitware Archive Keyring package"
     sudo -E apt-get install kitware-archive-keyring
 }
