@@ -1,8 +1,13 @@
-- [ ] Split base-files into multiple recipes
+TO DO
+- [-] Split base-files into multiple recipes
 - [x] Add an option to disable sudo operations
-- [ ] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
+- [x] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
+      Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
 - [ ] Check if binary is in path with appropriate version before installing it
 - [ ] Add support for docker containers and GCP
+
+To EVALUATE
+- [ ] Evaluate if PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> is still relevant
 - [ ] Generate the file hierarchy in a dedicated directory, then deploy into the filesystem
   - => No hardcoded path in recipe
     - [ ] Sanitize-path script to detect hardcoded paths
@@ -10,6 +15,7 @@
     - [ ] Deploy main target
     - [ ] Backup handling
     - [ ] Uninstall main target reverting to a known backup
+  - => How to handle installed packages???
 
 WON'T DO
 - [-] Replace the PKG_PROVIDER mechanism with the native PROVIDES/PREFERRED_PROVIDER providers handling for virtual packages

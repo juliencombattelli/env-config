@@ -58,6 +58,7 @@ Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVI
 * PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg>: defines a package name pattern for <pkg> that should be ignore when searching the package using <pkgprov>
   The pattern syntax depends on what <pkg> supports. As an example, apt package provider supports regex, but pip don't.
   - use case: pip provides exa which is not related to the ls replacement from ogham/exa
+  - TODO evaluate if this is relevant sinceEXCLUDELIST_PKG_PROVIDERS_<pkg> is already implemented
 
 * ALIAS[<aliasname>] = "<command>": defines an alias <aliasname> using <command> as value.
   The aliases should be defined in a distro config file as the name of the targeted
