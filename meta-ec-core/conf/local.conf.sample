@@ -1,0 +1,19 @@
+#
+# Certificate checks
+#
+# Specifies if SSL certificates should be checked when fetching. The default
+# value is 1 and certificates are not checked if the value is set to 0.
+# Disable certificate checking for web fetchers (wget, curl), Git, pip (pypi
+# related hosts are also considered as trusted) and system package managers.
+#
+# BB_CHECK_SSL_CERTS = "0"
+
+#
+# Platform and Distro selection
+#
+# The current platform and distribution is usually automatically determined
+# using `which-platform` and `which-distro` scripts respectively, but can be
+# overridden here if needed.
+#
+# PLATFORM = "native"
+# DISTRO = "ubuntu2204"
