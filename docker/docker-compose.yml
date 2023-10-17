@@ -6,6 +6,8 @@ services:
       context: .
     devices:
     - "/dev/fuse:/dev/fuse"
+    cap_add:
+    - "SYS_ADMIN"
     volumes:
     - type: bind
       source: ../
