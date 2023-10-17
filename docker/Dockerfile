@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+ARG UBUNTU_VERSION=latest
+FROM ubuntu:${UBUNTU_VERSION}
 
 # Define user information
 ARG USERNAME=user
@@ -9,8 +10,7 @@ ARG USER_GID=$USER_UID
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Disable certificate checks
-RUN echo "Acquire { https::Verify-Peer false };" > /etc/apt/apt.conf.d/99env-config-do-not-verify-peer.conf ; \
-echo "check_certificate = off" > ~/.wgetrc
+RUN echo "Acquire { https::Verify-Peer false };" > /etc/apt/apt.conf.d/99env-config-do-not-verify-peer.conf
 
 # Add some retries to apt to prevent some "Undetermined Error" behind corporate proxy
 RUN echo 'Acquire::Retries 10;' > /etc/apt/apt.conf.d/80-retries
@@ -30,5 +30,11 @@ useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
 echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME  && \
 chmod 0440 /etc/sudoers.d/$USERNAME
 
+# Switch to this new user
 USER $USERNAME
+
+# Disable certificate checks (cont'd)
+RUN git config --global http.sslVerify "false" && \
+echo "check_certificate = off" > /home/$USERNAME/.wgetrc
+
 WORKDIR /home/$USERNAME
