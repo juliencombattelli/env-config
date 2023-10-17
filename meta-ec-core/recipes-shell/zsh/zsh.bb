@@ -40,6 +40,18 @@ do_compile() {
 do_configure() {
     bbplain "Configuring zsh."
 
+    if [ -f $HOME/.zshrc ] || [ -f $HOME/.zshrc.pre-oh-my-zsh ]; then
+        bbplain "Removing previous zshrc files if any"
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        mkdir -p "${EC_TARGET_INSTALL_DIR}"/backup/zsh-$TIMESTAMP/
+        if [ -f $HOME/.zshrc ]; then
+            mv $HOME/.zshrc "${EC_TARGET_INSTALL_DIR}"/backup/zsh-$TIMESTAMP/
+        fi
+        if [ -f $HOME/.zshrc.pre-oh-my-zsh ]; then
+            mv $HOME/.zshrc.pre-oh-my-zsh "${EC_TARGET_INSTALL_DIR}"/backup/zsh-$TIMESTAMP/
+        fi
+    fi
+
     bbplain "Setting zsh as default shell."
     # Disable PAM's password authentication for chsh
     sudo cp /etc/pam.d/chsh /etc/pam.d/chsh.bak
