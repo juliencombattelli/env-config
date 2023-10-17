@@ -87,6 +87,8 @@ do_configure[depends] = "base-files:do_configure"
 ### Task complete (last task executed for a given recipe).
 ################################################################################
 
+# The main task is just a placeholder for dependency handling
+# Logic is added using prefuncs variable flag
 python base_do_complete() {
 }
 addtask do_complete after do_configure
@@ -100,6 +102,12 @@ python() {
     if deps:
         d.appendVarFlag('do_complete', 'rdepends', ' '.join(deps))
 }
+
+replace_ec_target_install_dir() {
+    find ${EC_TARGET_INSTALL_DIR} -type f -exec sed -i "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" {} +
+}
+
+do_complete[prefuncs] += "replace_ec_target_install_dir"
 
 ################################################################################
 ### Export base class functions.
