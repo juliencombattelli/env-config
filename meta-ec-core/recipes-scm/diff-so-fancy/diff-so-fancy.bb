@@ -4,6 +4,8 @@ PV = "1"
 
 DEPENDS = "git"
 
+SRC_URI = "file://dsf-path.sh"
+
 do_install() {
     if [ -d ${EC_TARGET_INSTALL_DIR}/share/diff-so-fancy ]; then
         bbplain "diff-so-fancy already installed. Updating."
@@ -19,6 +21,10 @@ def with_nvimpager(d):
 
 RDEPENDS = "${@'nvimpager' if with_nvimpager(d) else ''}"
 
+update_path() {
+    cp "${WORKDIR}"/dsf-path.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+}
+
 update_gitconfig_interactive_diffFilter() {
     git config --global interactive.diffFilter "diff-so-fancy --patch"
 }
@@ -33,6 +39,7 @@ update_gitconfig_core_pager_with_nvimpager() {
 
 python do_configure() {
     bb.plain("Configuring diff-so-fancy.")
+    bb.build.exec_func("update_path", d)
     bb.build.exec_func("update_gitconfig_interactive_diffFilter", d)
     if with_nvimpager(d):
         bb.build.exec_func("update_gitconfig_core_pager_with_nvimpager", d)
