@@ -23,11 +23,12 @@ python do_install() {
 }
 
 do_compile() {
-    bbplain "Building ZSH from sources."
+    ZSH_VERSION="5.9"
+    bbplain "Fetching and building ZSH ${ZSH_VERSION} from sources."
     cd ${WORKDIR}
-    wget https://sourceforge.net/projects/zsh/files/zsh/5.8/zsh-5.8.tar.xz
-    tar -xf zsh-5.8.tar.xz
-    cd zsh-5.8
+    wget https://sourceforge.net/projects/zsh/files/zsh/${ZSH_VERSION}/zsh-${ZSH_VERSION}.tar.xz
+    tar -xf zsh-${ZSH_VERSION}.tar.xz
+    cd zsh-${ZSH_VERSION}
     # Apt can be safely used here as we know we are on Ubuntu in WSL
     sudo -E apt-get install -y build-essential libncurses5-dev
     ./configure --with-tcsetpgrp
