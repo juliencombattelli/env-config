@@ -40,6 +40,7 @@ DEPENDS += "${DISTRO_PKG_PROVIDERS}"
 #   Use PKG_PROVIDER_<provider>_PREFERRED_VERSION_<pkg> if defined as version specification, None otherwise
 #   Call pkg_provider_<provider>_search_package function with pattern and version specification
 #   If package found, install it and return
+#   If installation is successful, PACKAGE_INSTALLED variable is set to True
 python installable_do_install() {
     bb.plain("Installing " + d.getVar('PN') + ".")
     pn = d.getVar("PN")
