@@ -28,7 +28,7 @@ def pkg_providers_inc(d):
     Return a list of space separated paths to the currently used package providers.
     '''
     pkg_providers = d.getVar('DISTRO_PKG_PROVIDERS', True)
-    return "".join("recipes-core/pkg-providers/include/{}.inc ".format(p) for p in pkg_providers.split())
+    return "".join("recipes-core/pkg-providers/api/{}.inc ".format(p) for p in pkg_providers.split())
 
 require ${@pkg_providers_inc(d)}
 
