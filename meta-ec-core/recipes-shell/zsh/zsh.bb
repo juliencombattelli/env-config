@@ -10,7 +10,6 @@ DEPENDS += "dircolors"
 inherit installable
 
 SRC_URI = "file://.zshrc"
-SRC_URI[sha256sum] = "b6af836b2662f21081091e0bd851d92b2507abb94ece340b663db7e4019f8c7c"
 
 python do_install() {
     zsh_not_installed = run_shell_cmd(d, "which zsh").returncode
@@ -50,5 +49,5 @@ do_configure() {
     sudo mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
 
     bbplain "Updating zshrc."
-    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" ${WORKDIR}/.zshrc > ~/.zshrc
+    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}"/.zshrc > ~/.zshrc
 }
