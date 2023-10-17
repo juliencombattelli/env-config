@@ -13,7 +13,7 @@ PKG_INSTALL ?= " \
     neovim vim vscode \
     ssh \
     git diff-so-fancy \
-    bash dircolors zsh \
+    bash zsh \
     bat exa fd nvimpager ripgrep \
     cmake gcc gdb gdb-dashboard make ninja clang-format clang-tidy clang \
 "
