@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+
+  ec-ubuntu-base-full:
+    build:
+      context: .
+    devices:
+    - "/dev/fuse:/dev/fuse"
+    volumes:
+    - type: bind
+      source: ../
+      target: /env-config
+    working_dir: /env-config
+
+  ec-ubuntu2204:
+    extends:
+      service: ec-ubuntu-base-full
+    build:
+      args:
+        UBUNTU_VERSION: "22.04"
+
+  ec-ubuntu2004:
+    extends:
+      service: ec-ubuntu-base-full
+    build:
+      args:
+        UBUNTU_VERSION: "20.04"
+
+  ec-ubuntu1804:
+    extends:
+      service: ec-ubuntu-base-full
+    build:
+      args:
+        UBUNTU_VERSION: "18.04"
