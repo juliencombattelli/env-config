@@ -1,6 +1,10 @@
+require include/pip-common.inc
+
 python () {
     d.setVar('PYTHON_VERSION', '{}.{}'.format(sys.version_info.major, sys.version_info.minor))
 }
+
+PIP_TRUSTED_HOSTS = "${@get_pip_trusted_hosts(d)}"
 
 BB_STRICT_CHECKSUM = "0"
 
@@ -14,9 +18,7 @@ MIRRORS = " https://bootstrap.pypa.io/pip/.*/ https://bootstrap.pypa.io/ "
 do_install() {
     bbplain "Installing pip."
     if ! python3 -m pip --version; then
-        # TODO use export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt on Ubuntu to avoid certificate check errors
-        # Or better install python3-pip using apt
-        python3 ${WORKDIR}/get-pip.py
+        python3 ${WORKDIR}/get-pip.py ${PIP_TRUSTED_HOSTS}
     else
         bbplain "pip already installed."
     fi
