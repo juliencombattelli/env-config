@@ -83,7 +83,9 @@ fetch -> unpack -> patch -> prepare_recipe_sysroot -> configure -> compile -> in
 
 * EC generic workflow:
 start -> fetch -> install -> configure -> complete
-Some recipes might use other workflows (including compilation steps) depending on the needs
+Some recipes might use other workflows (including compilation steps) depending on the needs.
+Tasks start and complete are defined in the base class but should not be overridden.
+Ideally they should be marked noexec but since they are using pre/postfuncs it would inhibit those callbacks too...
 
 ## Recipes
 
