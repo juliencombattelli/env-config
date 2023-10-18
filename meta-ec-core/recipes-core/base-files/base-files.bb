@@ -19,26 +19,6 @@ deploy_base_files() {
     cp -r "${WORKDIR}"/files*/. "${EC_TARGET_INSTALL_DIR}"
 }
 
-replace_proxy_placeholders() {
-    # Replace proxy environment variable placeholders
-    # Can be done early as proxy is already known at this point
-    sed -i "s|@EC_PROXY_SERVER@|$EC_PROXY_SERVER|g" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/proxy.sh"
-    sed -i "s|@EC_PROXY_PORT@|$EC_PROXY_PORT|g" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/proxy.sh"
-    sed -i "s|@EC_PROXY_USER@|$EC_PROXY_USER|g" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/proxy.sh"
-    sed -i "s|@EC_PROXY_PASSWORD@|$EC_PROXY_PASSWORD|g" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/proxy.sh"
-    sed -i "s|@EC_NO_PROXY@|$EC_NO_PROXY|g" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/proxy.sh"
-}
-
-python create_aliases() {
-    aliases = d.getVarFlags("ALIAS")
-    aliasfile = d.getVar("EC_TARGET_INSTALL_DIR") + "/etc/profile.d/aliases.sh"
-    with open(aliasfile, "w", encoding="utf-8") as f:
-        for alias,command in aliases.items():
-            f.write('alias {}="{}"\n'.format(alias, command))
-}
-
 python do_configure() {
     bb.build.exec_func("deploy_base_files", d)
-    bb.build.exec_func("replace_proxy_placeholders", d)
-    bb.build.exec_func("create_aliases", d)
 }
