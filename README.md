@@ -32,6 +32,15 @@ bitbake all
 sudo rm /etc/sudoers.d/$USER
 ```
 
+Packages will be installed with the appropriate package manager considering the
+current distribution, platform and required version, and there configuration
+will be deployed in appropriate places.
+
+Additional configuration files and scripts specific to env-config will be
+deployed to ~/.env-config by default. This directory follows the XDG Base
+Directory Specification and Filesystem Hierarchy Standard, meaning the user will
+find eg. a bin, etc, and share directories inside.
+
 As shown above, env-config may need administrator privileges.
 However, due to BitBake design, it will not prompt the user for a password when using sudo.
 To work around this issue, it is recommended to temporarily disable password authentication

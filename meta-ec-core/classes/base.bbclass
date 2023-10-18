@@ -91,7 +91,6 @@ python base_do_configure() {
 }
 addtask do_configure after do_install
 do_configure[dirs] = "${B}"
-do_configure[depends] = "base-files:do_configure"
 
 ################################################################################
 ### Task complete (last task executed for a given recipe).

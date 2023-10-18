@@ -9,7 +9,6 @@ DISTRO_PKG_PROVIDERS ?= "pip"
 # Use =/+=/=+ to overwrite the list, :append/:prepend to modify it.
 # Default: all the packages I regularly use on all environments.
 PKG_INSTALL ?= " \
-    base-files \
     neovim vim vscode \
     ssh \
     commit-editor diff-so-fancy git repo-aliases \
