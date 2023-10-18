@@ -4,7 +4,7 @@ PV = "1"
 
 FILESPATH:prepend := "${ECROOT}/meta-ec-core/scripts:"
 
-SRC_URI = " \
+SRC_URI += " \
     file://which-distro file://which-platform \
     file://lang.sh file://path.sh file://term.sh \
 "

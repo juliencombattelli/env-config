@@ -2,7 +2,7 @@ DESCRIPTION = ""
 PN = "cmake"
 PV = "1"
 
-SRC_URI = "file://cmake.sh"
+SRC_URI += "file://cmake.sh"
 
 inherit installable
 

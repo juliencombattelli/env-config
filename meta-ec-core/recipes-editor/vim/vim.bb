@@ -4,7 +4,7 @@ PV = "1"
 
 inherit installable
 
-SRC_URI = "file://vimrc"
+SRC_URI += "file://vimrc"
 
 do_configure() {
     if [ -d ~/.vim/bundle/Vundle.vim ]; then

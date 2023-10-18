@@ -3,13 +3,13 @@ PN = "zsh"
 PV = "1"
 
 # In case build from source is required
-DEPENDS = "make gcc"
+DEPENDS += "make gcc"
 
 DEPENDS += "shell-common dircolors"
 
 inherit installable
 
-SRC_URI = "file://.zshrc"
+SRC_URI += "file://.zshrc"
 
 python do_install() {
     zsh_not_installed = run_shell_cmd(d, "which zsh").returncode

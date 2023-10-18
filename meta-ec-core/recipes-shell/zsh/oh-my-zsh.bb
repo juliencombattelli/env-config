@@ -2,11 +2,11 @@ DESCRIPTION = ""
 PN = "oh-my-zsh"
 PV = "1"
 
-DEPENDS = "zsh git"
+DEPENDS += "zsh git"
 
 inherit installable
 
-SRC_URI:append = " \
+SRC_URI += " \
     file://p10k.zsh \
     https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh;name=omz \
 "
