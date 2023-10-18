@@ -178,26 +178,60 @@ def get_layers_branch_rev(d):
             s1= layers_branch_rev[i][p1:]
     return layers_branch_rev
 
+def display_ec_status(d):
+    d.setVar('BB_VERSION', bb.__version__)
+    localdata = bb.data.createCopy(d)
+    statuslines = []
+    for func in localdata.getVar('BUILDCFG_FUNCS').split():
+        g = globals()
+        if func not in g:
+            bb.warn("Build configuration function '%s' does not exist" % func)
+        else:
+            flines = g[func](localdata)
+            if flines:
+                statuslines.extend(flines)
+
+    statusheader = d.getVar('BUILDCFG_HEADER')
+    if statusheader:
+        bb.plain('\n%s\n%s\n' % (statusheader, '\n'.join(statuslines)))
+
+################################################################################
+### Pre-build sudo availability check.
+################################################################################
+
+def force_disable_sudo_if_required(d):
+    force_disable_sudo = False
+    reason = "unknown"
+
+    # Check if sudo is installed
+    if run_shell_cmd(d, "which sudo").returncode is not 0:
+        force_disable_sudo = True
+        reason = "sudo not installed"
+    # Check if sudo is executable without error
+    elif run_shell_cmd(d, "sudo ls").returncode is not 0:
+        force_disable_sudo = True
+        reason = "sudo not executable"
+    # Check if running in GCP with sudo disabled
+    elif bb.utils.to_boolean(d.getVar("CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO")):
+        force_disable_sudo = True
+        reason = "sudo disabled by GCP"
+
+    # Force disable sudo if any checks above indicate that sudo is not available
+    if force_disable_sudo:
+        d.setVar("DISABLE_SUDO", "1")
+        bb.warn("Force disabling sudo. Reason: " + reason + ".")
+
+################################################################################
+### Pre-build event handlers.
+################################################################################
+
 addhandler base_eventhandler
 base_eventhandler[eventmask] = "bb.event.BuildStarted"
 python base_eventhandler() {
     import bb.runqueue
     if isinstance(e, bb.event.BuildStarted):
-        d.setVar('BB_VERSION', bb.__version__)
-        localdata = bb.data.createCopy(d)
-        statuslines = []
-        for func in localdata.getVar('BUILDCFG_FUNCS').split():
-            g = globals()
-            if func not in g:
-                bb.warn("Build configuration function '%s' does not exist" % func)
-            else:
-                flines = g[func](localdata)
-                if flines:
-                    statuslines.extend(flines)
-
-        statusheader = d.getVar('BUILDCFG_HEADER')
-        if statusheader:
-            bb.plain('\n%s\n%s\n' % (statusheader, '\n'.join(statuslines)))
+        force_disable_sudo_if_required(d)
+        display_ec_status(d)
 }
 
 ################################################################################
