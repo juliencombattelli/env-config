@@ -50,6 +50,7 @@ python() {
 }
 
 prepare_ec_target_install_dir() {
+    mkdir -p "${EC_TARGET_INSTALL_DIR}"/backup/
     mkdir -p "${EC_TARGET_INSTALL_DIR}"/bin/
     mkdir -p "${EC_TARGET_INSTALL_DIR}"/etc/
     mkdir -p "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
