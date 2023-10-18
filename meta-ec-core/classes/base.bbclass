@@ -34,10 +34,11 @@ EC_IMPORTED := "${@ec_import(d)}"
 ### Task start (first task executed for a given recipe).
 ################################################################################
 
+# This task is just a placeholder for dependency handling
+# Logic is added using postfuncs variable flag
 python base_do_start() {
 }
 addtask do_start
-do_start[noexec] = "1"
 
 # Build dependencies
 # Task this:do_start may run only after all other:do_complete tasks for all
@@ -47,6 +48,15 @@ python() {
     if deps:
         d.appendVarFlag('do_start', 'depends', ' '.join(deps))
 }
+
+prepare_ec_target_install_dir() {
+    mkdir -p "${EC_TARGET_INSTALL_DIR}"/bin/
+    mkdir -p "${EC_TARGET_INSTALL_DIR}"/etc/
+    mkdir -p "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    mkdir -p "${EC_TARGET_INSTALL_DIR}"/share/
+}
+
+do_start[postfuncs] += "prepare_ec_target_install_dir"
 
 ################################################################################
 ### Task fetch (fetch files from SCR_URI).
@@ -92,7 +102,6 @@ do_configure[depends] = "base-files:do_configure"
 python base_do_complete() {
 }
 addtask do_complete after do_configure
-do_complete[noexec] = "1"
 
 # Runtime dependencies
 # Task this:do_complete may run only after all other:do_complete tasks for all
