@@ -7,6 +7,9 @@ TO DO
 - [x] Add support for docker containers and GCP
 - [x] Add DISABLE_PKG_PROVIDERS_UPDATE option
 - [x] Document settings in README (mostly point to the generated conf/local.conf)
+- [ ] Upgrade bitbake (inclusive language)
+  - bitbake 2.2 for python 3.6
+  - bitbake 2.4+ for python 3.8 (no ubuntu1804)
 
 To EVALUATE
 - [ ] Evaluate if PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> is still relevant
