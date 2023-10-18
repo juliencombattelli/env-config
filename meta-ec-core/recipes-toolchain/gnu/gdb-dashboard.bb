@@ -2,7 +2,7 @@ DESCRIPTION = ""
 PN = "gdb-dashboard"
 PV = "1"
 
-SRC_URI = "git://github.com/cyrus-and/gdb-dashboard.git;protocol=http;branch=master"
+SRC_URI += "git://github.com/cyrus-and/gdb-dashboard.git;protocol=http;branch=master"
 SRCREV = "AUTOINC"
 
 do_install() {

@@ -5,7 +5,7 @@ PV = "1"
 DEPENDS += "scdoc make"
 RDEPENDS += "neovim"
 
-SRC_URI = "git://github.com/lucc/nvimpager;protocol=http;nobranch=1"
+SRC_URI += "git://github.com/lucc/nvimpager;protocol=http;nobranch=1"
 SRCREV = "v0.12.0"
 
 S = "${WORKDIR}/git"

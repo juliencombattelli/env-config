@@ -2,9 +2,9 @@ DESCRIPTION = ""
 PN = "diff-so-fancy"
 PV = "1"
 
-DEPENDS = "git"
+DEPENDS += "git"
 
-SRC_URI = "file://dsf-path.sh"
+SRC_URI += "file://dsf-path.sh"
 
 do_install() {
     if [ -d ${EC_TARGET_INSTALL_DIR}/share/diff-so-fancy ]; then
@@ -19,7 +19,7 @@ do_install() {
 def with_nvimpager(d):
     return "nvimpager" in d.getVar("PKG_INSTALL")
 
-RDEPENDS = "${@'nvimpager' if with_nvimpager(d) else ''}"
+RDEPENDS += "${@'nvimpager' if with_nvimpager(d) else ''}"
 
 update_path() {
     cp "${WORKDIR}"/dsf-path.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/

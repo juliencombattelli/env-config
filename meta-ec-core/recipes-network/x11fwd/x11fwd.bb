@@ -2,7 +2,7 @@ DESCRIPTION = ""
 PN = "x11fwd"
 PV = "1"
 
-SRC_URI = "file://files"
+SRC_URI += "file://files"
 
 do_configure() {
     bbplain "Configuring X11 fowarding"

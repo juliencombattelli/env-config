@@ -1,6 +1,6 @@
 FILESPATH:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI:append = " \
+SRC_URI += " \
     file://kitware_${DISTRO}.list;subdir=list \
     https://apt.kitware.com/keys/kitware-archive-latest.asc;name=kitware \
 "
