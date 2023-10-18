@@ -30,6 +30,9 @@ python do_fetch() {
 }
 
 do_update_source_list() {
+    if [ "${DISABLE_PKG_PROVIDERS_UPDATE}" = "1" ]; then
+        return
+    fi
     if [ -d ${WORKDIR}/list ] && [ -n "$(ls -A ${WORKDIR}/list)" ]; then
         bbplain "Updating apt source lists."
         sudo cp ${WORKDIR}/list/* /etc/apt/sources.list.d/
@@ -38,6 +41,9 @@ do_update_source_list() {
 addtask do_update_source_list after do_fetch before do_update_keyring
 
 do_update_keyring() {
+    if [ "${DISABLE_PKG_PROVIDERS_UPDATE}" = "1" ]; then
+        return
+    fi
     if [ -d ${WORKDIR}/key ] && [ -n "$(ls -A ${WORKDIR}/key)" ]; then
         bbplain "Adding public keys into apt."
         sudo apt-key add ${WORKDIR}/key/*
@@ -46,6 +52,10 @@ do_update_keyring() {
 addtask do_update_keyring before do_update
 
 do_update() {
+    if [ "${DISABLE_PKG_PROVIDERS_UPDATE}" = "1" ]; then
+        bbwarn "Apt updates disabled."
+        return
+    fi
     bbplain "Updating apt cache."
     sudo -E apt update
 }
