@@ -130,6 +130,8 @@ EXPORT_FUNCTIONS do_start do_fetch do_install do_configure do_complete
 
 BUILDCFG_HEADER = "Build Configuration${@" (mc:${BB_CURRENT_MC})" if d.getVar("BBMULTICONFIG") else ""}:"
 BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM DISABLE_SUDO"
+# Do not include DISABLE_PKG_PROVIDERS_UPDATE in BUILDCFG_VARS as this option
+# targets developers only
 BUILDCFG_FUNCS = "buildcfg_vars get_layers_branch_rev"
 
 def buildcfg_vars(d):
