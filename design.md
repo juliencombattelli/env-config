@@ -63,6 +63,8 @@ Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVI
 * ALIAS[<aliasname>] = "<command>": defines an alias <aliasname> using <command> as value.
   The aliases should be defined in a distro config file as the name of the targeted
   command may be distro-dependant.
+  However, for distro-independent aliases, it is preferable to store them in a dedicated file deployed in
+  <ec-install-dir>/etc/profile.d (cf. recipes-scm/repo/repo-aliases.bb).
   The alias shell file is generated in the base-files recipe.
 
 * DISABLE_SUDO: disables all operations requiring the use of sudo.
