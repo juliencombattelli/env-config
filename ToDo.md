@@ -1,10 +1,12 @@
 TO DO
-- [-] Split base-files into multiple recipes
+- [x] Split base-files into multiple recipes
 - [x] Add an option to disable sudo operations
 - [x] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
 - [ ] Check if binary is in path with appropriate version before installing it
 - [ ] Add support for docker containers and GCP
+- [ ] Add DISABLE_PKG_PROVIDERS_UPDATE option
+- [ ] Document settings in README (mostly point to the generated conf/local.conf)
 
 To EVALUATE
 - [ ] Evaluate if PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> is still relevant
