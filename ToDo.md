@@ -4,9 +4,9 @@ TO DO
 - [x] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
 - [ ] Check if binary is in path with appropriate version before installing it
-- [ ] Add support for docker containers and GCP
-- [ ] Add DISABLE_PKG_PROVIDERS_UPDATE option
-- [ ] Document settings in README (mostly point to the generated conf/local.conf)
+- [x] Add support for docker containers and GCP
+- [x] Add DISABLE_PKG_PROVIDERS_UPDATE option
+- [x] Document settings in README (mostly point to the generated conf/local.conf)
 
 To EVALUATE
 - [ ] Evaluate if PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> is still relevant

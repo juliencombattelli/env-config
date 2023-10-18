@@ -20,7 +20,9 @@ currently used.
 
 ## Quick start
 
-To install the environment, download this meta-layer and all other layers needed, and run the following commands:
+To install the environment, download this meta-layer and all other layers
+needed, and run the following commands:
+
 ```bash
 # Temporarily disable password authentication for sudo to run system commands from BitBake (like apt)
 echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER > /dev/null && sudo chmod 0440 /etc/sudoers.d/$USER
@@ -32,6 +34,14 @@ bitbake all
 sudo rm /etc/sudoers.d/$USER
 ```
 
+### Configuration
+
+Some options might be adjusted in the generated conf/local.conf file after
+sourcing the ec-init-build-env script. They are documented directly in this
+local.conf file.
+
+### Installation results
+
 Packages will be installed with the appropriate package manager considering the
 current distribution, platform and required version, and there configuration
 will be deployed in appropriate places.
@@ -41,9 +51,17 @@ deployed to ~/.env-config by default. This directory follows the XDG Base
 Directory Specification and Filesystem Hierarchy Standard, meaning the user will
 find eg. a bin, etc, and share directories inside.
 
-As shown above, env-config may need administrator privileges.
-However, due to BitBake design, it will not prompt the user for a password when using sudo.
-To work around this issue, it is recommended to temporarily disable password authentication
-for the user by setting the NOPASSWD option in a sudoers file in /etc/sudoers.d/ directory.
-Once the installation of env-config is completed, remove this sudoers file.
-WARNING: try to minimize the operations done in super user as it can be destructive.
+### Note about sudo
+
+As shown above, env-config may need administrator privileges. However, due to
+BitBake design, it will not prompt the user for a password when using sudo. To
+work around this issue, it is recommended to temporarily disable password
+authentication for the user by setting the NOPASSWD option in a sudoers file in
+/etc/sudoers.d/ directory. Once the installation of env-config is completed,
+remove this sudoers file.
+
+WARNING: try to minimize the operations done in super user as it can be
+destructive.
+
+On systems where sudo is not available (either not installed or where the user
+is not in the sudoers), sudo operations will be automatically disabled.
