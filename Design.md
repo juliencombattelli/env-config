@@ -1,7 +1,10 @@
 ## Global configuration
 
-* PLATFORM (supported: native, virtualmachine, WSL1, WSL2, dockercontainer, gcpworkstation)
-* DISTRO (supported: Ubuntu1604, Ubuntu1804, Ubuntu2004, Ubuntu2204, KdeNeon, Manjaro, Cygwin, MSYS2, Windows)
+* PLATFORM
+  - supported: native, virtualmachine, wsl1, wsl2, containerdocker, gcpworkstation
+* DISTRO
+  - supported: Ubuntu1804, Ubuntu2004, Ubuntu2204, KdeNeon, Manjaro, Cygwin, MSYS2, Windows
+  - no longer supported: Ubuntu1604
 
 ### PLATFORM configuration
 
@@ -10,7 +13,7 @@
     - virtualmachine: ssh-server
     - WSL1:
     - WSL2:
-    - dockercontainer:
+    - containerdocker:
     - gcpworkstation:
 
 * PLATFORM_EXTRA_FEATURES
@@ -21,11 +24,11 @@
 
 ### DISTRO configuration
 
-* DISTRO_COMPATIBLE_PLATFORMS
-    - Ubuntu1604: native, virtualmachine, WSL1, WSL2
-    - Ubuntu1804: native, virtualmachine, WSL1, WSL2
-    - Ubuntu2004: native, virtualmachine, WSL1, WSL2
-    - Ubuntu2204: native, virtualmachine, WSL1, WSL2
+* DISTRO_COMPATIBLE_PLATFORMS (this variable does not exist and is here only for reference)
+    - Ubuntu1604: native, virtualmachine, wsl1, wsl2, containerdocker
+    - Ubuntu1804: native, virtualmachine, wsl1, wsl2, containerdocker
+    - Ubuntu2004: native, virtualmachine, wsl1, wsl2, containerdocker
+    - Ubuntu2204: native, virtualmachine, wsl1, wsl2, containerdocker
     - KdeNeon: native, virtualmachine
     - Manjaro: native, virtualmachine
     - Cygwin: native

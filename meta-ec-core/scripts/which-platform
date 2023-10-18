@@ -1,16 +1,33 @@
 #!/bin/sh
 
+return_platform() {
+    echo "$@"
+    exit
+}
+
+CGROUP_PATH=$(awk -F: '$2 == "pids" { print $3 }' /proc/1/cgroup)
+case "$CGROUP_PATH" in
+    /docker/*)
+        return_platform "containerdocker";;
+    /lxc/*)
+        return_platform "containerlxc";;
+esac
+
 UNAME="$(uname -a)"
 case "$UNAME" in
-    *Microsoft*) echo "wsl1";;
-    *microsoft*) echo "wsl2";;
-    *MINGW64*) echo "MINGW64";;
-    *CYGWIN*) echo "CYGWIN";;
+    *Microsoft*)
+        return_platform "wsl1";;
+    *microsoft*)
+        return_platform "wsl2";;
+    *MINGW64*)
+        return_platform "mingw64";;
+    *CYGWIN*)
+        return_platform "cygwin";;
     *)
         CHASSIS="$(hostnamectl | grep Chassis | tr -s ' ' | cut -d' ' -f3)"
         if [ "$CHASSIS" = vm ]; then
-            echo "virtualmachine"
+            return_platform "virtualmachine"
         else
-            echo "native"
+            return_platform "native"
         fi
 esac
