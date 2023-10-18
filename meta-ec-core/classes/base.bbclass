@@ -129,7 +129,7 @@ EXPORT_FUNCTIONS do_start do_fetch do_install do_configure do_complete
 ################################################################################
 
 BUILDCFG_HEADER = "Build Configuration${@" (mc:${BB_CURRENT_MC})" if d.getVar("BBMULTICONFIG") else ""}:"
-BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM DISABLE_SUDO"
+BUILDCFG_VARS = "BB_VERSION DISTRO PLATFORM DISABLE_SUDO DISABLE_SUDO_FORCED"
 # Do not include DISABLE_PKG_PROVIDERS_UPDATE in BUILDCFG_VARS as this option
 # targets developers only
 BUILDCFG_FUNCS = "buildcfg_vars get_layers_branch_rev"
@@ -198,32 +198,6 @@ def display_ec_status(d):
         bb.plain('\n%s\n%s\n' % (statusheader, '\n'.join(statuslines)))
 
 ################################################################################
-### Pre-build sudo availability check.
-################################################################################
-
-def force_disable_sudo_if_required(d):
-    force_disable_sudo = False
-    reason = "unknown"
-
-    # Check if sudo is installed
-    if run_shell_cmd(d, "which sudo").returncode is not 0:
-        force_disable_sudo = True
-        reason = "sudo not installed"
-    # Check if running in GCP with sudo disabled
-    elif bb.utils.to_boolean(d.getVar("CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO")):
-        force_disable_sudo = True
-        reason = "sudo disabled by GCP"
-    # Check if sudo is executable without error
-    elif run_shell_cmd(d, "sudo ls").returncode is not 0:
-        force_disable_sudo = True
-        reason = "sudo not executable"
-
-    # Force disable sudo if any checks above indicate that sudo is not available
-    if force_disable_sudo:
-        d.setVar("DISABLE_SUDO", "1")
-        bb.warn("Force disabling sudo. Reason: " + reason + ".")
-
-################################################################################
 ### Pre-build event handlers.
 ################################################################################
 
@@ -232,7 +206,8 @@ base_eventhandler[eventmask] = "bb.event.BuildStarted"
 python base_eventhandler() {
     import bb.runqueue
     if isinstance(e, bb.event.BuildStarted):
-        force_disable_sudo_if_required(d)
+        if bb.utils.to_boolean(d.getVar("DISABLE_SUDO_FORCED")):
+            bb.warn("Force disabling sudo. Reason: " + d.getVar("DISABLE_SUDO_FORCED_REASON") + ".")
         display_ec_status(d)
 }
 
@@ -241,9 +216,9 @@ python base_eventhandler() {
 ################################################################################
 
 # Sudo wrapper to catch all calls to sudo from shell functions and inhibit them
-# when DISABLE_SUDO is set
+# when DISABLE_SUDO or DISABLE_SUDO_FORCED are set
 sudo() {
-    if [ "${DISABLE_SUDO}" = "1" ]; then
+    if [ "${DISABLE_SUDO_FORCED}" = "1" ] || [ "${DISABLE_SUDO}" = "1" ]; then
         bbplain "sudo disabled, skipping command \"sudo $@\""
     else
         # Use env to desambiguate between the wrapper and the real command
