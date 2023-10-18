@@ -6,7 +6,7 @@ DEPENDS += "shell-common dircolors"
 
 inherit installable
 
-SRC_URI = "file://.bashrc"
+SRC_URI += "file://.bashrc"
 
 do_configure() {
     bbplain "Configuring bash."
