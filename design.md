@@ -67,9 +67,12 @@ Note: On Ubuntu-based distro, for cmake pip is preferred and PREFERRED_PKG_PROVI
   <ec-install-dir>/etc/profile.d (cf. recipes-scm/repo/repo-aliases.bb).
   The alias shell file is generated in the base-files recipe.
 
-* DISABLE_SUDO: disables all operations requiring the use of sudo.
+* DISABLE_SUDO: disable all operations requiring the use of sudo.
   - use case: needed on platforms where root access might be restricted (eg. GCP when CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO is true).
 Note: sudo operations in all recipes should use special functions automatically checking this flag. Sudo should never be used directly.
+
+* DISABLE_PKG_PROVIDERS_UPDATE: disable update operations of package providers
+  - use case: have a shorter develop/run/debug loop
 
 ## Tasks
 
