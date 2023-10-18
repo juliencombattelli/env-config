@@ -6,7 +6,7 @@ FILESPATH:prepend := "${ECROOT}/meta-ec-core/scripts:"
 
 SRC_URI += " \
     file://which-distro file://which-platform \
-    file://lang.sh file://path.sh file://term.sh \
+    file://00_lang.sh file://00_path.sh file://00_term.sh \
 "
 
 do_configure() {
@@ -15,7 +15,7 @@ do_configure() {
     install -m 0755 "${WORKDIR}"/which-distro "${EC_TARGET_INSTALL_DIR}"/bin/
     install -m 0755 "${WORKDIR}"/which-platform "${EC_TARGET_INSTALL_DIR}"/bin/
 
-    cp "${WORKDIR}"/lang.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    cp "${WORKDIR}"/path.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    cp "${WORKDIR}"/term.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/00_lang.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/00_path.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/00_term.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
 }
