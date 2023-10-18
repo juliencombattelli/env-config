@@ -9,6 +9,24 @@
 # BB_CHECK_SSL_CERTS = "0"
 
 #
+# Package providers updates
+#
+# Disable update operations done by package providers. This is useful during
+# development to speed up the dev/test loop.
+#
+# DISABLE_PKG_PROVIDERS_UPDATE = "1"
+
+#
+# Sudo operation updates
+#
+# Disable all sudo operations. A sudo wrapper is defined in base.bbclass
+# taking precedence over the sudo binary. It calls the real sudo binary if
+# DISABLE_SUDO is not set, otherwise prints the inhibited command.
+# It is usually automatically set when appropriate, but can be overridden here.
+#
+# DISABLE_SUDO = "1"
+
+#
 # Platform and Distro selection
 #
 # The current platform and distribution is usually automatically determined
