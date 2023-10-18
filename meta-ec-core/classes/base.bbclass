@@ -207,14 +207,14 @@ def force_disable_sudo_if_required(d):
     if run_shell_cmd(d, "which sudo").returncode is not 0:
         force_disable_sudo = True
         reason = "sudo not installed"
-    # Check if sudo is executable without error
-    elif run_shell_cmd(d, "sudo ls").returncode is not 0:
-        force_disable_sudo = True
-        reason = "sudo not executable"
     # Check if running in GCP with sudo disabled
     elif bb.utils.to_boolean(d.getVar("CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO")):
         force_disable_sudo = True
         reason = "sudo disabled by GCP"
+    # Check if sudo is executable without error
+    elif run_shell_cmd(d, "sudo ls").returncode is not 0:
+        force_disable_sudo = True
+        reason = "sudo not executable"
 
     # Force disable sudo if any checks above indicate that sudo is not available
     if force_disable_sudo:
