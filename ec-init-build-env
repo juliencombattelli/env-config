@@ -74,7 +74,7 @@ while [[ $# -gt 0 ]]; do
       help
       return 0
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $1"
       help
       return 1
@@ -140,6 +140,7 @@ else
 fi
 
 # BitBake and associated Poky version
+# Refer to https://wiki.yoctoproject.org/wiki/Releases
 BITBAKEVER="1.52.4"
 POKYVER="honister-3.4.4"
 
