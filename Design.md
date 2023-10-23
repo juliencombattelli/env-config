@@ -85,10 +85,20 @@ fetch -> unpack -> patch -> prepare_recipe_sysroot -> configure -> compile -> in
                                                                                       |> populate_sysroot |
 
 * EC generic workflow:
-start -> fetch -> install -> configure -> complete
-Some recipes might use other workflows (including compilation steps) depending on the needs.
-Tasks start and complete are defined in the base class but should not be overridden.
-Ideally they should be marked noexec but since they are using pre/postfuncs it would inhibit those callbacks too...
+  start -> fetch -> install -> configure -> complete
+  * Some recipes might use other workflows (including compilation steps)
+    depending on the needs.
+  * Tasks start and complete are defined in the base class but should not be
+    overridden. Ideally they should be marked noexec but since they are using
+    pre/postfuncs it would inhibit those callbacks too...
+  * Errors while compiling, installing or configuring a package should not be
+    fatal, unless the error can have side effects on the system. As an example
+    if neovim is compiled, a set of dependency must be manually installed; the
+    absence of those dependencies should emit an non-fatal error logged in
+    console which does not interrupt the BitBake run. However, a permission
+    error while copying a file may come from a wrong configuration at distro or
+    platform level, and should stop immediately BitBake before damaging the
+    system.
 
 ## Recipes
 
