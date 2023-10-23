@@ -3,6 +3,7 @@ TO DO
 - [x] Add an option to disable sudo operations
 - [x] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
+- [ ] Use classes to implement pkg-providers
 - [ ] Check if binary is in path with appropriate version before installing it
 - [ ] Ensure python3-apt package is available from the first python3 found in PATH or fallback to system python which should have it
 - [ ] Handle permission denied on copies (.bashrc appears to be ro on some configuration...)
