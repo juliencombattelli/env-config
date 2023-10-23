@@ -79,3 +79,10 @@ addtask do_install before do_configure
 do_install[deptask] = "do_update"
 
 EXPORT_FUNCTIONS do_install
+
+# Exclude pip from the considered package providers by default as pypi.org is
+# beyond anybody's control: anyone can upload a package called `make` completely
+# unrelated to build systems (oups, this has been done...)
+# Recipes must explicitly enable pip as a pkg provider by using:
+# EXCLUDELIST_PKG_PROVIDERS_${PN}:remove = "pip"
+EXCLUDELIST_PKG_PROVIDERS_${PN} = "pip"
