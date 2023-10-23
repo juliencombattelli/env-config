@@ -38,7 +38,12 @@ do_compile() {
 }
 
 do_configure() {
-    bbplain "Configuring zsh."
+    if ! which zsh; then
+        bbwarn "Zsh not installed, skipping zsh configuration."
+        return
+    else
+        bbplain "Configuring zsh."
+    fi
 
     if [ -f $HOME/.zshrc ] || [ -f $HOME/.zshrc.pre-oh-my-zsh ]; then
         bbplain "Removing previous zshrc files if any"

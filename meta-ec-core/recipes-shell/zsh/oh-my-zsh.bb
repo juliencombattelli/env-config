@@ -13,7 +13,10 @@ SRC_URI += " \
 SRC_URI[omz.sha256sum] = "6ad30a2c638fea177a2f6701cbbf5e5e7dc7f44711e89708c89f4735be8320cd"
 
 do_install() {
-    if [ -d ${ZSH:-$HOME/.oh-my-zsh} ]; then
+    if ! which zsh; then
+        bbwarn "Zsh not installed, skipping oh-my-zsh installation."
+        return
+    elif [ -d ${ZSH:-$HOME/.oh-my-zsh} ]; then
         bbplain "oh-my-zsh already installed. Updating."
         git -C ${ZSH:-$HOME/.oh-my-zsh} pull
     else
@@ -28,6 +31,13 @@ do_install() {
 }
 
 do_configure() {
+    if ! which zsh; then
+        bbwarn "Zsh not installed, skipping oh-my-zsh configuration."
+        return
+    else
+        bbplain "Configuring oh-my-zsh."
+    fi
+
     # OMZ automatically backup the zshrc file before installation
     # Restore the backed up one as it is the one from env-config
     if [ -f $HOME/.zshrc.pre-oh-my-zsh ]; then
