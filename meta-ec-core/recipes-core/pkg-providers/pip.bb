@@ -4,8 +4,6 @@ python () {
     d.setVar('PYTHON_VERSION', '{}.{}'.format(sys.version_info.major, sys.version_info.minor))
 }
 
-PIP_TRUSTED_HOSTS = "${@get_pip_trusted_hosts(d)}"
-
 BB_STRICT_CHECKSUM = "0"
 
 # Handle multiple python version for get-pip.py using Bitbake's mirror mechanism

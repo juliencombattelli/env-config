@@ -2,10 +2,11 @@ require recipes-core/pkg-providers/include/pip-common.inc
 
 # Return the currently installed version of the given package, or None if it is not installed
 def _pip_is_pkg_installed(d, pkg):
-    list_command = "{python} -m pip list --format=json".format(python=sys.executable)
+    list_command = "{python} -m pip {trusted_hosts} list --format=json".format(
+        python=sys.executable, trusted_hosts=d.getVar("PIP_TRUSTED_HOSTS"))
     list = run_shell_cmd(d, list_command)
     if list.returncode == 0:
-        versions = [p['version'] for p in json.loads(list.stdout) if p['name'] == pkg]
+        versions = [p["version"] for p in json.loads(list.stdout) if p["name"] == pkg]
         if len(versions) == 0:
             return None # Package not installed
         if len(versions) > 1:
@@ -16,7 +17,8 @@ def _pip_is_pkg_installed(d, pkg):
 # Return the available version of the given package, or None if it is not available
 def _pip_is_pkg_available(d, pkg, version_spec):
     from distutils.version import LooseVersion
-    index_command = "{python} -m pip index versions {pkg}".format(python=sys.executable, pkg=pkg)
+    index_command = "{python} -m pip {trusted_hosts} index versions {pkg}".format(
+        python=sys.executable, trusted_hosts=d.getVar("PIP_TRUSTED_HOSTS"), pkg=pkg)
     index = run_shell_cmd(d, index_command)
     if index.returncode == 0:
         for line in index.stdout.splitlines():
@@ -36,12 +38,6 @@ def _pip_is_pkg_available(d, pkg, version_spec):
                 return True, None # Package found, no version required
     return False, None # Package not found
 
-def _pip_get_trusted_hosts_options(d):
-    if bb.utils.to_boolean(d.getVar("BB_CHECK_SSL_CERTS")):
-        return "--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
-    else:
-        return ""
-
 def pkg_provider_pip_search_package(d, pkg, _, version):
     installed_version = _pip_is_pkg_installed(d, pkg)
     # TODO do version check of installed version
@@ -54,8 +50,8 @@ def pkg_provider_pip_search_package(d, pkg, _, version):
 
 def pkg_provider_pip_install_packages(d, pkg, version):
     version_spec = version or ""
-    install_command = "{python} -m pip install {trusted_hosts} {pkg}{version}".format(
-        python=sys.executable, trusted_hosts=d.getVar('PIP_TRUSTED_HOSTS'), pkg=pkg, version=version_spec)
+    install_command = "{python} -m pip {trusted_hosts} install {pkg}{version}".format(
+        python=sys.executable, trusted_hosts=d.getVar("PIP_TRUSTED_HOSTS"), pkg=pkg, version=version_spec)
     install = run_shell_cmd(d, install_command)
     if install.returncode != 0:
         bb.error("Unable to install package {} using pip".format(pkg))
