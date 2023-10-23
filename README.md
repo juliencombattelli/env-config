@@ -15,7 +15,7 @@ Here is a non-exhaustive list of tasks with their role:
 * do_complete: The default and last task for all recipes. This task depends on all other normal tasks required to build a recipe.
 
 As a reference, here is a link to the
-[Bitbake documentation](https://docs.yoctoproject.org/bitbake/1.52/singleindex.html)
+[BitBake documentation](https://docs.yoctoproject.org/bitbake/1.52/singleindex.html)
 currently used.
 
 ## Quick start
@@ -28,11 +28,14 @@ needed, and run the following commands:
 echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER > /dev/null && sudo chmod 0440 /etc/sudoers.d/$USER
 # Source the env-config init script
 source ./ec-init-build-env
-# Run bitbake to perform the software installation and configuration
+# Run BitBake to perform the software installation and configuration
 bitbake all
 # Restore the password authentication for sudo
 sudo rm /etc/sudoers.d/$USER
 ```
+
+The setup script ec-init-build-env supports some options (like proxy server).
+Run `source ./ec-init-build-env --help` to check them out.
 
 ### Configuration
 
@@ -65,3 +68,25 @@ destructive.
 
 On systems where sudo is not available (either not installed or where the user
 is not in the sudoers), sudo operations will be automatically disabled.
+
+## Testing
+
+Tests are mostly performed on WSL Ubuntu distributions (the latest) and inside
+docker containers based on the supported Ubuntu distributions. Docker is often
+preferred as it will not break the host system in case of error.
+
+To test env-config from an Ubuntu 22.04 container, use docker compose:
+```shell
+docker compose -f ./docker/docker-compose.yml run --build ec-ubuntu2204
+```
+
+Once inside the container, the env-config directory will be bind mounted and you
+will be automatically placed inside it. The user will be named `user` and will
+be part of the sudoers without password authentication required, thus no need to
+manually create the file /etc/sudoers.d/user.
+
+Just source the setup script and run BitBake to test your recipes:
+```shell
+source ./ec-init-build-env
+bitbake <recipe>
+```
