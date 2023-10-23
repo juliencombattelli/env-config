@@ -215,10 +215,19 @@ python base_eventhandler() {
 ### Helper functions.
 ################################################################################
 
+# Return whether sudo is disabled in the current configuration
+sudo_disabled() {
+    if [ "${DISABLE_SUDO_FORCED}" = "1" ] || [ "${DISABLE_SUDO}" = "1" ]; then
+        return 0 # Null return code indicates success
+    else
+        return 1
+    fi
+}
+
 # Sudo wrapper to catch all calls to sudo from shell functions and inhibit them
 # when DISABLE_SUDO or DISABLE_SUDO_FORCED are set
 sudo() {
-    if [ "${DISABLE_SUDO_FORCED}" = "1" ] || [ "${DISABLE_SUDO}" = "1" ]; then
+    if sudo_disabled; then
         bbplain "sudo disabled, skipping command \"sudo $@\""
     else
         # Use env to desambiguate between the wrapper and the real command

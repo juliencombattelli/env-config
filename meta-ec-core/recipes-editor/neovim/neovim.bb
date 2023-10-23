@@ -30,11 +30,26 @@ do_install() {
 }
 
 do_compile() {
-    if ! make CMAKE_BUILD_TYPE=Release; then
+    if sudo_disabled; then
+        NEOVIM_INSTALL_PREFIX="CMAKE_INSTALL_PREFIX=$HOME/.local"
+        NEOVIM_SUDO=""
+    else
+        NEOVIM_INSTALL_PREFIX=""
+        NEOVIM_SUDO="sudo"
+    fi
+
+    if ! make CMAKE_BUILD_TYPE=Release $NEOVIM_INSTALL_PREFIX; then
         bberror "Unable to build neovim from source."
         return
     fi
-    if ! sudo make install; then
+
+    if sudo_disabled; then
+        bbplain "Sudo disabled, installing neovim for the local user."
+    else
+        bbplain "Sudo enabled, installing neovim globally."
+    fi
+
+    if ! $NEOVIM_SUDO make install; then
         bberror "Unable to install neovim."
         return
     fi
