@@ -11,7 +11,8 @@ SRC_URI += "https://github.com/neovim/neovim/releases/download/${NEOVIM_REV}/nvi
 SRC_URI[appimage.sha256sum] = "61950131e18157ab9c7f14131a3dda0aa81f8e4fb47994bf6d8b418d9be6e3c0"
 
 # Fallback to building from source if required
-DEPENDS += "make gcc"
+# Always download neovim for now even if not building from source as I regularly refer to the source code
+DEPENDS += "cmake make gcc"
 SRC_URI += "git://github.com/neovim/neovim;protocol=http;nobranch=1;name=github"
 SRCREV_github = "${NEOVIM_REV}"
 S = "${WORKDIR}/git"
