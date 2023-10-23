@@ -1,5 +1,4 @@
 def _apt_vercmp_op(a, b, op):
-    import apt
     if op in ('=='):
         return a == b
     elif op == '<=':
@@ -16,7 +15,6 @@ def _apt_vercmp_op(a, b, op):
         raise Exception('Unsupported comparison operator "{}"'.format(op))
 
 def _apt_vercmp(version, versionspec):
-    import apt
     versionspec = versionspec.strip()
     i = 0
     if versionspec.startswith(('<=', '==', '!=', '>=')):
@@ -26,7 +24,10 @@ def _apt_vercmp(version, versionspec):
     return _apt_vercmp_op(version, versionspec[i:].strip(), versionspec[0:i] or "==")
 
 def pkg_provider_apt_search_package(d, pattern, wholeword, version):
-    import apt
+    try:
+        import apt
+    except ModuleNotFoundError:
+        return None, None, False
 
     if wholeword:
         pattern = "^{}$".format(pattern)
