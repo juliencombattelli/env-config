@@ -30,8 +30,14 @@ do_install() {
 }
 
 do_compile() {
-    make CMAKE_BUILD_TYPE=Release
-    sudo make install
+    if ! make CMAKE_BUILD_TYPE=Release; then
+        bberror "Unable to build neovim from source."
+        return
+    fi
+    if ! sudo make install; then
+        bberror "Unable to install neovim."
+        return
+    fi
 }
 
 do_configure() {
