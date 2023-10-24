@@ -84,7 +84,14 @@ Note2: Kitware now provides a PPA for CMake software (including UI add-ons)
   given package.
   Use case: exa and bat are not provided through pip.
 
-* PREFERRED_PKG_VERSION_<pkg>: use a specific version (version range?) for pkg.
+* PREFERRED_PKG_VERSION_<pkg>: use a specific version for pkg. The value must be
+  a valid version specification with the following format:
+  op varsion1, op version2, ...
+  Valid operators are `==`, `!=`, `<=`, `>=`, `<` and `>`.
+  If no operator is supplied, `==` is used.
+  Version number must follow semantic versioning.
+  Example1: == 2.4
+  Example2: >= 2.0, < 3
   Use case: Zsh<5.8 has a bug in WSL and version 5.8+ must be recompiled...
 
 * PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN_<pkg>: defines a package name pattern
