@@ -14,8 +14,11 @@ separated in three categories:
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
 - [ ] Use classes to implement pkg-providers
 - [ ] Check if binary is in path with appropriate version before installing it
-- [ ] Ensure python3-apt package is available from the first python3 found in PATH or fallback to system python which should have it
-- [ ] Handle permission denied on copies (.bashrc appears to be ro on some configuration...)
+- [x] Ensure python3-apt package is available from the first python3 found in
+      PATH or fallback to system python which should have it
+      => just added exception handling to import apt
+- [x] Handle permission denied on copies (.bashrc appears to be ro on some configuration...)
+      => handled in other meta-layer for this specific environment
 - [x] Add support for docker containers and GCP
 - [x] Add DISABLE_PKG_PROVIDERS_UPDATE option
 - [x] Document settings in README (mostly point to the generated conf/local.conf)
