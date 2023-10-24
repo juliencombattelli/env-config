@@ -42,38 +42,48 @@ DEPENDS += "${DISTRO_PKG_PROVIDERS}"
 #   If package found, install it and return
 #   If installation is successful, PACKAGE_INSTALLED variable is set to True
 python installable_do_install() {
-    bb.plain("Installing " + d.getVar('PN') + ".")
-    pn = d.getVar("PN")
-    preferred_pkg_providers = d.getVar("PREFERRED_PKG_PROVIDERS_" + pn)
-    distro_pkg_providers = d.getVar("DISTRO_PKG_PROVIDERS")
-    pkg_providers = preferred_pkg_providers if preferred_pkg_providers is not None else distro_pkg_providers
-    is_installed = False
-    for pkg_provider in pkg_providers.split():
-        excluded_pkg_providers = d.getVar("EXCLUDELIST_PKG_PROVIDERS_{pkg}".format(pkg=pn)) or ""
-        if pkg_provider in excluded_pkg_providers.split():
-            continue
-        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
-        pattern = pkg_pattern if pkg_pattern is not None else pn
+
+    def enabled_package_providers(d, pkg):
+        pkg_providers = (d.getVar("PREFERRED_PKG_PROVIDERS_" + pn) or d.getVar("DISTRO_PKG_PROVIDERS") or "").split()
+        excluded_pkg_providers = (d.getVar("EXCLUDELIST_PKG_PROVIDERS_{pkg}".format(pkg=pn)) or "").split()
+        return [provider for provider in pkg_providers if provider not in excluded_pkg_providers]
+
+    def search_package(d, pkg_provider, pkg, version_spec):
+        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pkg))
+        pattern = pkg_pattern if pkg_pattern is not None else pkg
         pattern_is_whole_word = False if pkg_pattern is not None else True # If using ${PN} as pattern, then search in wholeword mode
-        version = d.getVar("PREFERRED_PKG_VERSION_{pkg}".format(pkg=pn))
         search_package_func = "pkg_provider_{}_search_package".format(pkg_provider)
-        bb.plain("Searching for " + d.getVar('PN') + " with " + pkg_provider)
+        bb.plain("Searching for " + pkg + " with " + pkg_provider)
         found_pkg, found_version, is_installed = globals()[search_package_func](d, pattern, pattern_is_whole_word, version)
+        return found_pkg, found_version, is_installed
+
+    def install_package(d, pkg_provider, found_pkg, version):
+        install_package_func = "pkg_provider_{}_install_packages".format(pkg_provider)
+        globals()[install_package_func](d, found_pkg, version)
+
+    pn = d.getVar("PN")
+    version = d.getVar("PREFERRED_PKG_VERSION_" + pn)
+    pkg_providers = enabled_package_providers(d, pn)
+
+    bb.plain("Installing " + pn + ".")
+
+    is_installed = False
+    for pkg_provider in pkg_providers:
+        found_pkg, found_version, is_installed = search_package(d, pkg_provider, pn, version)
         if found_pkg:
-            bb.plain("Found candidate " + found_pkg + " for package " + d.getVar('PN') + " using " + pkg_provider)
+            bb.plain("Found candidate " + found_pkg + " for package " + pn + " using " + pkg_provider)
             if is_installed:
                 bb.plain(found_pkg + " already installed.")
             else:
                 bb.plain("Installing " + found_pkg + ".")
-                install_package_func = "pkg_provider_{}_install_packages".format(pkg_provider)
-                globals()[install_package_func](d, found_pkg, version)
+                install_package(d, pkg_provider, found_pkg, version)
             d.setVar("PACKAGE_INSTALLED", True)
             return
         else:
             pattern = "" if pkg_pattern is None else " (pattern: `{}`)".format(pkg_pattern)
-            bb.warn("Unable to install package `{}`{} with package provider `{}`".format(d.getVar('PN'), pattern, pkg_provider))
+            bb.warn("Unable to install package `{}`{} with package provider `{}`".format(pn, pattern, pkg_provider))
     if not is_installed:
-        bb.error("Unable to install package `" + d.getVar('PN') + "` with any package provider")
+        bb.error("Unable to install package `" + pn + "` with any package provider")
 }
 addtask do_install before do_configure
 do_install[deptask] = "do_update"
