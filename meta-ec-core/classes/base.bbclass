@@ -5,7 +5,7 @@ inherit utility-tasks
 ### Import python modules and make them available for all recipes.
 ################################################################################
 
-EC_IMPORTS += "os sys time re json ec.siginfo"
+EC_IMPORTS += "os sys time re json ec.utils ec.siginfo"
 
 def ec_import(d): # Based on Poky's oe_import()
     import sys
