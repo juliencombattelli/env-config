@@ -3,6 +3,7 @@
 # SRC_URI is provided.
 # Use =/+=/=+ to overwrite the list, :append/:prepend to modify it.
 # Default: pip, a package manager available almost everywhere.
+# TODO remove as it is now excluded by default
 DISTRO_PKG_PROVIDERS ?= "pip"
 
 # Space-separated list of packages to install on the given distribution.

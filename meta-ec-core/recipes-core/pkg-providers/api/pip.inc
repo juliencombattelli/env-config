@@ -1,22 +1,13 @@
 require recipes-core/pkg-providers/include/pip-common.inc
 
-# Return the currently installed version of the given package, or None if it is not installed
-def _pip_is_pkg_installed(d, pkg):
-    list_command = "{python} -m pip {trusted_hosts} list --format=json".format(
-        python=sys.executable, trusted_hosts=d.getVar("PIP_TRUSTED_HOSTS"))
-    list = run_shell_cmd(d, list_command)
-    if list.returncode == 0:
-        versions = [p["version"] for p in json.loads(list.stdout) if p["name"] == pkg]
-        if len(versions) == 0:
-            return None # Package not installed
-        if len(versions) > 1:
-            bb.error("Multiple versions found for package `{}` {}, this use case is not supported".format(pkg, versions))
-        return versions[0]
-    return None
-
-# Return the available version of the given package, or None if it is not available
-def _pip_is_pkg_available(d, pkg, version_spec):
-    from distutils.version import LooseVersion
+def pkg_provider_pip_search_package(d, pkg, _):
+    # Currently installed package version
+    installed = ""
+    # All available version in index
+    versions = []
+    # List of packages with their version and whether they are installed
+    packages = []
+    # Get index information for the given package
     index_command = "{python} -m pip {trusted_hosts} index versions {pkg}".format(
         python=sys.executable, trusted_hosts=d.getVar("PIP_TRUSTED_HOSTS"), pkg=pkg)
     index = run_shell_cmd(d, index_command)
@@ -26,31 +17,15 @@ def _pip_is_pkg_available(d, pkg, version_spec):
             match = re.search("^Available versions: (.*)$", line)
             if match:
                 versions = match.group(1).split(", ")
-                versions.sort(key=LooseVersion, reverse=True)
-                if len(versions) == 0:
-                    return False, None # Package not found
-                if version_spec: # If version_spec is provided, look for this specific version
-                    op, vb = re.split("([=<>!]+)(.*)", version_spec)[1:3]
-                    for va in versions:
-                        if bb.utils.vercmp_string_op(va, vb, op):
-                            return True, vb # Package found at the specified version
-                    return False, None # Package not found at the specified version
-                return True, None # Package found, no version required
-    return False, None # Package not found
-
-def pkg_provider_pip_search_package(d, pkg, _, version):
-    installed_version = _pip_is_pkg_installed(d, pkg)
-    # TODO do version check of installed version
-    is_installed = installed_version is not None
-    if not is_installed:
-        # Get available version in the PyPi index
-        is_pkg_found, version = _pip_is_pkg_available(d, pkg, version)
-        pkg = pkg if is_pkg_found else None
-    return pkg, version, is_installed
+            match = re.search("^  INSTALLED: (.*)$", line)
+            if match:
+                installed = match.group(1)
+        packages = [(pkg, version, version == installed) for version in versions]
+    return packages
 
 def pkg_provider_pip_install_packages(d, pkg, version):
     version_spec = version or ""
-    install_command = "{python} -m pip {trusted_hosts} install {pkg}{version}".format(
+    install_command = "{python} -m pip {trusted_hosts} install {pkg}=={version}".format(
         python=sys.executable, trusted_hosts=d.getVar("PIP_TRUSTED_HOSTS"), pkg=pkg, version=version_spec)
     install = run_shell_cmd(d, install_command)
     if install.returncode != 0:

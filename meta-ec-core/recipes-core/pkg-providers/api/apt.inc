@@ -1,38 +1,20 @@
-def _apt_vercmp_op(a, b, op):
-    if op in ('=='):
-        return a == b
-    elif op == '<=':
-        return a <= b
-    elif op == '>=':
-        return a >= b
-    elif op in ('>'):
-        return a > b
-    elif op in ('<'):
-        return a < b
-    elif op == '!=':
-        return a != b
-    else:
-        raise Exception('Unsupported comparison operator "{}"'.format(op))
-
-def _apt_vercmp(version, versionspec):
-    versionspec = versionspec.strip()
-    i = 0
-    if versionspec.startswith(('<=', '==', '!=', '>=')):
-        i = 2
-    elif versionspec.startswith(('<', '>')):
-        i = 1
-    return _apt_vercmp_op(version, versionspec[i:].strip(), versionspec[0:i] or "==")
-
-def pkg_provider_apt_search_package(d, pattern, wholeword, version):
+def pkg_provider_apt_search_package(d, pattern, wholeword):
     try:
         import apt
     except ModuleNotFoundError:
-        return None, None, False
+        bb.warn("Python APT's library not found, skipping.")
+        return []
 
     if wholeword:
         pattern = "^{}$".format(pattern)
 
     search_pattern = re.compile(pattern)
+
+    # According to https://www.debian.org/doc/debian-policy/ch-controlfields.html#version,
+    # version field format of debian packages is [epoch:]upstream_version[-debian_revision]
+    # The upstream_version is extracted in group 2 (only major.minor.patch is extracted)
+    # TODO emit warning if package does not follow semver using bb.utils.is_semver()
+    deb_pkg_version_re = re.compile(r'^(\d+:)?(\d+(\.\d+){0,2})')
 
     class RegexNameFilter(apt.cache.Filter):
         def apply(self, pkg):
@@ -44,10 +26,13 @@ def pkg_provider_apt_search_package(d, pattern, wholeword, version):
     cache = apt.cache.FilteredCache(apt.Cache())
     cache.set_filter(RegexNameFilter())
 
+    packages = []
     for pkg in sorted([pkg.name for pkg in cache], key=natural_sort_key, reverse=True):
-        if version is None or _apt_vercmp(cache[pkg].versions[0], version):
-            return pkg, version, cache[pkg].is_installed
-    return None, None, False
+        # Consider only the first version in the list
+        # TODO check if it is always the more recent
+        pkg_version = deb_pkg_version_re.match(cache[pkg].versions[0].version).group(2)
+        packages.append((pkg, pkg_version, cache[pkg].is_installed))
+    return packages
 
 def pkg_provider_apt_install_packages(d, pkg, _):
     # Version argument is not used with apt for now

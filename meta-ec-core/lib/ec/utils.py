@@ -1,23 +1,17 @@
-import re
+def is_version_satisfying_spec(version, version_spec):
+    try:
+        from packaging.version import parse
+        from packaging.specifiers import SpecifierSet
+    except ModuleNotFoundError:
+        # if packaging is installed earlier during the same BitBake execution
+        # it will not be in sys.modules and a classic import would not work
+        import importlib.util
+        importlib.invalidate_caches()
+        packaging_version = importlib.import_module('packaging.version')
+        parse = packaging_version.parse
+        packaging_specifiers = importlib.import_module('packaging.specifiers')
+        SpecifierSet = packaging_specifiers.SpecifierSet
 
-# A version spec starts with an operator in ==, !=, <=, >=, <, >, followed
-# by a version containing any character except whitespace and comma
-spec_regexp = re.compile(r"^(==|!=|<=|>=|<|>) ([^\s,]*)$")
-
-def explode_version_spec(version_spec):
-    '''
-    Return a list of tuple containing the version and the operator of each
-    version spec.
-    '''
-    spec_list = [spec.strip() for spec in version_spec.split(",")]
-    exploded_spec = []
-    for spec in spec_list:
-        m = spec_regexp.match(spec)
-        if not m:
-            print(f"spec {spec} not matching")
-            break
-        else:
-            op = m.group(1)
-            ver = m.group(2)
-            exploded_spec.append((ver, op))
-    return exploded_spec
+    version = parse(version)
+    version_spec = SpecifierSet(version_spec)
+    return version in version_spec
