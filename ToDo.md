@@ -14,6 +14,9 @@ separated in three categories:
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
 - [ ] Use classes to implement pkg-providers
 - [ ] Check if binary is in path with appropriate version before installing it
+      => Not that easy cause we don't know the name of the binaries before hand
+         For example we could have clang-16 or -17, so to know if it is installed
+         the get_version function should test every clang-* starting with high numbers, not ideal...
 - [x] Ensure python3-apt package is available from the first python3 found in
       PATH or fallback to system python which should have it
       => just added exception handling to import apt
