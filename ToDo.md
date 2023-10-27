@@ -13,6 +13,7 @@ separated in three categories:
 - [x] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
 - [ ] Use classes to implement pkg-providers
+      => Not doable as it would require passing function arguments through environment variables...
 - [ ] Check if binary is in path with appropriate version before installing it
       => Not that easy cause we don't know the name of the binaries before hand
          For example we could have clang-16 or -17, so to know if it is installed
