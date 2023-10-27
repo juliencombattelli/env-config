@@ -7,11 +7,11 @@
 #       The syntax depends on the provider
 #   - is_whole_word: whether pattern is the exact package name
 #       Usefull for provider supporting only regexes for patterns
-#   - version: the version of the package to search for
-# Returns a tuple with:
+# Returns a sorted list of tuple with:
 #   - the package name found
-#   - its version (or None if irrelevant for installation)
+#   - its version
 #   - whether it is installed or not
+#   - sorted from the most recent version to the oldest
 # Knowing that the package is already installed is essentially an optimisation. However it could be
 # usefull for package managers that do not support install queries for already installed packages.
 #
@@ -48,38 +48,38 @@ python installable_do_install() {
         excluded_pkg_providers = (d.getVar("EXCLUDELIST_PKG_PROVIDERS_{pkg}".format(pkg=pn)) or "").split()
         return [provider for provider in pkg_providers if provider not in excluded_pkg_providers]
 
-    def search_package(d, pkg_provider, pkg, version_spec):
-        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pkg))
+    def search_package(d, pkg_provider, pkg, pkg_pattern):
         pattern = pkg_pattern if pkg_pattern is not None else pkg
         pattern_is_whole_word = False if pkg_pattern is not None else True # If using ${PN} as pattern, then search in wholeword mode
         search_package_func = "pkg_provider_{}_search_package".format(pkg_provider)
         bb.plain("Searching for " + pkg + " with " + pkg_provider)
-        found_pkg, found_version, is_installed = globals()[search_package_func](d, pattern, pattern_is_whole_word, version)
-        return found_pkg, found_version, is_installed
+        return globals()[search_package_func](d, pattern, pattern_is_whole_word)
 
     def install_package(d, pkg_provider, found_pkg, version):
         install_package_func = "pkg_provider_{}_install_packages".format(pkg_provider)
         globals()[install_package_func](d, found_pkg, version)
 
     pn = d.getVar("PN")
-    version = d.getVar("PREFERRED_PKG_VERSION_" + pn)
+    version_spec = d.getVar("PREFERRED_PKG_VERSION_" + pn) or ""
     pkg_providers = enabled_package_providers(d, pn)
 
     bb.plain("Installing " + pn + ".")
 
     is_installed = False
     for pkg_provider in pkg_providers:
-        found_pkg, found_version, is_installed = search_package(d, pkg_provider, pn, version)
-        if found_pkg:
-            bb.plain("Found candidate " + found_pkg + " for package " + pn + " using " + pkg_provider)
-            if is_installed:
-                bb.plain(found_pkg + " already installed.")
-            else:
-                bb.plain("Installing " + found_pkg + ".")
-                install_package(d, pkg_provider, found_pkg, version)
-            d.setVar("PACKAGE_INSTALLED", True)
-            return
-        else:
+        pkg_pattern = d.getVar("PKG_PROVIDER_{provider}_PACKAGE_PATTERN_{pkg}".format(provider=pkg_provider, pkg=pn))
+        found_packages = search_package(d, pkg_provider, pn, pkg_pattern)
+        for pkg, version, is_installed in found_packages:
+            version_is_satisfying_spec = ec.utils.is_version_satisfying_spec(version, version_spec)
+            if version_is_satisfying_spec:
+                if is_installed:
+                    bb.plain(pkg + " already installed.")
+                else:
+                    bb.plain("Installing " + pkg + " (" + version + ") using " + pkg_provider + ".")
+                    install_package(d, pkg_provider, pkg, version)
+                d.setVar("PACKAGE_INSTALLED", True)
+                return
+        if not is_installed:
             pattern = "" if pkg_pattern is None else " (pattern: `{}`)".format(pkg_pattern)
             bb.warn("Unable to install package `{}`{} with package provider `{}`".format(pn, pattern, pkg_provider))
     if not is_installed:
