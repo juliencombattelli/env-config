@@ -20,6 +20,13 @@ do_install() {
     else
         bbplain "pip already installed."
     fi
+
+    bbplain "Installing packaging."
+    if  ! python3 -c "import packaging"; then
+        python3 -m pip ${PIP_TRUSTED_HOSTS} install packaging
+    else
+        bbplain "packaging already installed."
+    fi
 }
 addtask do_install before do_update
 
