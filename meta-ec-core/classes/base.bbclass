@@ -9,9 +9,14 @@ EC_IMPORTS += "os sys time re json ec.utils ec.siginfo"
 
 def ec_import(d): # Based on Poky's oe_import()
     import sys
+    import site
 
     bbpath = d.getVar("BBPATH").split(":")
     sys.path[0:0] = [os.path.join(dir, "lib") for dir in bbpath]
+    # Add the user site packages directory to sys.path in case pip is not
+    # already installed (needed for packages installed using pip and used in
+    # recipes, like packaging)
+    sys.path.append(site.getusersitepackages())
 
     def inject(name, value):
         """Make a python object accessible from the metadata"""
