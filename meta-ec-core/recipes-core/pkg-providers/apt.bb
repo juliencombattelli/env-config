@@ -58,6 +58,7 @@ do_update() {
     fi
     bbplain "Updating apt cache."
     sudo -E apt update
+    sudo -E apt install --yes python3-apt
 }
 addtask do_update before do_configure
 
