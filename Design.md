@@ -1,3 +1,19 @@
+# Env-Config Design Document
+
+## Concepts
+
+* Platform
+
+
+* Distribution
+
+
+* Package provider
+
+Each provider recipe is responsible for installing its required dependencies.
+For example, the Apt package provider relies on the Apt python library and must
+be installed in the apt:do_update task.
+
 ## Global configuration
 
 Options that should only be defined in bitbake.conf or conf/local.conf:
