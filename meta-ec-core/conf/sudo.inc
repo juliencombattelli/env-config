@@ -9,7 +9,7 @@ def force_disable_sudo_if_required(d):
     reason = "unknown"
 
     # Check if sudo is installed
-    if run_shell_cmd(d, "which sudo").returncode is not 0:
+    if run_shell_cmd(d, "which sudo").returncode != 0:
         force_disable_sudo = True
         reason = "sudo not installed"
     # Check if running in GCP with sudo disabled
@@ -17,7 +17,7 @@ def force_disable_sudo_if_required(d):
         force_disable_sudo = True
         reason = "sudo disabled by GCP"
     # Check if sudo is executable without error
-    elif run_shell_cmd(d, "sudo ls").returncode is not 0:
+    elif run_shell_cmd(d, "sudo ls").returncode != 0:
         force_disable_sudo = True
         reason = "sudo not executable"
 

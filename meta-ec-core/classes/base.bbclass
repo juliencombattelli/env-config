@@ -36,6 +36,18 @@ def ec_import(d): # Based on Poky's oe_import()
 EC_IMPORTED := "${@ec_import(d)}"
 
 ################################################################################
+### Operations on all tasks
+################################################################################
+
+# Enable network capabilities for all tasks by default
+# The current implementation changes the current uid/gid, leaving sudo unusable
+python() {
+    for e in bb.data.keys(d):
+        if d.getVarFlag(e, "task", False):
+            d.setVarFlag(e, "network", "1")
+}
+
+################################################################################
 ### Task start (first task executed for a given recipe).
 ################################################################################
 

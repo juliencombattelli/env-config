@@ -18,9 +18,11 @@ Initial version.
 Based on BitBake 1.52 (Yocto 3.4 Honister):
 * override operator changed from `_` to `:`
 
-## Version 3 (planned)
+## Version 3
 
 Based on BitBake 2.2 (Yocto 4.1 Langdale)
+* more inclusive language (removal of blacklists/whitelists)
+* more restrictive fetcher
 
 ## Version 4 (planned)
 

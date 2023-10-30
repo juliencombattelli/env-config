@@ -15,7 +15,7 @@ Here is a non-exhaustive list of tasks with their role:
 * do_complete: The default and last task for all recipes. This task depends on all other normal tasks required to build a recipe.
 
 As a reference, here is a link to the
-[BitBake documentation](https://docs.yoctoproject.org/bitbake/1.52/singleindex.html)
+[BitBake documentation](https://docs.yoctoproject.org/bitbake/2.2/singleindex.html)
 currently used.
 
 ## Quick start
