@@ -1,16 +1,21 @@
 DESCRIPTION = ""
 PN = "nvimpager"
-PV = "1"
+NVIMPAGER_VER = "0.12.0"
+PV = "${NVIMPAGER_VER}-git${SRCPV}"
 
 DEPENDS += "scdoc make"
 RDEPENDS += "neovim"
 
-SRC_URI += "git://github.com/lucc/nvimpager;protocol=http;nobranch=1"
-SRCREV = "v0.12.0"
+SRC_URI += "git://github.com/lucc/nvimpager;protocol=https;nobranch=1"
+SRCREV = "v${NVIMPAGER_VER}"
 
 S = "${WORKDIR}/git"
 
 do_install() {
+    if ! which make; then
+        bberror "Make no installed, unable to install nvimpager."
+        return
+    fi
     if which scdoc 2>/dev/null; then
         INSTALL_TARGET="install"
     else

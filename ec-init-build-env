@@ -87,7 +87,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Export main BitBake environment variable
-export BB_ENV_EXTRAWHITE="ECROOT \
+export BB_ENV_PASSTHROUGH_ADDITIONS="ECROOT \
 EC_PROXY_SERVER EC_PROXY_PORT EC_PROXY_USER EC_PROXY_PASSWORD \
 http_proxy https_proxy no_proxy \
 CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO \
@@ -141,8 +141,8 @@ fi
 
 # BitBake and associated Poky version
 # Refer to https://wiki.yoctoproject.org/wiki/Releases
-BITBAKEVER="1.52.4"
-POKYVER="honister-3.4.4"
+BITBAKEVER="2.2.4"
+POKYVER="langdale-4.1.4"
 
 # Download BitBake
 BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
