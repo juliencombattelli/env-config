@@ -62,7 +62,9 @@ do_configure() {
     sudo cp /etc/pam.d/chsh /etc/pam.d/chsh.bak
     sudo sed -i 's/\(auth\s\+\)required\(\s\+pam_shells.so\)/\1sufficient\2/' /etc/pam.d/chsh
     # Change shell
-    chsh -s $(which zsh)
+    if ! sudo_disabled; then
+        chsh -s $(which zsh)
+    fi
     # Restore PAM's password authentication for chsh
     sudo mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
 
