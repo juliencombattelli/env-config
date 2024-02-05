@@ -1,0 +1,4 @@
+#!/bin/bash
+
+printf "\e]9;4;2;$1\a"
+
