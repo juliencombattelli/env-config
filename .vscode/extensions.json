@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "ms-azuretools.vscode-docker",
-        "eugenwiens.bitbake"
+        "ms-python.python",
+        "yocto-project.yocto-bitbake"
     ]
 }
