@@ -12,6 +12,20 @@ SRC_URI += " \
 "
 SRC_URI[omz.sha256sum] = "6ad30a2c638fea177a2f6701cbbf5e5e7dc7f44711e89708c89f4735be8320cd"
 
+install_or_update() {
+    PLUGIN_KIND="$1" # plugin or theme
+    PLUGIN_REPO="$2"
+    PLUGIN_NAME="$(basename $PLUGIN_REPO .git)"
+    PLUGIN_PATH="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/${PLUGIN_KIND}s/$PLUGIN_NAME"
+    if [ -d "$PLUGIN_PATH" ]; then
+        bbplain "oh-my-zsh plugin already installed: $PLUGIN_NAME. Updating."
+        git -C "$PLUGIN_PATH" pull
+    else
+        bbplain "Installing oh-my-zsh plugin: $PLUGIN_NAME."
+        git clone "$PLUGIN_REPO" "$PLUGIN_PATH"
+    fi
+}
+
 do_install() {
     if ! which zsh; then
         bbwarn "Zsh not installed, skipping oh-my-zsh installation."
@@ -22,12 +36,14 @@ do_install() {
     else
         bbplain "Installing oh-my-zsh."
         bash ${WORKDIR}/install.sh --unattended
-
-        bbplain "Installing oh-my-zsh plugins."
-        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-        git clone https://github.com/zsh-users/zsh-completions.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-completions
     fi
+
+    bbplain "Installing oh-my-zsh plugins."
+
+    install_or_update theme https://github.com/romkatv/powerlevel10k.git
+    install_or_update plugin https://github.com/zsh-users/zsh-syntax-highlighting.git
+    install_or_update plugin https://github.com/zsh-users/zsh-completions.git
+    install_or_update plugin https://github.com/jirutka/zsh-shift-select.git
 }
 
 do_configure() {
