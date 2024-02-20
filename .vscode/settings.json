@@ -1,0 +1,11 @@
+{
+    "bitbake.loggingLevel": "debug",
+    "bitbake.pathToBitbakeFolder": "${workspaceFolder}/bitbake-2.2.4",
+    "bitbake.pathToEnvScript": "${workspaceFolder}/ec-init-build-env",
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/bitbake-2.2.4/lib"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/bitbake-2.2.4/lib"
+    ]
+}
