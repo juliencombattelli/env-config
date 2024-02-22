@@ -1,0 +1,89 @@
+{
+    "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+    "final_space": true,
+    "shell_integration": true,
+    "blocks": [
+        {
+            "alignment": "left",
+            "segments": [
+                {
+                    "background": "236",
+                    "foreground": "39",
+                    "style": "plain",
+                    "template": " {{ if .WSL }}WSL at {{ end }}{{.Icon}} <248>\ue0b1</>",
+                    "type": "os"
+                },
+                {
+                    "background": "236",
+                    "foreground": "31",
+                    "style": "plain",
+                    "template": " \uf0e7 ",
+                    "type": "root"
+                },
+                {
+                    "background": "236",
+                    "foreground": "39",
+                    "properties": {
+                        "style": "full"
+                    },
+                    "style": "plain",
+                    "template": " {{ .Path }} ",
+                    "type": "path"
+                },
+                {
+                    "background": "236",
+                    "foreground": "#D4E157",
+                    "style": "plain",
+                    "template": "<31>\ue0b1 </>{{ .HEAD }} ",
+                    "type": "git"
+                },
+                {
+                    "background": "transparent",
+                    "foreground": "236",
+                    "style": "plain",
+                    "template": "\ue0b0",
+                    "type": "text"
+                }
+            ],
+            "type": "prompt"
+        },
+        {
+            "segments": [
+                {
+                    "background": "236",
+                    "foreground_templates": [
+                        "{{ if eq .Code 0 }}70{{else}}160{{ end }}"
+                    ],
+                    "properties": {
+                        "always_enabled": true
+                    },
+                    "leading_diamond": "\ue0b2",
+                    "style": "diamond",
+                    "template": "{{ if eq .Code 0 }} \u2713 {{else}} {{ .Code }} \u2718 {{ end }}",
+                    "type": "status"
+                },
+                {
+                    "background": "236",
+                    "foreground": "248",
+                    "style": "plain",
+                    "template": "<248>\ue0b3</> {{ .FormattedMs }} ",
+                    "type": "executiontime",
+                    "properties": {
+                        "threshold": 3000,
+                        "style": "round"
+                    }
+                },
+                {
+                    "background": "236",
+                    "foreground": "180",
+                    "style": "plain",
+                    "template": "{{ if .SSHSession }}<248>\ue0b3</> {{ .UserName }}@{{ .HostName }} {{ end }}",
+                    "type": "session"
+                }
+            ],
+            "type": "rprompt",
+            "overflow": "hide"
+        }
+    ],
+    "version": 2
+}
