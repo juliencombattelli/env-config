@@ -12,8 +12,6 @@ separated in three categories:
 - [x] Add an option to disable sudo operations
 - [x] Add PKG_PROVIDER_<pkgprov>_IGNORE_PACKAGE_PATTERN_<pkg> variable to ignore package name for a package manager
       Implemented as EXCLUDELIST_PKG_PROVIDERS_<pkg> for now
-- [ ] Use classes to implement pkg-providers
-      => Not doable as it would require passing function arguments through environment variables...
 - [ ] Check if binary is in path with appropriate version before installing it
       => Not that easy cause we don't know the name of the binaries before hand
          For example we could have clang-16 or -17, so to know if it is installed
@@ -27,8 +25,8 @@ separated in three categories:
 - [x] Add DISABLE_PKG_PROVIDERS_UPDATE option
 - [x] Document settings in README (mostly point to the generated conf/local.conf)
 - [ ] Upgrade bitbake (inclusive language)
-  - bitbake 2.2 for python 3.6
-  - bitbake 2.4+ for python 3.8 (no ubuntu1804)
+  - [x] bitbake 2.2 for python 3.6
+  - [ ] bitbake 2.4+ for python 3.8 (no ubuntu1804)
 
 ## TO EVALUATE
 
@@ -48,3 +46,5 @@ separated in three categories:
   - /!\ Won't do: PROVIDES only impacts which recipe get selected by BitBake and cannot be used to impact other recipes task-wise
   - [ ] Create virtual/packagemanager that each current pkg mgr PROVIDES
   - [ ] Set PREFERRED_PROVIDER_virtual/packagemanager where appropriate (mainly in distro files)
+- [ ] Use classes to implement pkg-providers
+      => Not doable as it would require passing function arguments through environment variables...
