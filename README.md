@@ -21,7 +21,8 @@ currently used.
 ## Quick start
 
 To install the environment, download this meta-layer and all other layers
-needed, and run the following commands:
+needed, install [Bitbake prerequisites](https://docs.yoctoproject.org/ref-manual/system-requirements.html#ubuntu-and-debian),
+and run the following commands:
 
 ```bash
 # Temporarily disable password authentication for sudo to run system commands from BitBake (like apt)
