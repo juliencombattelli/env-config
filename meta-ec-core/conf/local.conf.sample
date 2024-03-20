@@ -35,3 +35,15 @@
 #
 # PLATFORM = "native"
 # DISTRO = "ubuntu2204"
+
+#
+# Platform-specific configuration
+#
+
+#
+# WSL
+#
+# Force deploying WSL distro configutation file at /etc/wsl.conf even if
+# already present (will overwrite the current config file).
+#
+# FORCE_WSL_CONF = "1"
