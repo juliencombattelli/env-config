@@ -103,9 +103,9 @@ sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/bblayers.conf.sample"
 sed -e "s|##ECROOT##|$ECROOT|g" "$ECROOT/meta-ec-core/conf/local.conf.sample" > "$BUILDDIR/conf/local.conf"
 
 # Create and source proxy configuration
-# The proxy.sh script is both used to allow BitBake to access Internet and later
+# The 02_proxy.sh script is both used to allow BitBake to access Internet and later
 # deployed into the user configuration from the proxy recipe
-cp "$ECROOT/meta-ec-core/recipes-shell/proxy/files/proxy.sh" "$BUILDDIR/conf/proxy.sh"
+cp "$ECROOT/meta-ec-core/recipes-shell/proxy/files/02_proxy.sh" "$BUILDDIR/conf/proxy.sh"
 if [ -n "${EC_PROXY_ASK_PASSWORD}" ]; then
     echo "Proxy password for $EC_PROXY_SERVER"
     read -s EC_PROXY_PASSWORD
