@@ -21,6 +21,7 @@ do_install() {
     else
         INSTALL_TARGET="install-no-man"
     fi
+    bbplain "Installing nvimpager."
     if ! make PREFIX=$HOME/.local $INSTALL_TARGET; then
         bberror "Unable to install nvimpager."
     fi
