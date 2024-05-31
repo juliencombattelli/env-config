@@ -8,6 +8,7 @@ inherit installable
 
 SRC_URI += " \
     file://p10k.zsh \
+    file://p10k.zsh.post.zsh \
     file://zsh-shift-select-ext.zsh \
     https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh;name=omz \
 "
@@ -63,5 +64,6 @@ do_configure() {
 
     # Install additional files
     cp "${WORKDIR}"/p10k.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/p10k.zsh.post.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
     cp "${WORKDIR}"/zsh-shift-select-ext.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
 }
