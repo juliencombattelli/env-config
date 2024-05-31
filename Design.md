@@ -4,17 +4,43 @@
 
 * Platform
 
+A platform describes the specificities of an hardware platform on which
+Env-Config might be installed, like:
+- the env-config packages to be installed on specific platform at a potential
+  preferred version
+- hardware-related configuration (eg. X11 server address)
 
 * Distribution
 
+A distribution describes the specificities of a Linux distribution where
+Env-Config might be installed, like:
+- the package providers available system-wide and installed by default
+- the env-config packages to be installed on specific distro at a potential
+  preferred version
 
 * Package provider
 
-Each provider recipe is responsible for installing its required dependencies.
-For example, the Apt package provider relies on the Apt python library and must
-be installed in the apt:do_update task.
+A package provider is a special type of recipe integrating a package-management
+system into Env-Config.
+
+Software that should be installed with a given package manager should have its
+recipe depends on the corresponding package provider recipe and must inherit
+from the installable class.
+
+Package providers are seperated into two parts:
+- an implementation of the API descibed in the header of the file
+  meta-ec-core/classes/installable.bbclass. This API allows the installable
+  class to interact with the package manager.
+- a dedicated recipe implementing the do_install and do_configure if
+  appropriated for the system. Each package provider recipe is responsible for
+  installing its required dependencies. For example, the Apt package provider
+  relies on the Apt python library and must be installed in the task
+  apt:do_update.
 
 ## Global configuration
+
+Refer to meta-ec-core/conf/local.conf.sample for more details about user
+customizations.
 
 Options that should only be defined in bitbake.conf or conf/local.conf:
 
@@ -23,14 +49,25 @@ Options that should only be defined in bitbake.conf or conf/local.conf:
 
 * DISTRO:
   - supported: Ubuntu1804, Ubuntu2004, Ubuntu2204, KdeNeon
-  - planned: Manjaro, Cygwin, MSYS2, Windows
+  - planned: Ubuntu2404, Manjaro, Cygwin, MSYS2, Windows
   - no longer supported: Ubuntu1604
 
 * DISABLE_SUDO: disable all operations requiring the use of sudo.
   Use case: needed on platforms where root access might be restricted (eg.
     GCP when CLOUD_WORKSTATIONS_CONFIG_DISABLE_SUDO is true).
-Note: sudo operations in all recipes must use special functions automatically
-  checking this flag. Sudo must never be used directly.
+
+> Note: ~~sudo operations in all recipes must use special functions automatically
+> checking this flag. Sudo must never be used directly.~~
+> The base class file base.bbclass provides some utilities to deal with sudo:
+>
+> - a `sudo_disabled` shell function to check the availability of sudo in recipe
+>   shell functions
+> - a `sudo` shell function logging each tentative to use sudo while it is
+>   disabled, and executing the command while it is enabled
+>
+> Direct use of sudo is possible using `command sudo <cmd>` in recipe shell code
+> but is still discouraged.
+
 
 * DISABLE_PKG_PROVIDERS_UPDATE: disable update operations of package providers.
   Use case: have a shorter develop/run/debug loop.
