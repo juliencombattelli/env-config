@@ -8,8 +8,8 @@
 () {
   emulate -L zsh -o extended_glob
 
-  # Add aosp segment just before context segment (user@hostname)
-  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[${POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[(i)context]}]=(aosp context)
+  # Add aosp and tmux segment just before context segment (user@hostname)
+  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[${POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[(i)context]}]=(aosp tmux context)
 
   # Override the status Ok symbols from recent p10k versions which is purple
   # with the Hack-NF font for some reasons...
@@ -24,5 +24,13 @@
     p10k segment -f "darkolivegreen2" -ri "ANDROID_ICON" -t "${TARGET_PRODUCT}"
   }
 
+  function prompt_tmux() {
+    if [ -z "$TMUX" ]; then
+      return
+    fi
+    p10k segment -f "green" -t "tmux"
+  }
+
   (( ! $+functions[p10k] )) || p10k reload
 }
+
