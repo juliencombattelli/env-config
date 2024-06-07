@@ -1,9 +1,3 @@
-* text=auto
-*.sh text eol=lf
-*.bash text eol=lf
-*.zsh text eol=lf
-ec-init-build-env text eol=lf
-meta-ec-core/scripts/timestamp text eol=lf
-meta-ec-core/scripts/which-distro text eol=lf
-meta-ec-core/scripts/which-platform text eol=lf
+# This project is meant to be used on Linux, so force LF usage for every files
+* text eol=lf
 
