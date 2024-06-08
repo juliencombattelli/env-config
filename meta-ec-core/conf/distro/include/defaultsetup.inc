@@ -14,6 +14,6 @@ PKG_INSTALL ?= " \
     ssh \
     commit-editor diff-so-fancy git repo-aliases \
     aliases bash requests-ca-bundle oh-my-zsh proxy \
-    bat exa fd nvimpager ripgrep \
+    bat eza fd nvimpager ripgrep \
     cmake gcc gdb gdb-dashboard make ninja clang-format clang-tidy clang \
 "

@@ -76,6 +76,16 @@ prepare_ec_target_install_dir() {
 
 do_start[postfuncs] += "prepare_ec_target_install_dir"
 
+# Emit a warning for recipes having EC_DEPRECATED set
+# TODO add doc about EC_DEPRECATED
+python warn_if_ec_deprecated() {
+    ec_deprecated = d.getVar('EC_DEPRECATED')
+    if ec_deprecated is not None:
+        bb.warn("This recipe is deprecated. Reason: " + ec_deprecated)
+}
+
+do_start[postfuncs] += "warn_if_ec_deprecated"
+
 ################################################################################
 ### Task fetch (fetch files from SCR_URI).
 ################################################################################
