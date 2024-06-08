@@ -17,7 +17,11 @@ do_update:append() {
     if [ ! -f /usr/share/doc/kitware-archive-keyring/copyright ]; then
         bbplain "Remove previously installed Kitware public key."
         sudo rm -f /usr/share/keyrings/kitware-archive-keyring.gpg
-        bbplain "Installing Kitware Archive Keyring package."
-        sudo -E apt-get install kitware-archive-keyring
+        if sudo -E apt-cache show kitware-archive-keyring; then
+            bbplain "Installing Kitware Archive Keyring package."
+            sudo -E apt-get install kitware-archive-keyring
+        else
+            bbplain "Kitware Archive Keyring package not available, skipping."
+        fi
     fi
 }
