@@ -27,6 +27,13 @@ separated in three categories:
 - [ ] Upgrade bitbake (inclusive language)
   - [x] bitbake 2.2 for python 3.6
   - [ ] bitbake 2.4+ for python 3.8 (no ubuntu1804)
+- [x] Upgrade Neovim to 0.10.0
+- [x] Add support for Ubuntu 24.04
+- [ ] Fetch CMake from cmake.org
+- [x] Replace exa with eza fetched from Github releases
+- [x] Add EC_DEPRECATED recipe flag
+- [x] Remove pip from all distro as package provider
+- [x] Mark pip deprecated?
 
 ## TO EVALUATE
 
