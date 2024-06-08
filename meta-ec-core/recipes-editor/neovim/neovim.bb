@@ -1,6 +1,6 @@
 DESCRIPTION = ""
 PN = "neovim"
-NEOVIM_VER = "0.9.2"
+NEOVIM_VER = "0.10.0"
 PV = "${NEOVIM_VER}-git${SRCPV}"
 
 # Tag in neovim repository
@@ -9,7 +9,7 @@ NEOVIM_TAG = "v${NEOVIM_VER}"
 # Use appimage if supported
 DEPENDS += "libfuse2"
 SRC_URI += "https://github.com/neovim/neovim/releases/download/${NEOVIM_TAG}/nvim.appimage;name=appimage"
-SRC_URI[appimage.sha256sum] = "61950131e18157ab9c7f14131a3dda0aa81f8e4fb47994bf6d8b418d9be6e3c0"
+SRC_URI[appimage.sha256sum] = "6a021e9465fe3d3375e28c3e94c1c2c4f7d1a5a67e4a78cf52d18d77b1471390"
 
 # Fallback to building from source if required
 # Always download neovim for now even if not building from source as I regularly refer to the source code
