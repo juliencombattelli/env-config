@@ -1,5 +1,7 @@
 require include/pip-common.inc
 
+EC_DEPRECATED = "Pip should not be used anymore in env-config due to PEP 668 (externally-managed-environment)."
+
 python () {
     d.setVar('PYTHON_VERSION', '{}.{}'.format(sys.version_info.major, sys.version_info.minor))
 }
