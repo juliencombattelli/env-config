@@ -14,6 +14,13 @@ services:
       target: /env-config
     working_dir: /env-config
 
+  ec-ubuntu2404:
+    extends:
+      service: ec-ubuntu-base-full
+    build:
+      args:
+        UBUNTU_VERSION: "24.04"
+
   ec-ubuntu2204:
     extends:
       service: ec-ubuntu-base-full
