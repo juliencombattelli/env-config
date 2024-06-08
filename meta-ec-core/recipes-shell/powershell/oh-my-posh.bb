@@ -4,8 +4,6 @@ PV = "1"
 
 DEPENDS += "powershell"
 
-inherit installable
-
 SRC_URI += "file://p10k.omp.json"
 
 do_install() {
