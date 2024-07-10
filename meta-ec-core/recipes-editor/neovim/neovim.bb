@@ -27,7 +27,7 @@ do_install() {
         do_compile
     else
         # Install the appimage for the current user if working
-        sudo install -m 755 "${WORKDIR}/nvim.appimage" "/usr/local/bin/nvim"
+        install -m 755 "${WORKDIR}/nvim.appimage" "$HOME/.local/bin/nvim" # "${EC_TARGET_INSTALL_DIR}/bin/nvim"
     fi
 }
 
