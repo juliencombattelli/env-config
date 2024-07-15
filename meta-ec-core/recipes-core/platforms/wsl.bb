@@ -21,15 +21,24 @@ do_configure() {
     done
 
     sed -i "s/<placeholder>/$USER/" ${WORKDIR}/etc/wsl.conf
+    DEPLOY_CONFIG=
     if [ -f /etc/wsl.conf ]; then
         if [ "$FORCE_WSL_CONF" = "1" ]; then
             bbplain "Deploying WSL distro config file (forced)."
-            sudo install ${WORKDIR}/etc/wsl.conf /etc/wsl.conf
+            DEPLOY_CONFIG=1
+        elif ! grep ">>> env-config <<<" /etc/wsl.conf &>/dev/null; then
+            bbplain "Deploying WSL distro config file (backing up original one)."
+            sudo mv /etc/wsl.conf /etc/wsl.conf.bak-by-env-config
+            DEPLOY_CONFIG=1
         else
             bbplain "WSL distro config file already deployed, nothing to do."
         fi
     else
         bbplain "Deploying WSL distro config file."
-        sudo install ${WORKDIR}/etc/wsl.conf /etc/wsl.conf
+        DEPLOY_CONFIG=1
+
+    fi
+    if [ -n "$DEPLOY_CONFIG" ]; then
+        sudo install -m 644 ${WORKDIR}/etc/wsl.conf /etc/wsl.conf
     fi
 }
