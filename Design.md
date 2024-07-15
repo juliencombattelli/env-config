@@ -109,13 +109,24 @@ Options that should only be defined in a distro config file:
   - Windows: native
 
 * DISTRO_PKG_PROVIDERS: list of package manager to use by priority order
-  (syspkgmgr > pip > built from source).
-  - pip: all
+  (syspkgmgr ~~> pip~~ > built from source).
+  - ~~pip: all~~
   - apt: Ubuntu-based (Ubuntu1604, Ubuntu1804, Ubuntu2004, KdeNeon)
   - pacman: Arch-based (Manjaro, MSYS2)
   - winget: Windows
   - powershell install-package: Windows
   - none: package built from source
+
+> Note: use of pip is highly discouraged for multiple reasons:
+>
+>  - installing packages system-wide with pip can easily break a distribution
+>  - installing packages user-wide with pip can messed up some package lookup,
+>    but this should be easy to recover (just uninstall the user package)
+>  - pypi.org packages naming is not arbitrated (eg. both cmake and make are
+>    available on pypi.org, cmake is the official one, but make has nothing to do
+>    with GNU Make)
+>
+> For these reasons, pip package provider is now deprecated.
 
 ### Recipes configuration
 
