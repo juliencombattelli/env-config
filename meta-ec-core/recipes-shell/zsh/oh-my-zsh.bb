@@ -11,6 +11,7 @@ SRC_URI += " \
     file://p10k.zsh.post.zsh \
     file://zsh-shift-select-ext.zsh \
     file://zsh-swap-last-args.zsh \
+    file://zsh-comment-line.zsh \
     https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/1e277553bcc9f23a904bf728013df6ebfe339e74/tools/install.sh;name=omz \
 "
 SRC_URI[omz.sha256sum] = "6ad30a2c638fea177a2f6701cbbf5e5e7dc7f44711e89708c89f4735be8320cd"
@@ -68,4 +69,5 @@ do_configure() {
     cp "${WORKDIR}"/p10k.zsh.post.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
     cp "${WORKDIR}"/zsh-shift-select-ext.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
     cp "${WORKDIR}"/zsh-swap-last-args.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/zsh-comment-line.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
 }
