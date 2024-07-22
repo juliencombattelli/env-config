@@ -15,6 +15,12 @@ python() {
             return
 }
 
-do_configure() {
-    install "${WORKDIR}"/bat-manpager.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+install_bat_manpager() {
+    install -m 644 "${WORKDIR}"/bat-manpager.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+}
+
+python do_configure() {
+    bb.plain("Configuring Bat.")
+    if d.getVarFlag("PAGER", "man") == "bat":
+        bb.build.exec_func("install_bat_manpager", d)
 }

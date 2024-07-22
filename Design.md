@@ -180,6 +180,10 @@ Note2: Kitware now provides a PPA for CMake software (including UI add-ons)
   (cf. recipes-scm/repo/repo-aliases.bb). The alias shell file is generated in
   the base-files recipe.
 
+* PAGER[<application>] = "<package>": defines a pager to use for a given
+  application. The packages handling paging are responsible to set the
+  appropriate configuration.
+
 ## Tasks
 
 * Poky workflow:

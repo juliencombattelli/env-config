@@ -16,10 +16,14 @@ do_install() {
     fi
 }
 
-def with_nvimpager(d):
-    return "nvimpager" in d.getVar("PKG_INSTALL")
+def dsf_pager(d):
+    pager = None
+    if d.getVarFlag("PAGER", "git") == "diff-so-fancy":
+        # Use less as default dsf pager
+        pager = d.getVarFlag("PAGER", "git/diff-so-fancy") or "less"
+    return pager
 
-RDEPENDS += "${@'nvimpager' if with_nvimpager(d) else ''}"
+RDEPENDS += "${@dsf_pager(d) or ''}"
 
 update_path() {
     cp "${WORKDIR}"/dsf-path.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
@@ -29,11 +33,11 @@ update_gitconfig_interactive_diffFilter() {
     git config --global interactive.diffFilter "diff-so-fancy --patch"
 }
 
-update_gitconfig_core_pager() {
+update_gitconfig_core_pager_dsf_less() {
     git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
 }
 
-update_gitconfig_core_pager_with_nvimpager() {
+update_gitconfig_core_pager_dsf_nvimpager() {
     git config --global core.pager "diff-so-fancy --patch | nvimpager"
 }
 
@@ -41,8 +45,7 @@ python do_configure() {
     bb.plain("Configuring diff-so-fancy.")
     bb.build.exec_func("update_path", d)
     bb.build.exec_func("update_gitconfig_interactive_diffFilter", d)
-    if with_nvimpager(d):
-        bb.build.exec_func("update_gitconfig_core_pager_with_nvimpager", d)
-    else:
-        bb.build.exec_func("update_gitconfig_core_pager", d)
+    pager = dsf_pager(d)
+    if pager is not None:
+        bb.build.exec_func("update_gitconfig_core_pager_dsf_" + pager, d)
 }
