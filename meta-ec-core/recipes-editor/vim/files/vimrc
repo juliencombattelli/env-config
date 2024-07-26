@@ -29,11 +29,21 @@ set hlsearch
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Cursor shape settings
 " INSERT mode
-let &t_SI = "\<Esc>[6 q"
+let &t_SI = "\<Esc>[5 q"
 " REPLACE mode
-let &t_SR = "\<Esc>[4 q"
-" Others
-let &t_EI = "\<Esc>[2 q"
+let &t_SR = "\<Esc>[3 q"
+" Default for other modes
+let &t_EI = "\<Esc>[1 q"
+" Force to use default when entering vim
+" silent !echo -ne "\<Esc>[1 q"
+" The silent approach is not working in Windows Terminal
+" so force a mode switch at startup with an autocommand
+augroup ResetCursorShape
+  au!
+  "autocmd VimEnter * startinsert | stopinsert
+  autocmd VimEnter * normal! :startinsert :stopinsert
+  "autocmd VimEnter * :normal :startinsert :stopinsert
+augroup END
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Scrolling settings
