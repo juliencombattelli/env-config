@@ -146,7 +146,7 @@ POKYVER="langdale-4.1.4"
 
 # Download BitBake
 BITBAKEDIR="$ECROOT/bitbake-$BITBAKEVER"
-export PATH="$PATH:$BITBAKEDIR/bin"
+export PATH="$PATH:$BITBAKEDIR/bin:$ECROOT/meta-ec-core/scripts"
 if [ ! -d $BITBAKEDIR ]; then
     # Download BitBake
     printf "Downloading BitBake... "

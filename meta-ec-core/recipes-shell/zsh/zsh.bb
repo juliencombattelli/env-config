@@ -9,7 +9,10 @@ DEPENDS += "shell-common dircolors"
 
 inherit installable
 
-SRC_URI += "file://.zshrc"
+SRC_URI += " \
+    file://fragment.zshenv \
+    file://.zshrc \
+"
 
 python do_install() {
     zsh_not_installed = run_shell_cmd(d, "which zsh").returncode
@@ -68,6 +71,9 @@ do_configure() {
     # Restore PAM's password authentication for chsh
     sudo mv /etc/pam.d/chsh.bak /etc/pam.d/chsh
 
+    bbplain "Updating zshenv."
+    ec_update_file_with_fragment "${HOME}/.zshenv" "${WORKDIR}/fragment.zshenv"
+
     bbplain "Updating zshrc."
-    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}"/.zshrc > ~/.zshrc
+    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}/.zshrc" > "${HOME}/.zshrc"
 }
