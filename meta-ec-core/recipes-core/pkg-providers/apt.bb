@@ -42,6 +42,11 @@ addtask do_update_source_list after do_fetch before do_update_keyring
 
 do_update_keyring() {
     if [ "${DISABLE_PKG_PROVIDERS_UPDATE}" = "1" ]; then
+        bbwarn "Package providers updates disabled, skipping Apt keyring updates."
+        return
+    fi
+    if sudo_disabled; then
+        bbwarn "Sudo disabled, skipping Apt keyring updates."
         return
     fi
     if [ -d ${WORKDIR}/key ] && [ -n "$(ls -A ${WORKDIR}/key)" ]; then
@@ -53,7 +58,11 @@ addtask do_update_keyring before do_update
 
 do_update() {
     if [ "${DISABLE_PKG_PROVIDERS_UPDATE}" = "1" ]; then
-        bbwarn "Apt updates disabled."
+        bbwarn "Package providers updates disabled, skipping Apt updates."
+        return
+    fi
+    if sudo_disabled; then
+        bbwarn "Sudo disabled, skipping Apt updates."
         return
     fi
     bbplain "Updating apt cache."
