@@ -152,17 +152,23 @@ if [ ! -d $BITBAKEDIR ]; then
     printf "Downloading BitBake... "
     if ! wget --quiet "https://github.com/openembedded/bitbake/archive/refs/tags/$BITBAKEVER.tar.gz" \
         --output-document "/tmp/bitbake-$BITBAKEVER.tar.gz"; then
-        echo "Failed to download BitBake. Exiting."
-        return 1
+        echo "Failed to download BitBake."
+        printf "Cloning BitBake... "
+        if ! git clone --depth 1 --branch $BITBAKEVER https://github.com/openembedded/bitbake $BITBAKEDIR 2>/dev/null; then
+          echo "Failed to clone BitBake. Exiting."
+          return 1
+        fi
+        echo "Done."
+    else
+      echo "Done."
+      # Extract BitBake
+      printf "Extracting BitBake... "
+      if ! tar -xf "/tmp/bitbake-$BITBAKEVER.tar.gz" -C "$ECROOT"; then
+          echo "Failed to extract BitBake. Exiting."
+          return 1
+      fi
+      echo "Done."
     fi
-    echo "Done."
-    # Extract BitBake
-    printf "Extracting BitBake... "
-    if ! tar -xf "/tmp/bitbake-$BITBAKEVER.tar.gz" -C "$ECROOT"; then
-        echo "Failed to extract BitBake. Exiting."
-        return 1
-    fi
-    echo "Done."
     # Remove archive
     rm "/tmp/bitbake-$BITBAKEVER.tar.gz"
 fi
