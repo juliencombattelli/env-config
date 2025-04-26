@@ -6,6 +6,8 @@ PV = "${NEOVIM_VER}-git${SRCPV}"
 # Tag in neovim repository
 NEOVIM_TAG = "v${NEOVIM_VER}"
 
+DEPENDS += "xdg-dirs"
+
 # Use appimage if supported
 DEPENDS += "libfuse2"
 SRC_URI += "https://github.com/neovim/neovim/releases/download/${NEOVIM_TAG}/nvim.appimage;name=appimage"
