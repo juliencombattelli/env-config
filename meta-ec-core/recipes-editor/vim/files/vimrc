@@ -12,6 +12,7 @@ Plugin 'tomasiser/vim-code-dark'
 Plugin 'scrooloose/nerdtree'
 "Plugin 'chrisbra/Colorizer'
 Plugin 'Yggdroot/indentLine'
+Plugin 'airblade/vim-gitgutter'
 
 call vundle#end()
 filetype plugin indent on
@@ -22,9 +23,19 @@ set nocompatible
 filetype off
 syntax on
 set number
+set nowrap
 set showmatch
 set cursorline
 set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+
+set signcolumn=yes
+set colorcolumn=80,100,120
+
+# Helps refreshing gitgutter realtime
+set updatetime=100
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Cursor shape settings
@@ -54,18 +65,19 @@ map <ScrollWheelDown> <C-E>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Spacing settings
 set expandtab
+set tabstop=4
 set shiftwidth=4
 set softtabstop=4
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Indent settings
 set list
-" set listchars=
-" set listchars+=tab:›\ 
-" set listchars+=trail:·
-" set listchars+=extends:»
-" set listchars+=precedes:«
-" set listchars+=nbsp:⣿
+set listchars=
+set listchars+=tab:›\ 
+set listchars+=trail:·
+set listchars+=extends:»
+set listchars+=precedes:«
+set listchars+=nbsp:⣿
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Register Ctrl+A shortcut
@@ -74,14 +86,14 @@ imap <C-a> <esc>ggVG<CR>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Register Ctrl+N shortcut
-nmap <C-n> :NERDTreeToggle<CR>
+nmap <C-b> :NERDTreeToggle<CR>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Lightline settings
 set laststatus=2
 set noshowmode
 let g:lightline = {
-            \   'colorscheme': 'powerline'
+            \   'colorscheme': 'codedark'
             \}
 let g:lightline.separator = {
             \   'left': '', 'right': ''
@@ -92,4 +104,18 @@ let g:lightline.subseparator = {
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Color scheme settings
-silent! colorscheme codedark
+" If you don't like many colors and prefer the conservative style of the standard Visual Studio
+let g:codedark_conservative=0
+" If you like the new dark modern colors (Needs feedback!)
+let g:codedark_modern=1
+" Activates italicized comments (make sure your terminal supports italics)
+let g:codedark_italics=0
+" Make the background transparent
+let g:codedark_transparent=1
+" If you have vim-airline, you can also enable the provided theme
+let g:airline_theme = 'codedark'
+" Might be necessary on some systems
+" set t_Co=256
+" set t_ut=
+colorscheme codedark
+
