@@ -3,7 +3,7 @@
 function shift-select::jucom-kill-and-input() {
     zle kill-region -w
     zle -K main
-    zle -U "$KEYS"
+    zle -U -- "$KEYS"
 }
 zle -N shift-select::jucom-kill-and-input
 
