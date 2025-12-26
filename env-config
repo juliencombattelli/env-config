@@ -7,19 +7,19 @@ function ec_log_plain {
 }
 
 function ec_log_debug {
-    printf "\x1b[1;36mDEBUG: %s\x1b[0m\n" "$@" >&2
+    printf "[\x1b[1;36mDEBUG\x1b[0m] %s\n" "$@" >&2
 }
 
 function ec_log_note {
-    printf "\x1b[1mNOTE: %s\x1b[0m\n" "$@" >&2
+    printf "[\x1b[1mNOTE \x1b[0m] %s\n" "$@" >&2
 }
 
 function ec_log_warn {
-    printf "\x1b[1;33mWARNING: %s\x1b[0m\n" "$@" >&2
+    printf "[\x1b[1;33mWARN \x1b[0m] \x1b[1;33m%s\x1b[0m\n" "$@" >&2
 }
 
 function ec_log_error {
-    printf "\x1b[1;31mERROR: %s\x1b[0m\n" "$@" >&2
+    printf "[\x1b[1;31mERROR\x1b[0m] \x1b[1;31m%s\x1b[0m\n" "$@" >&2
 }
 
 function ec_root_dir {
@@ -34,6 +34,74 @@ function ec_root_dir {
         fi
     done
     (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
+}
+
+function ec_into_layer_path {
+    # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
+    # The path printed into stdout as the form //<layer-name>/<subpath>
+    local path="$1"
+    for layer_path in $EC_ENABLED_LAYERS; do
+        if [[ "$path" == "$layer_path"/* ]]; then
+            local parent_dir="$(dirname "$layer_path")"
+            local subpath="${path#"^$parent_dir"}"
+            echo "/$subpath"
+            return 0
+        fi
+    done
+    ec_log_error "Path \`$path\` is not in an enabled layer."
+    return 1
+}
+
+function ec_validate_layers {
+    local invalid_layer=false
+    for layer_dir in "$@"; do
+        if [[ ! -d "$layer_dir" ]]; then
+            ec_log_error "Layer directory \`$layer_dir\` does not exist."
+            invalid_layer=true
+        elif [[ ! -f "$layer_dir/layer.bash" ]]; then
+            ec_log_error "Layer file \`$layer_dir/layer.bash\` does not exist."
+            invalid_layer=true
+        fi
+    done
+    if $invalid_layer; then
+        return 1
+    fi
+}
+
+function ec_source_and_validate_distro {
+    local invalid_distro=true
+    for layer_path in $EC_ENABLED_LAYERS; do
+        local distro_file="$layer_path/distros/$EC_DISTRO.bash"
+        ec_log_debug "Checking distro file $distro_file"
+        if [[ -f $distro_file ]]; then
+            # shellcheck disable=SC1090
+            source "$distro_file"
+            # TODO add validation
+            invalid_distro=false
+        fi
+    done
+    if $invalid_distro; then
+        ec_log_error "Unsupported distro \`$EC_DISTRO\`"
+        return 1
+    fi
+}
+
+function ec_source_and_validate_platform {
+    local invalid_platform=true
+    for layer_path in $EC_ENABLED_LAYERS; do
+        local platform_file="$layer_path/platforms/$EC_PLATFORM.bash"
+        ec_log_debug "Checking platform file $platform_file"
+        if [[ -f $platform_file ]]; then
+            # shellcheck disable=SC1090
+            source "$platform_file"
+            # TODO add validation
+            invalid_platform=false
+        fi
+    done
+    if $invalid_platform; then
+        ec_log_error "Unsupported platform \`$EC_PLATFORM\`"
+        return 1
+    fi
 }
 
 EC_ROOT_DIR="$(ec_root_dir)"
@@ -71,7 +139,7 @@ If no package is provided `all` is used as default.
 EOH
 }
 
-EC_ENABLED_LAYERS=()
+EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
 
 EC_PROXY_SERVER=""
 EC_PROXY_PORT=""
@@ -81,25 +149,25 @@ EC_NO_PROXY=""
 EC_POSITIONAL_ARGS=()
 
 function ec_print_context {
-    echo "################################################################################"
-    echo "### Context"
-    echo "################################################################################"
-    echo "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
-    echo "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
-    echo "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
-    echo "EC_LIB_DIR=\`$EC_LIB_DIR\`"
+    ec_log_debug "################################################################################"
+    ec_log_debug "### Context"
+    ec_log_debug "################################################################################"
+    ec_log_debug "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
+    ec_log_debug "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
+    ec_log_debug "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
+    ec_log_debug "EC_LIB_DIR=\`$EC_LIB_DIR\`"
 }
 
 function ec_print_cli_args {
-    echo "################################################################################"
-    echo "### CLI arguments"
-    echo "################################################################################"
-    echo "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
-    echo "EC_PROXY_SERVER=$EC_PROXY_SERVER"
-    echo "EC_PROXY_PORT=$EC_PROXY_PORT"
-    echo "EC_PROXY_USER=$EC_PROXY_USER"
-    echo "EC_NO_PROXY=$EC_NO_PROXY"
-    echo "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
+    ec_log_debug "################################################################################"
+    ec_log_debug "### CLI arguments"
+    ec_log_debug "################################################################################"
+    ec_log_debug "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
+    ec_log_debug "EC_PROXY_SERVER=$EC_PROXY_SERVER"
+    ec_log_debug "EC_PROXY_PORT=$EC_PROXY_PORT"
+    ec_log_debug "EC_PROXY_USER=$EC_PROXY_USER"
+    ec_log_debug "EC_NO_PROXY=$EC_NO_PROXY"
+    ec_log_debug "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
 }
 
 while (( $# > 0 )); do
@@ -130,13 +198,34 @@ readonly EC_PROXY_USER
 readonly EC_NO_PROXY
 readonly EC_POSITIONAL_ARGS
 
+readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
+readonly EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
 declare -A EC_PACKAGES_DEPENDS
-readonly EC_COMMAND=${EC_POSITIONAL_ARGS[0]}
-readonly EC_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
+declare all
+
+ec_log_note "Running env-config v4..."
 
 ec_print_cli_args
 ec_print_context
-echo "################################################################################"
+ec_log_debug "################################################################################"
+
+declare EC_LAYER_DIR="${EC_ENABLED_LAYERS[0]}"
+
+ec_validate_layers "${EC_ENABLED_LAYERS[@]}" || exit 1
+
+EC_DISTRO="$(which-distro)"
+readonly EC_DISTRO
+
+EC_PLATFORM="$(which-platform)"
+readonly EC_PLATFORM
+
+:(){
+    # TODO consider creating a dedicated named function, like source_distro_and_platform
+    local valid=true
+    ec_source_and_validate_distro || valid=false
+    ec_source_and_validate_platform || valid=false
+    $valid || exit 1
+};:
 
 case "$EC_COMMAND" in
     install)
@@ -147,6 +236,8 @@ case "$EC_COMMAND" in
         echo "Diffing \`${EC_PACKAGES[*]}\`";;
     backup)
         echo "Backing up \`${EC_PACKAGES[*]}\`";;
+    "")
+        echo "Missing command"; exit 1;;
     *)
         echo "Error: unsupported command \`$EC_COMMAND\`"; exit 1;;
 esac
