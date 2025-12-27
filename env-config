@@ -69,36 +69,36 @@ function ec_validate_layers {
 }
 
 function ec_source_and_validate_distro {
-    local invalid_distro=true
+    local valid=false
     for layer_path in $EC_ENABLED_LAYERS; do
         local distro_file="$layer_path/distros/$EC_DISTRO.bash"
         ec_log_debug "Checking distro file $distro_file"
         if [[ -f $distro_file ]]; then
             # shellcheck disable=SC1090
-            source "$distro_file"
+            source "$distro_file" || valid=false
             # TODO add validation
-            invalid_distro=false
+            valid=true
         fi
     done
-    if $invalid_distro; then
+    if ! $valid; then
         ec_log_error "Unsupported distro \`$EC_DISTRO\`"
         return 1
     fi
 }
 
 function ec_source_and_validate_platform {
-    local invalid_platform=true
+    local valid=false
     for layer_path in $EC_ENABLED_LAYERS; do
         local platform_file="$layer_path/platforms/$EC_PLATFORM.bash"
         ec_log_debug "Checking platform file $platform_file"
         if [[ -f $platform_file ]]; then
             # shellcheck disable=SC1090
-            source "$platform_file"
+            source "$platform_file" || valid=false
             # TODO add validation
-            invalid_platform=false
+            valid=true
         fi
     done
-    if $invalid_platform; then
+    if ! $valid; then
         ec_log_error "Unsupported platform \`$EC_PLATFORM\`"
         return 1
     fi
@@ -170,6 +170,13 @@ function ec_print_cli_args {
     ec_log_debug "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
 }
 
+function ec_source_distro_and_platform {
+    local valid=true
+    ec_source_and_validate_distro || valid=false
+    ec_source_and_validate_platform || valid=false
+    $valid
+}
+
 while (( $# > 0 )); do
     case $1 in
         -h|--help)
@@ -219,13 +226,7 @@ readonly EC_DISTRO
 EC_PLATFORM="$(which-platform)"
 readonly EC_PLATFORM
 
-:(){
-    # TODO consider creating a dedicated named function, like source_distro_and_platform
-    local valid=true
-    ec_source_and_validate_distro || valid=false
-    ec_source_and_validate_platform || valid=false
-    $valid || exit 1
-};:
+ec_source_distro_and_platform || exit 1
 
 case "$EC_COMMAND" in
     install)
