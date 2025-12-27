@@ -2,6 +2,46 @@
 
 set -euo pipefail
 
+shopt -s dotglob # We want glob to match hidden files too
+shopt -s nullglob # We want glob to return nothing of there is no match
+
+function ec_root_dir {
+    # From https://stackoverflow.com/a/246128
+    local SOURCE_PATH="${BASH_SOURCE[0]}"
+    local SYMLINK_DIR
+    while [ -L "$SOURCE_PATH" ]; do
+        SYMLINK_DIR="$( cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd )"
+        SOURCE_PATH="$(readlink "$SOURCE_PATH")"
+        if [[ $SOURCE_PATH != /* ]]; then
+            SOURCE_PATH=$SYMLINK_DIR/$SOURCE_PATH
+        fi
+    done
+    (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
+}
+
+# Global variables
+# Declared upfront for better linting in the functions below
+# Some of them are marked readonly later-on after their proper initialization
+
+EC_PROXY_SERVER=""
+EC_PROXY_PORT=""
+EC_PROXY_USER=""
+EC_NO_PROXY=""
+
+EC_POSITIONAL_ARGS=()
+
+EC_ENABLED_LAYERS=()
+
+
+EC_ROOT_DIR="$(ec_root_dir)"
+readonly EC_ROOT_DIR
+readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
+readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
+readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
+
+EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
+
+
 function ec_log_plain {
     printf "%s\n" "$@" >&2
 }
@@ -22,27 +62,15 @@ function ec_log_error {
     printf "[\x1b[1;31mERROR\x1b[0m] \x1b[1;31m%s\x1b[0m\n" "$@" >&2
 }
 
-function ec_root_dir {
-    # From https://stackoverflow.com/a/246128
-    local SOURCE_PATH="${BASH_SOURCE[0]}"
-    local SYMLINK_DIR
-    while [ -L "$SOURCE_PATH" ]; do
-        SYMLINK_DIR="$( cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd )"
-        SOURCE_PATH="$(readlink "$SOURCE_PATH")"
-        if [[ $SOURCE_PATH != /* ]]; then
-            SOURCE_PATH=$SYMLINK_DIR/$SOURCE_PATH
-        fi
-    done
-    (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
-}
 
 function ec_into_layer_path {
     # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
     # The path printed into stdout as the form //<layer-name>/<subpath>
     local path="$1"
-    for layer_path in $EC_ENABLED_LAYERS; do
+    for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         if [[ "$path" == "$layer_path"/* ]]; then
-            local parent_dir="$(dirname "$layer_path")"
+            local parent_dir
+            parent_dir="$(dirname "$layer_path")"
             local subpath="${path#"^$parent_dir"}"
             echo "/$subpath"
             return 0
@@ -70,7 +98,7 @@ function ec_validate_layers {
 
 function ec_source_and_validate_distro {
     local valid=false
-    for layer_path in $EC_ENABLED_LAYERS; do
+    for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         local distro_file="$layer_path/distros/$EC_DISTRO.bash"
         ec_log_debug "Checking distro file $distro_file"
         if [[ -f $distro_file ]]; then
@@ -88,7 +116,7 @@ function ec_source_and_validate_distro {
 
 function ec_source_and_validate_platform {
     local valid=false
-    for layer_path in $EC_ENABLED_LAYERS; do
+    for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         local platform_file="$layer_path/platforms/$EC_PLATFORM.bash"
         ec_log_debug "Checking platform file $platform_file"
         if [[ -f $platform_file ]]; then
@@ -103,12 +131,6 @@ function ec_source_and_validate_platform {
         return 1
     fi
 }
-
-EC_ROOT_DIR="$(ec_root_dir)"
-readonly EC_ROOT_DIR
-readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
-readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
-readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
 
 function ec_help {
     cat << 'EOH'
@@ -138,15 +160,6 @@ for the current distribution and platform.
 If no package is provided `all` is used as default.
 EOH
 }
-
-EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
-
-EC_PROXY_SERVER=""
-EC_PROXY_PORT=""
-EC_PROXY_USER=""
-EC_NO_PROXY=""
-
-EC_POSITIONAL_ARGS=()
 
 function ec_print_context {
     ec_log_debug "################################################################################"
@@ -198,12 +211,12 @@ while (( $# > 0 )); do
     esac
 done
 
-readonly EC_ENABLED_LAYERS
 readonly EC_PROXY_SERVER
 readonly EC_PROXY_PORT
 readonly EC_PROXY_USER
 readonly EC_NO_PROXY
 readonly EC_POSITIONAL_ARGS
+readonly EC_ENABLED_LAYERS
 
 readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
 readonly EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
