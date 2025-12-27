@@ -190,6 +190,24 @@ function ec_source_distro_and_platform {
     $valid
 }
 
+function ec_get_recipe_file_for_package {
+    local package="$1"
+    local recipe_file=()
+    for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
+        shopt -s nullglob
+        recipe_file+=("$layer_path"/recipes/*/"$package".bash)
+    done
+    if (( ${#recipe_file[@]} > 1 )); then
+        ec_log_error "Found more than one recipe for package \`$package\` (total ${#recipe_file[@]}):"
+        ec_log_error "${recipe_file[@]}"
+        return 1
+    elif (( ${#recipe_file[@]} == 0 )); then
+        ec_log_error "No recipe found for package \`$package\`."
+        return 1
+    fi
+    echo "${recipe_file[@]}"
+}
+
 while (( $# > 0 )); do
     case $1 in
         -h|--help)
