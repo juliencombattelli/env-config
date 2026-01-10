@@ -19,6 +19,17 @@ function ec_root_dir {
     (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
 }
 
+function ec_contains {
+    local pattern="$1"
+    shift
+    for i in "$@"; do
+        if [[ "$i" == "$pattern" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Global variables
 # Declared upfront for better linting in the functions below
 # Some of them are marked readonly later-on after their proper initialization
@@ -237,9 +248,99 @@ readonly EC_POSITIONAL_ARGS
 readonly EC_ENABLED_LAYERS
 
 readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
-readonly EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
-declare -A EC_PACKAGES_DEPENDS
-declare all
+EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
+declare -A EC_PACKAGES_DEPENDS=()
+declare -A EC_PACKAGES_HIGHEST_DEPEND_RANK=()
+declare -a all=()
+
+function ec_source_recipes_recursively {
+    # Source all packages from the global EC_TARGET_PACKAGES and all their
+    # dependencies recursively and populate the global EC_PACKAGES_DEPENDS
+    local recipe_file
+    declare -a depends
+    for package in "${EC_TARGET_PACKAGES[@]}"; do
+        if ! ec_contains "$package" "${!EC_PACKAGES_DEPENDS[@]}"; then
+            depends=()
+            recipe_file=$(ec_get_recipe_file_for_package "$package")
+            # shellcheck disable=SC1090
+            source "$recipe_file"
+            echo "Adding $package with depends \`${depends[*]}\`"
+            EC_PACKAGES_DEPENDS[$package]="${depends[*]}"
+            ec_source_recipes_recursively "${depends[@]}"
+        fi
+    done
+}
+
+function ec_max {
+    # Return the maximum value between two arguments
+    local a=$1
+    local b=$2
+    echo $(( a > b ? a : b ))
+    return 0
+}
+
+function ec_highest_depend_rank_for_package {
+    local package="$1"
+    local highest_rank=0
+    local depend_rank
+    local package_depends
+    # Split the DEPENDS string into an array
+    eval "package_depends=(${EC_PACKAGES_DEPENDS[$package]})"
+    for depend in "${package_depends[@]}"; do
+        if [[ ! -v EC_PACKAGES_HIGHEST_DEPEND_RANK[$depend] ]]; then
+            # The rank of one of the package dependencies is unknown,
+            # cannot get highest rank for this package yet
+            return 1
+        fi
+        depend_rank="${EC_PACKAGES_HIGHEST_DEPEND_RANK[$depend]}"
+        highest_rank=$(ec_max "$highest_rank" "$depend_rank")
+    done
+    echo "$highest_rank"
+}
+
+function ec_compute_dependency_chain {
+    local package
+    local rank
+    local package_queue=("${!EC_PACKAGES_DEPENDS[@]}")
+    local it=0
+    while (( ${#package_queue[@]} )); do
+        ((++it))
+        # TODO detect if we iterated over all items and make no progress instead
+        if (( it > 100 )); then
+            ec_log_error "Infinite loop detected, aborting."
+            exit 1
+        fi
+        # pop the first package from the queue
+        package="${package_queue[0]}"
+        package_queue=("${package_queue[@]:1}")
+        if rank=$(ec_highest_depend_rank_for_package "$package"); then
+            EC_PACKAGES_HIGHEST_DEPEND_RANK[$package]="$((rank+1))"
+        else
+            # push back the package into the queue as rank cannot be known yet
+            package_queue+=("$package")
+        fi
+    done
+}
+
+function ec_do_install {
+    # Iterate over all packages ranks and do the installation of all packages
+    # of rank 1, then rank 2, etc
+    # TODO make a visitor taking the callback as argument
+    local rank=1
+    local packages_rank_decl
+    packages_rank_decl="$(declare -p EC_PACKAGES_HIGHEST_DEPEND_RANK)"
+    declare -A packages_rank="${packages_rank_decl#*=}"
+    while (( ${#packages_rank[@]} )); do
+        for package in "${!packages_rank[@]}"; do
+            if (( packages_rank[$package] == rank )); then
+                echo "Installing \`$package\`"
+                unset "packages_rank[$package]"
+            fi
+        done
+        ((++rank))
+    done
+
+}
 
 ec_log_note "Running env-config v4..."
 
@@ -259,9 +360,16 @@ readonly EC_PLATFORM
 
 ec_source_distro_and_platform || exit 1
 
+if [[ ! -v EC_TARGET_PACKAGES ]]; then
+    EC_TARGET_PACKAGES=("${all[@]}")
+fi
+
+ec_source_recipes_recursively 
+ec_compute_dependency_chain
+
 case "$EC_COMMAND" in
     install)
-        echo "Installing \`${EC_PACKAGES[*]}\`";;
+        ec_do_install;;
     remove)
         echo "Removing \`${EC_PACKAGES[*]}\`";;
     diff)
