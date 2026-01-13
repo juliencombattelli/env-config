@@ -90,3 +90,19 @@ bindkey $'^[^[OD' backward-char
 export KEYTIMEOUT=10
 
 # TODO add Ctrl+Z and Ctrl+Y to undo and redo
+
+# Override the default shift-select::select-and-invoke function
+# Add auto suffix char handling
+function shift-select::select-and-invoke {
+    if (( SUFFIX_ACTIVE )); then
+        # Remove the auto suffix added by any previous command
+        # For example, autocomplete add an auto suffix space after the last completed word
+        zle auto-suffix-remove -w
+    fi
+    if (( !REGION_ACTIVE )); then
+        zle set-mark-command -w
+        zle -K shift-select
+    fi
+    zle ${WIDGET#shift-select::} -w
+}
+
