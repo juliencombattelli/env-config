@@ -76,5 +76,5 @@ do_configure() {
 
     bbplain "Updating zshrc."
     mkdir -p "${HOME}/.config/zsh"
-    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}/.zshrc" > "${HOME}/.config/zsh/zshrc"
+    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}/.zshrc" > "${HOME}/.config/zsh/.zshrc"
 }
