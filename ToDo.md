@@ -42,7 +42,7 @@ separated in three categories:
 - [ ] Move a maximum of files out of $HOME into dedicated XDG folders (.config, .local, .cache)
   - [ ] bash
   - [x] zsh
-  - [ ] git
+  - [x] git
   - [x] gdb
   - [ ] tmux config
   - [ ] docker
