@@ -115,6 +115,9 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# Disable auto cd feature as I never use it anyway
+unsetopt autocd
+
 # Source any .sh and .zsh script in @EC_TARGET_INSTALL_DIR@/etc/profile.d
 for f in @EC_TARGET_INSTALL_DIR@/etc/profile.d/*; do
     if [[ "$f" =~ ^.*\\.(z)?sh$ ]]; then
