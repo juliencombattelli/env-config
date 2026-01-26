@@ -75,5 +75,6 @@ do_configure() {
     ec_update_file_with_fragment "${HOME}/.zshenv" "${WORKDIR}/fragment.zshenv"
 
     bbplain "Updating zshrc."
-    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}/.zshrc" > "${HOME}/.zshrc"
+    mkdir -p "${HOME}/.config/zsh"
+    sed "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" "${WORKDIR}/.zshrc" > "${HOME}/.config/zsh/zshrc"
 }

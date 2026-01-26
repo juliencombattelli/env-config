@@ -5,6 +5,14 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# Move completion cache files into a dedicated folder
+mkdir -p "$HOME/.cache/zsh"
+export ZSH_COMPDUMP="$HOME/.cache/zsh/.zcompdump-$HOST"
+
+# Move history file into a dedicated folder
+mkdir -p "$HOME/.local/state/zsh"
+export HISTFILE="$HOME/.local/state/zsh/history"
+
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
