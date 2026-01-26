@@ -39,6 +39,25 @@ separated in three categories:
 - [ ] Install waypipe (associate with X11fwd?)
 - [ ] Create symlink of /mnt/wslg/runtime-dir/wayland-* in /run/user/$UID/
 - [ ] Add rust/cargo toolchain recipe
+- [ ] Move a maximum of files out of $HOME into dedicated XDG folders (.config, .local, .cache)
+  - [ ] bash
+  - [x] zsh
+  - [ ] git
+  - [x] gdb
+  - [ ] tmux config
+  - [ ] docker
+  - [ ] repo folders
+  - [ ] less history
+  - [ ] wget history
+  - [ ] python history
+  - [ ] rust/cargo
+  - [ ] vim (delete as nvim is used by default now?)
+  - [ ] vscode folders (not sure if this is doable)
+  - [ ] .cmake
+  - [ ] .landscape (wtf is this?)
+  - [ ] .dotnet (needed only for that CMake VSCode extension...)
+  - [ ] .dbus (wtf they don't respect their own XDG spec...)
+  - [ ] env-config (should be in .config/env-config)
 
 ## TO EVALUATE
 
