@@ -342,11 +342,39 @@ function ec_do_install {
 
 }
 
+function ec_do_remove {
+    echo "Removing \`${EC_PACKAGES[*]}\`"
+}
+
+function ec_do_diff {
+    echo "Diffing \`${EC_PACKAGES[*]}\`"
+}
+
+function ec_do_backup {
+    echo "Backing up \`${EC_PACKAGES[*]}\`"
+}
+
 ec_log_note "Running env-config v4..."
 
 ec_print_cli_args
 ec_print_context
 ec_log_debug "################################################################################"
+
+case "$EC_COMMAND" in
+    install)
+        EC_COMMAND_FUNCTION=ec_do_install;;
+    remove)
+        EC_COMMAND_FUNCTION=ec_do_remove;;
+    diff)
+        EC_COMMAND_FUNCTION=ec_do_diff;;
+    backup)
+        EC_COMMAND_FUNCTION=ec_do_backup;;
+    "")
+        ec_log_error "Missing command"; exit 1;;
+    *)
+        ec_log_error "Unsupported command \`$EC_COMMAND\`"; exit 1;;
+esac
+readonly EC_COMMAND_FUNCTION
 
 declare EC_LAYER_DIR="${EC_ENABLED_LAYERS[0]}"
 
@@ -367,17 +395,5 @@ fi
 ec_source_recipes_recursively 
 ec_compute_dependency_chain
 
-case "$EC_COMMAND" in
-    install)
-        ec_do_install;;
-    remove)
-        echo "Removing \`${EC_PACKAGES[*]}\`";;
-    diff)
-        echo "Diffing \`${EC_PACKAGES[*]}\`";;
-    backup)
-        echo "Backing up \`${EC_PACKAGES[*]}\`";;
-    "")
-        echo "Missing command"; exit 1;;
-    *)
-        echo "Error: unsupported command \`$EC_COMMAND\`"; exit 1;;
-esac
+# Execute the user provided command
+$EC_COMMAND_FUNCTION
