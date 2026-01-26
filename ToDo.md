@@ -34,6 +34,11 @@ separated in three categories:
 - [x] Add EC_DEPRECATED recipe flag
 - [x] Remove pip from all distro as package provider
 - [x] Mark pip deprecated?
+- [ ] Add a "check" recipe issuing a warning if user is not 1000 on WSL (limitation for Wayland w/ WSLg)
+- [ ] Add all requirements in README for the current bitbake version (including locale and python3-packaging)
+- [ ] Install waypipe (associate with X11fwd?)
+- [ ] Create symlink of /mnt/wslg/runtime-dir/wayland-* in /run/user/$UID/
+- [ ] Add rust/cargo toolchain recipe
 
 ## TO EVALUATE
 
