@@ -49,8 +49,7 @@ separated in three categories:
   - [ ] repo folders
   - [x] less history
   - [x] wget hsts
-  - [ ] python history
-  - [ ] rust/cargo
+  - [x] rust/cargo
   - [x] vim (delete as nvim is used by default now?)
   - [ ] vscode folders (not sure if this is doable)
   - [ ] .dotnet (needed only for that CMake VSCode extension...)
