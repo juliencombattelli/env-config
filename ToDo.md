@@ -51,7 +51,7 @@ separated in three categories:
   - [ ] wget hsts
   - [ ] python history
   - [ ] rust/cargo
-  - [ ] vim (delete as nvim is used by default now?)
+  - [x] vim (delete as nvim is used by default now?)
   - [ ] vscode folders (not sure if this is doable)
   - [ ] .cmake
   - [ ] .landscape (wtf is this?)

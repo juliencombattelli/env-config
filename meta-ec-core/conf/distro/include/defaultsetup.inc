@@ -2,7 +2,7 @@
 # Use =/+=/=+ to overwrite the list, :append/:prepend to modify it.
 # Default: all the packages I regularly use on all environments.
 PKG_INSTALL ?= " \
-    neovim vim vscode \
+    neovim vscode \
     ssh \
     commit-editor diff-so-fancy git repo-aliases \
     aliases bash requests-ca-bundle oh-my-zsh proxy \
