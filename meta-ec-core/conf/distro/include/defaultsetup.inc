@@ -3,7 +3,7 @@
 # Default: all the packages I regularly use on all environments.
 PKG_INSTALL ?= " \
     neovim vscode \
-    ssh \
+    ssh wget \
     commit-editor diff-so-fancy git repo-aliases \
     aliases bash requests-ca-bundle oh-my-zsh proxy \
     bat eza fd nvimpager ripgrep \

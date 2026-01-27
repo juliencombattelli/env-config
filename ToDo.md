@@ -48,7 +48,7 @@ separated in three categories:
   - [ ] docker
   - [ ] repo folders
   - [ ] less history
-  - [ ] wget hsts
+  - [x] wget hsts
   - [ ] python history
   - [ ] rust/cargo
   - [x] vim (delete as nvim is used by default now?)
