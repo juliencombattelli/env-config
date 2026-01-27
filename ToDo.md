@@ -40,7 +40,7 @@ separated in three categories:
 - [ ] Create symlink of /mnt/wslg/runtime-dir/wayland-* in /run/user/$UID/
 - [ ] Add rust/cargo toolchain recipe
 - [ ] Move a maximum of files out of $HOME into dedicated XDG folders (.config, .local, .cache)
-  - [ ] bash
+  - [x] bash
   - [x] zsh
   - [x] git
   - [x] gdb
@@ -48,7 +48,7 @@ separated in three categories:
   - [ ] docker
   - [ ] repo folders
   - [ ] less history
-  - [ ] wget history
+  - [ ] wget hsts
   - [ ] python history
   - [ ] rust/cargo
   - [ ] vim (delete as nvim is used by default now?)
