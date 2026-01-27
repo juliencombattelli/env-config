@@ -53,10 +53,7 @@ separated in three categories:
   - [ ] rust/cargo
   - [x] vim (delete as nvim is used by default now?)
   - [ ] vscode folders (not sure if this is doable)
-  - [ ] .cmake
-  - [ ] .landscape (wtf is this?)
   - [ ] .dotnet (needed only for that CMake VSCode extension...)
-  - [ ] .dbus (wtf they don't respect their own XDG spec...)
   - [ ] env-config (should be in .config/env-config)
 
 ## TO EVALUATE
