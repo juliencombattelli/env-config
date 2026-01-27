@@ -47,7 +47,7 @@ separated in three categories:
   - [ ] tmux config
   - [ ] docker
   - [ ] repo folders
-  - [ ] less history
+  - [x] less history
   - [x] wget hsts
   - [ ] python history
   - [ ] rust/cargo
