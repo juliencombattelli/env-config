@@ -6,13 +6,16 @@ DEPENDS += "git"
 
 SRC_URI += "file://dsf-path.sh"
 
+DSF_DIR = "${HOME}/.local/share/diff-so-fancy"
+
 do_install() {
-    if [ -d ${EC_TARGET_INSTALL_DIR}/share/diff-so-fancy ]; then
+    if [ -d "${DSF_DIR}" ]; then
         bbplain "diff-so-fancy already installed. Updating."
-        git -C ${EC_TARGET_INSTALL_DIR}/share/diff-so-fancy pull
+        git -C "${DSF_DIR}" pull
     else
         bbplain "Installing diff-so-fancy."
-        git clone https://github.com/so-fancy/diff-so-fancy ${EC_TARGET_INSTALL_DIR}/share/diff-so-fancy
+        mkdir -p "${HOME}/.local/share"
+        git clone https://github.com/so-fancy/diff-so-fancy "${DSF_DIR}"
     fi
 }
 
