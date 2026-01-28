@@ -2,6 +2,8 @@ DESCRIPTION = ""
 PN = "vim"
 PV = "1"
 
+EC_DEPRECATED = "Vim recipe is not maintained ad I don't use it anymore. Use Neovim instead."
+
 DEPENDS += "git"
 
 inherit installable
