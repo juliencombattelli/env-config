@@ -20,7 +20,7 @@ install_or_update() {
     PLUGIN_KIND="$1" # plugin or theme
     PLUGIN_REPO="$2"
     PLUGIN_NAME="$(basename $PLUGIN_REPO .git)"
-    PLUGIN_PATH="${ZSH_CUSTOM:-$HOME/.config/zsh/oh-my-zsh/custom}/${PLUGIN_KIND}s/$PLUGIN_NAME"
+    PLUGIN_PATH="${EC_CONFIG_DIR}/zsh/oh-my-zsh/custom/${PLUGIN_KIND}s/$PLUGIN_NAME"
     if [ -d "$PLUGIN_PATH" ]; then
         bbplain "oh-my-zsh plugin already installed: $PLUGIN_NAME. Updating."
         git -C "$PLUGIN_PATH" pull
@@ -34,9 +34,9 @@ do_install() {
     if ! which zsh; then
         bbwarn "Zsh not installed, skipping oh-my-zsh installation."
         return
-    elif [ -d ${ZSH:-$HOME/.config/zsh/oh-my-zsh} ]; then
+    elif [ -d "${EC_CONFIG_DIR}/zsh/oh-my-zsh" ]; then
         bbplain "oh-my-zsh already installed. Updating."
-        git -C ${ZSH:-$HOME/.config/zsh/oh-my-zsh} pull
+        git -C "${EC_CONFIG_DIR}/zsh/oh-my-zsh" pull
     else
         bbplain "Installing oh-my-zsh."
         bash ${WORKDIR}/install.sh --unattended
@@ -59,9 +59,9 @@ do_configure() {
     fi
 
     # Install additional files
-    cp "${WORKDIR}"/p10k.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    cp "${WORKDIR}"/p10k.zsh.post.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    cp "${WORKDIR}"/zsh-shift-select-ext.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    cp "${WORKDIR}"/zsh-swap-last-args.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    cp "${WORKDIR}"/zsh-comment-line.zsh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/p10k.zsh "${EC_INSTALL_DIR}"
+    cp "${WORKDIR}"/p10k.zsh.post.zsh "${EC_INSTALL_DIR}"
+    cp "${WORKDIR}"/zsh-shift-select-ext.zsh "${EC_INSTALL_DIR}"
+    cp "${WORKDIR}"/zsh-swap-last-args.zsh "${EC_INSTALL_DIR}"
+    cp "${WORKDIR}"/zsh-comment-line.zsh "${EC_INSTALL_DIR}"
 }

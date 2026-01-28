@@ -93,8 +93,8 @@ source $ZSH/oh-my-zsh.sh
 # Disable auto cd feature as I never use it anyway
 unsetopt autocd
 
-# Source any .sh and .zsh script in @EC_TARGET_INSTALL_DIR@/etc/profile.d
-for f in @EC_TARGET_INSTALL_DIR@/etc/profile.d/*; do
+# Source any .sh and .zsh script in @EC_INSTALL_DIR@
+for f in @EC_INSTALL_DIR@/*; do
     if [[ "$f" =~ ^.*\\.(z)?sh$ ]]; then
         source "$f"
     fi

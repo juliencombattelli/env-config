@@ -6,7 +6,7 @@ DEPENDS += "git"
 
 SRC_URI += "file://dsf-path.sh"
 
-DSF_DIR = "${HOME}/.local/share/diff-so-fancy"
+DSF_DIR = "${EC_DATA_DIR}/diff-so-fancy"
 
 do_install() {
     if [ -d "${DSF_DIR}" ]; then
@@ -14,7 +14,6 @@ do_install() {
         git -C "${DSF_DIR}" pull
     else
         bbplain "Installing diff-so-fancy."
-        mkdir -p "${HOME}/.local/share"
         git clone https://github.com/so-fancy/diff-so-fancy "${DSF_DIR}"
     fi
 }
@@ -29,7 +28,7 @@ def dsf_pager(d):
 RDEPENDS += "${@dsf_pager(d) or ''}"
 
 update_path() {
-    cp "${WORKDIR}"/dsf-path.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/dsf-path.sh "${EC_INSTALL_DIR}"
 }
 
 update_gitconfig_interactive_diffFilter() {

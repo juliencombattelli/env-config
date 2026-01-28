@@ -12,12 +12,12 @@ SRC_URI[zig.tar.xz.sha256sum] = "02aa270f183da276e5b5920b1dac44a63f1a49e55050ebd
 do_install() {
     bbplain "Installing zig."
 
-    cp "${WORKDIR}/zig.sh" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/"
+    cp "${WORKDIR}/zig.sh" "${EC_INSTALL_DIR}"
 
-    mkdir -p "$HOME/.local/share/zig"
+    mkdir -p "${EC_DATA_DIR}/zig"
     # Remove previous installation if any
-    rm -rf "$HOME/.local/share/zig/zig"
-    cp -r "${WORKDIR}/zig-x86_64-linux-${ZIG_VER}" "$HOME/.local/share/zig/zig"
+    rm -rf "${EC_DATA_DIR}/zig/zig"
+    cp -r "${WORKDIR}/zig-x86_64-linux-${ZIG_VER}" "${EC_DATA_DIR}/zig/zig"
 
     # TODO add zls
 }

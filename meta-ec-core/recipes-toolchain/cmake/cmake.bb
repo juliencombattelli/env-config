@@ -10,5 +10,5 @@ inherit installable
 PREFERRED_PKG_VERSION_cmake = ">=3.11"
 
 do_configure() {
-    cp "${WORKDIR}"/cmake.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}"/cmake.sh "${EC_INSTALL_DIR}"
 }

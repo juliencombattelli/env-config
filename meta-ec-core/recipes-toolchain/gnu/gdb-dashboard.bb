@@ -9,6 +9,6 @@ SRCREV = "AUTOINC"
 
 do_install() {
     bbplain "Installing gdb-dashboard."
-    mkdir -p $HOME/.config/gdb
-    cp ${WORKDIR}/git/.gdbinit $HOME/config/gdb/gdbinit
+    mkdir -p ${EC_CONFIG_DIR}/gdb
+    cp ${WORKDIR}/git/.gdbinit ${EC_CONFIG_DIR}/gdb/gdbinit
 }

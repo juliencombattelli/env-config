@@ -66,15 +66,17 @@ python() {
         d.appendVarFlag('do_start', 'depends', ' '.join(deps))
 }
 
-prepare_ec_target_install_dir() {
-    mkdir -p "${EC_TARGET_INSTALL_DIR}"/backup/
-    mkdir -p "${EC_TARGET_INSTALL_DIR}"/bin/
-    mkdir -p "${EC_TARGET_INSTALL_DIR}"/etc/
-    mkdir -p "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
-    mkdir -p "${EC_TARGET_INSTALL_DIR}"/share/
+prepare_ec_install_dirs() {
+    mkdir -p "${EC_CONFIG_DIR}"
+    mkdir -p "${EC_BIN_DIR}"
+    mkdir -p "${EC_DATA_DIR}"
+    mkdir -p "${EC_STATE_DIR}"
+    mkdir -p "${EC_CACHE_DIR}"
+
+    mkdir -p "${EC_INSTALL_DIR}"
 }
 
-do_start[postfuncs] += "prepare_ec_target_install_dir"
+do_start[postfuncs] += "prepare_ec_install_dirs"
 
 # Emit a warning for recipes having EC_DEPRECATED set
 # TODO add doc about EC_DEPRECATED
@@ -139,11 +141,11 @@ python() {
         d.appendVarFlag('do_complete', 'rdepends', ' '.join(deps))
 }
 
-replace_ec_target_install_dir() {
-    find ${EC_TARGET_INSTALL_DIR} -type f -exec sed -i "s|@EC_TARGET_INSTALL_DIR@|${EC_TARGET_INSTALL_DIR}|g" {} +
+replace_ec_install_dir() {
+    find ${EC_INSTALL_DIR} -type f -exec sed -i "s|@EC_INSTALL_DIR@|${EC_INSTALL_DIR}|g" {} +
 }
 
-do_complete[prefuncs] += "replace_ec_target_install_dir"
+do_complete[prefuncs] += "replace_ec_install_dir"
 
 ################################################################################
 ### Export base class functions.

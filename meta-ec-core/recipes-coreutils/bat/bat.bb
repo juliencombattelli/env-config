@@ -16,7 +16,7 @@ python() {
 }
 
 install_bat_manpager() {
-    install -m 644 "${WORKDIR}"/bat-manpager.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    install -m 644 "${WORKDIR}/bat-manpager.sh" "${EC_INSTALL_DIR}"
 }
 
 python do_configure() {

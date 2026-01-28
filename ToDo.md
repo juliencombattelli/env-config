@@ -53,7 +53,7 @@ separated in three categories:
   - [x] vim (delete as nvim is used by default now?)
   - [ ] vscode folders (not sure if this is doable)
   - [ ] .dotnet (needed only for that CMake VSCode extension...)
-  - [ ] env-config (should be in .config/env-config)
+  - [x] env-config (should be in .config/env-config)
 
 ## TO EVALUATE
 

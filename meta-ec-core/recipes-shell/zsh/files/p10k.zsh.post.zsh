@@ -1,5 +1,5 @@
 # This file must be run after p10k.zsh when the .zshrc sources all files in
-# $EC_TARGET_INSTALL_DIR/etc/profile.d/ directory.
+# $EC_INSTALL_DIR/ directory.
 # To guarantee this, the file name must be lexicographically greater than
 # p10k.zsh, hence the .post extension.
 # It must also be run only in a Zsh environment, hence the second .zsh

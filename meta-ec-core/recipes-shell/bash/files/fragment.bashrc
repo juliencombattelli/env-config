@@ -2,8 +2,8 @@
 mkdir -p "$HOME/.local/state/bash"
 export HISTFILE="$HOME/.local/state/bash/history"
 
-# Source any .sh and .bash script in @EC_TARGET_INSTALL_DIR@/etc/profile.d
-for f in @EC_TARGET_INSTALL_DIR@/etc/profile.d/*; do
+# Source any .sh and .bash script in @EC_INSTALL_DIR@
+for f in @EC_INSTALL_DIR@/*; do
     if [[ "$f" =~ ^.*\.(ba)?sh$ ]]; then
         source "$f"
     fi

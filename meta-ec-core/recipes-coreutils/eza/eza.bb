@@ -7,5 +7,5 @@ SRC_URI += " https://github.com/eza-community/eza/releases/latest/download/eza_x
 BB_STRICT_CHECKSUM = "ignore"
 
 do_install() {
-    install -m 755 "${WORKDIR}/eza" "${HOME}/.local/bin"
+    install -m 755 "${WORKDIR}/eza" "${EC_BIN_DIR}"
 }

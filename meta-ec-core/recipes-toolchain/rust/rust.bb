@@ -12,7 +12,7 @@ BB_STRICT_CHECKSUM = "ignore"
 do_install() {
     . "${WORKDIR}/rust.sh"
 
-    cp "${WORKDIR}/rust.sh" "${EC_TARGET_INSTALL_DIR}/etc/profile.d/"
+    cp "${WORKDIR}/rust.sh" "${EC_INSTALL_DIR}"
 
     if [ -d "$RUSTUP_HOME" ]; then
         bbplain "rustup already installed."

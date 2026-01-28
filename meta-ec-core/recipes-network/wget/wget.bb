@@ -7,8 +7,8 @@ SRC_URI += "file://wgetrc file://wget.sh"
 do_configure() {
     bbplain "Configuring wget."
 
-    mkdir -p "${HOME}/.config/wget"
-    cp "${WORKDIR}"/wgetrc "${HOME}/.config/wget"
+    mkdir -p "${EC_CONFIG_DIR}/wget"
+    cp "${WORKDIR}/wgetrc" "${EC_CONFIG_DIR}/wget/"
 
-    cp "${WORKDIR}"/wget.sh "${EC_TARGET_INSTALL_DIR}"/etc/profile.d/
+    cp "${WORKDIR}/wget.sh" "${EC_INSTALL_DIR}"
 }
