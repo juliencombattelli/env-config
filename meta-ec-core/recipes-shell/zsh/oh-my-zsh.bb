@@ -31,6 +31,7 @@ install_or_update() {
 }
 
 do_install() {
+    export ZSH="${EC_CONFIG_DIR}/zsh/oh-my-zsh"
     if ! which zsh; then
         bbwarn "Zsh not installed, skipping oh-my-zsh installation."
         return
