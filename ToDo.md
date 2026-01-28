@@ -44,8 +44,8 @@ separated in three categories:
   - [x] zsh
   - [x] git
   - [x] gdb
-  - [ ] tmux config
-  - [ ] docker
+  - [ ] tmux config (~/.config/tmux/tmux.conf since 3.1 (Ubuntu 22.04+))
+  - [ ] docker (DOCKER_CONFIG env var)
   - [ ] repo folders
   - [x] less history
   - [x] wget hsts
