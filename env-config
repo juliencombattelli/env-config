@@ -52,27 +52,33 @@ readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
 
 EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
 
+source $EC_ROOT_DIR/lib/ansi.bash
 
 function ec_log_plain {
     printf "%s\n" "$@" >&2
 }
 
 function ec_log_debug {
-    printf "[\x1b[1;36mDEBUG\x1b[0m] %s\n" "$@" >&2
+    printf "[$(ansi_style fg=cyan)DEBUG$(ansi_style)] %s\n" "$@" >&2
 }
 
 function ec_log_note {
-    printf "[\x1b[1mNOTE \x1b[0m] %s\n" "$@" >&2
+    printf "[$(ansi_style bold fg=white)NOTE $(ansi_style)] %s\n" "$@" >&2
 }
 
 function ec_log_warn {
-    printf "[\x1b[1;33mWARN \x1b[0m] \x1b[1;33m%s\x1b[0m\n" "$@" >&2
+    printf "[$(ansi_style bold fg=yellow)WARN $(ansi_style)] $(ansi_style bold fg=yellow)%s$(ansi_style)\n" "$@" >&2
 }
 
 function ec_log_error {
-    printf "[\x1b[1;31mERROR\x1b[0m] \x1b[1;31m%s\x1b[0m\n" "$@" >&2
+    printf "[$(ansi_style bold fg=red)ERROR$(ansi_style)] $(ansi_style bold fg=red)%s$(ansi_style)\n" "$@" >&2
 }
 
+ec_log_plain "Displaying all variants of log levels:"
+ec_log_debug "- this is a debug message"
+ec_log_note  "- this is a note"
+ec_log_warn  "- this is a warning"
+ec_log_error "- this is an error"
 
 function ec_into_layer_path {
     # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
