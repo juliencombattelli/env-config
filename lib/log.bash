@@ -1,4 +1,4 @@
-source "lib/ansi.bash"
+source ansi.bash
 
 function ec_log_plain {
     printf "%s\n" "$@" >&2

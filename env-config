@@ -24,13 +24,15 @@ EC_ROOT_DIR="$(ec_root_dir)"
 readonly EC_ROOT_DIR
 readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
 readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
-readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
 
-export PATH="$EC_ROOT_DIR:$PATH"
+export PATH="$EC_ROOT_DIR/lib:$PATH"
 
-source "lib/ansi.bash"
-source "lib/log.bash"
-source "lib/utils.bash"
+# shellcheck source-path=lib
+source ansi.bash
+# shellcheck source-path=lib
+source log.bash
+# shellcheck source-path=lib
+source utils.bash
 
 ec_log_plain "Displaying all variants of log levels:"
 ec_log_debug "- this is a debug message"
@@ -156,7 +158,6 @@ function ec_print_context {
     ec_log_debug "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
     ec_log_debug "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
     ec_log_debug "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
-    ec_log_debug "EC_LIB_DIR=\`$EC_LIB_DIR\`"
 }
 
 function ec_print_cli_args {

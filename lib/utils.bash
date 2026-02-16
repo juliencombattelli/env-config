@@ -1,3 +1,5 @@
+# Generic functions not relying on any global state
+
 function ec_contains {
     local pattern="$1"
     shift
