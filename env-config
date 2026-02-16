@@ -50,9 +50,11 @@ readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
 readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
 readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
 
+export PATH="$EC_ROOT_DIR:$PATH"
+
 EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
 
-source $EC_ROOT_DIR/lib/ansi.bash
+source "lib/ansi.bash"
 
 function ec_log_plain {
     printf "%s\n" "$@" >&2
