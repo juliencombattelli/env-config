@@ -20,16 +20,23 @@ function ec_root_dir {
     (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
 }
 
-function ec_contains {
-    local pattern="$1"
-    shift
-    for i in "$@"; do
-        if [[ "$i" == "$pattern" ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
+EC_ROOT_DIR="$(ec_root_dir)"
+readonly EC_ROOT_DIR
+readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
+readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
+readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
+
+export PATH="$EC_ROOT_DIR:$PATH"
+
+source "lib/ansi.bash"
+source "lib/log.bash"
+source "lib/utils.bash"
+
+ec_log_plain "Displaying all variants of log levels:"
+ec_log_debug "- this is a debug message"
+ec_log_note  "- this is a note"
+ec_log_warn  "- this is a warning"
+ec_log_error "- this is an error"
 
 # Global variables
 # Declared upfront for better linting in the functions below
@@ -42,27 +49,7 @@ EC_NO_PROXY=""
 
 EC_POSITIONAL_ARGS=()
 
-EC_ENABLED_LAYERS=()
-
-
-EC_ROOT_DIR="$(ec_root_dir)"
-readonly EC_ROOT_DIR
-readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
-readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
-readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
-
-export PATH="$EC_ROOT_DIR:$PATH"
-
 EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
-
-source "lib/ansi.bash"
-source "lib/log.bash"
-
-ec_log_plain "Displaying all variants of log levels:"
-ec_log_debug "- this is a debug message"
-ec_log_note  "- this is a note"
-ec_log_warn  "- this is a warning"
-ec_log_error "- this is an error"
 
 function ec_into_layer_path {
     # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
