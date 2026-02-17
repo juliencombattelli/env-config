@@ -1,7 +1,7 @@
-
 # The ANSI control sequences used here are documented in the following pages:
 # - https://www.xfree86.org/current/ctlseqs.html
 # - https://vt100.net/docs/vt510-rm/contents.html
+# Each function references the corresponding ANSI control function on vt100.net
 
 function ansi_cursor_show {
     # https://vt100.net/docs/vt510-rm/DECTCEM.html
