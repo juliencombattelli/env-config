@@ -199,7 +199,7 @@ function ec_get_recipe_file_for_package {
 }
 
 while (( $# > 0 )); do
-    case $1 in
+    case "$1" in
         -h|--help)
             ec_help; exit 0;;
         -l|--layer)
