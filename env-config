@@ -3,6 +3,7 @@
 set -euo pipefail
 
 shopt -s dotglob # We want glob to match hidden files too
+shopt -s globstar # We want to match files recursivelly using **
 shopt -s nullglob # We want glob to return nothing of there is no match
 shopt -s sourcepath # We want source to search for files in PATH
 
