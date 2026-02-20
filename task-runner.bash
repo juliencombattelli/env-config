@@ -36,10 +36,12 @@ function ec_kill_background_processes {
 function ec_discover_tasks {
     echo "Discovering tasks..."
 
-    while IFS= read -r -d '' task_file; do
+    for task_file in "$TASKS_DIR"/**/*.bash; do
+        [[ -f "$task_file" ]] || continue
+
         # Get task name from filename (remove .bash extension)
-        local task_name
-        task_name=$(basename "$task_file" .bash)
+        local task_name="${task_file##*/}"
+        task_name="${task_name%.bash}"
 
         # Store the script path
         TASK_SCRIPTS["$task_name"]="$task_file"
@@ -57,7 +59,7 @@ function ec_discover_tasks {
         TASK_DEPENDENCIES["$task_name"]="$deps"
 
         echo "  Found task: $task_name (dependencies: ${deps:-none})"
-    done < <(find "$TASKS_DIR" -name "*.bash" -type f -print0)
+    done
 
     echo ""
 }
@@ -94,10 +96,10 @@ function _ec_execute_task {
         # shellcheck disable=SC1090
         source "$script"
 
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $task"
+        printf "[%(%Y-%m-%d %H:%M:%S)T] Starting: %s\n" -1 "$task"
         do_install
         sleep $(( (RANDOM % 5) + 1))
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $task"
+        printf "[%(%Y-%m-%d %H:%M:%S)T] Completed: %s\n" -1 "$task"
     ) &
 
     # Store the PID
