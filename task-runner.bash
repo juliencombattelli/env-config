@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-
-# Directory containing all task files
-TASKS_DIR="${1:-./layer-core/recipes}"
+shopt -s globstar nullglob
 
 # Associative arrays to store task information
 declare -A TASK_DEPENDENCIES=() # task -> space-separated list of dependencies
@@ -11,12 +9,12 @@ declare -A TASK_SCRIPTS=()      # task -> path to task script
 declare -A TASK_COMPLETED=()    # task -> 1 if completed
 declare -A TASK_RUNNING=()      # task -> PID if running
 
-JOBS_COUNT=64
+readonly JOBS_COUNT=64
 
 function ec_wait_background_processes {
     local silent="${1:-}"
     local remaining=${#TASK_RUNNING[@]}
-    while [[ $remaining -gt 0 ]]; do
+    while (( $remaining > 0 )); do
         if [[ "$silent" != "silent" ]]; then
             echo "Waiting for $remaining background process(es) to complete..."
         fi
@@ -26,17 +24,19 @@ function ec_wait_background_processes {
 }
 
 function ec_kill_background_processes {
-    background_jobs=($(jobs -p))
-    if [[ ${#background_jobs[@]} != 0 ]]; then
+    local -a background_jobs
+    readarray -t background_jobs < <(jobs -p)
+    if (( ${#background_jobs[@]} > 0 )); then
         echo "Killing all background jobs" >&2
         kill "${background_jobs[@]}" >&2
     fi
 }
 
 function ec_discover_tasks {
-    echo "Discovering tasks..."
+    local tasks_dir="$1"
+    echo "Discovering tasks in $tasks_dir..."
 
-    for task_file in "$TASKS_DIR"/**/*.bash; do
+    for task_file in "$tasks_dir"/**/*.bash; do
         [[ -f "$task_file" ]] || continue
 
         # Get task name from filename (remove .bash extension)
@@ -50,6 +50,7 @@ function ec_discover_tasks {
         local deps
         deps=$(
             DEPENDS=()
+            # TODO handle error when sourcing the recipes
             # shellcheck disable=SC1090
             source "$task_file" 2>/dev/null || true
             echo "${DEPENDS[*]}"
@@ -74,7 +75,7 @@ function ec_dependencies_satisfied {
 
     # Check each dependency
     for dep in $deps; do
-        if [[ -z "${TASK_COMPLETED[$dep]:-}" ]]; then
+        if [[ ! -v TASK_COMPLETED[$dep] ]]; then
             return 1 # Dependency not completed
         fi
     done
@@ -117,13 +118,13 @@ function ec_execute_tasks {
     # Reverse mapping: PID -> task name
     declare -A pid_to_task=()
 
-    while [[ $completed_count -lt $total_tasks ]]; do
+    while (( $completed_count < $total_tasks )); do
         # Start all tasks whose dependencies are satisfied
         local tasks_started=0
         for task in "${!TASK_SCRIPTS[@]}"; do
             # Skip if already completed or running
-            [[ -n "${TASK_COMPLETED[$task]:-}" ]] && continue
-            [[ -n "${TASK_RUNNING[$task]:-}" ]] && continue
+            [[ -v TASK_COMPLETED[$task] ]] && continue
+            [[ -v TASK_RUNNING[$task] ]] && continue
             (( ${#TASK_RUNNING[@]} >= JOBS_COUNT )) && continue
 
             # Check if dependencies are satisfied
@@ -135,14 +136,13 @@ function ec_execute_tasks {
         done
 
         # If no tasks are running and none could start, we have a problem
-        local running_pids=("${!TASK_RUNNING[@]}")
-        local running_count=${#running_pids[@]}
-        if [[ $running_count -eq 0 ]]; then
-            if [[ $tasks_started -eq 0 ]]; then
+        local running_count=${#TASK_RUNNING[@]}
+        if (( running_count == 0 )); then
+            if (( tasks_started == 0 )); then
                 echo "ERROR: No tasks can be started. Possible circular dependency!" >&2
                 echo "Remaining tasks:" >&2
                 for task in "${!TASK_SCRIPTS[@]}"; do
-                    if [[ -z "${TASK_COMPLETED[$task]:-}" ]]; then
+                    if [[ ! -v TASK_COMPLETED[$task] ]]; then
                         echo "  - $task (waiting for: ${TASK_DEPENDENCIES[$task]})" >&2
                     fi
                 done
@@ -155,8 +155,8 @@ function ec_execute_tasks {
         local completed_pid
         if wait -n -p completed_pid; then
             # Find which task completed
-            local completed_task="${pid_to_task[$completed_pid]:-}"
-            if [[ -n "$completed_task" ]]; then
+            if [[ -v pid_to_task[$completed_pid] ]]; then
+                local completed_task="${pid_to_task[$completed_pid]}"
                 TASK_COMPLETED["$completed_task"]=1
                 unset "TASK_RUNNING[$completed_task]"
                 unset "pid_to_task[$completed_pid]"
@@ -165,7 +165,7 @@ function ec_execute_tasks {
         else
             # A task failed
             local failed_task="${pid_to_task[$completed_pid]:-unknown}"
-            echo "ERROR: Task '$failed_task' (PID: ${completed_pid:-unknown}) failed!" >&2
+            echo "ERROR: Task '$failed_task' (PID: $completed_pid) failed!" >&2
             exit 1
         fi
 
@@ -184,29 +184,32 @@ function ec_validate_dependencies {
         local deps="${TASK_DEPENDENCIES[$task]}"
 
         for dep in $deps; do
-            if [[ -z "${TASK_SCRIPTS[$dep]:-}" ]]; then
+            if [[ ! -v TASK_SCRIPTS[$dep] ]]; then
                 echo "ERROR: Task '$task' depends on '$dep', but '$dep' does not exist!" >&2
                 validation_failed=1
             fi
         done
     done
 
-    if [[ $validation_failed -eq 1 ]]; then
+    if (( validation_failed == 1 )); then
         exit 1
     fi
 }
 
 # Main execution
 function main {
-    if [[ ! -d "$TASKS_DIR" ]]; then
-        echo "ERROR: Tasks directory '$TASKS_DIR' not found!" >&2
+    # Directory containing all task files
+    local tasks_dir="${1:-./layer-core/recipes}"
+
+    if [[ ! -d "$tasks_dir" ]]; then
+        echo "ERROR: Tasks directory '$tasks_dir' not found!" >&2
         exit 1
     fi
 
-    ec_discover_tasks
+    ec_discover_tasks "$tasks_dir"
 
-    if [[ ${#TASK_SCRIPTS[@]} -eq 0 ]]; then
-        echo "No tasks found in '$TASKS_DIR'!"
+    if (( ${#TASK_SCRIPTS[@]} == 0 )); then
+        echo "No tasks found in '$tasks_dir'!"
         exit 0
     fi
 
