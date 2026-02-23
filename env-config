@@ -11,7 +11,6 @@ shopt -s globstar # We want to match files recursively using **
 shopt -s nullglob # We want glob to return nothing of there is no match
 shopt -s sourcepath # We want source to search for files in PATH
 
-
 ################################################################################
 ### Global context variables
 ################################################################################
@@ -517,10 +516,6 @@ function on_interrupt {
     exit $sigint_code
 }
 
-trap on_interrupt SIGINT
-trap at_exit EXIT
-
-
 ################################################################################
 ### Main execution
 ################################################################################
@@ -531,6 +526,9 @@ function main {
     declare -a all=()
 
     ec_log_note "Running env-config v4..."
+
+    trap on_interrupt SIGINT
+    trap at_exit EXIT
 
     ec_print_cli_args
     ec_print_context
