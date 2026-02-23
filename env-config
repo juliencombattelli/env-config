@@ -335,7 +335,7 @@ function ec_execute_tasks {
         else
             # A task failed
             local failed_task="${pid_to_task[$completed_pid]:-unknown}"
-            ec_log_error "ERROR: Task '$failed_task' (PID: $completed_pid) failed!"
+            ec_log_error "Task '$failed_task' (PID: $completed_pid) failed!"
             exit 1
         fi
 
