@@ -43,13 +43,6 @@ source log.bash
 # shellcheck source-path=lib
 source utils.bash
 
-ec_log_plain "Displaying all variants of log levels:"
-ec_log_debug "- this is a debug message"
-ec_log_note  "- this is a note"
-ec_log_warn  "- this is a warning"
-ec_log_error "- this is an error"
-
-
 ################################################################################
 ### Global variables
 ################################################################################
@@ -64,6 +57,7 @@ EC_NO_PROXY=""
 
 EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
 EC_JOBS_COUNT=1
+EC_COLOR=auto
 EC_DEBUG_SLEEP=false
 
 function ec_into_layer_path {
@@ -392,6 +386,11 @@ function ec_do_backup {
 EC_POSITIONAL_ARGS=()
 
 function ec_print_context {
+    ec_log_plain "Displaying all variants of log levels:"
+    ec_log_debug "- this is a debug message"
+    ec_log_note  "- this is a note"
+    ec_log_warn  "- this is a warning"
+    ec_log_error "- this is an error"
     ec_log_debug "################################################################################"
     ec_log_debug "### Context"
     ec_log_debug "################################################################################"
@@ -428,6 +427,7 @@ Options:
     -h, --help              Display this message
     -l, --layer             Path to a layer root directory (can be repeated, layer-core is always included)
     -j, --job [N]           Number of concurrent jobs to run (N defaults to CPU count)
+    --color WHEN            Control when to use color in output (auto, never or always)
     --proxy-server URL      Proxy server URL
     --proxy-port   PORT     Proxy port number (requires --proxy-server)
     --proxy-user   USER     Proxy user (requires --proxy-server)
@@ -443,13 +443,34 @@ If no package is provided `all` is used as default.
 EOH
 }
 
-function parse_cli {
+function ec_color_set {
+    local when=$1
+    case $when in
+        auto)
+            [[ -n "${NO_COLOR:-}" ]] && EC_COLOR=false && return
+            [[ "${TERM:-dump}" == "dumb" ]] && EC_COLOR=false && return
+            [[ -t 1 ]] && EC_COLOR=true || EC_COLOR=false;;
+        never) EC_COLOR=false;;
+        always) EC_COLOR=true;;
+        '') ec_log_error "Missing value for option --color"; exit 1;;
+        *) ec_log_error "Invalid value \`$when\` for option --color, possible values: auto, never, always "; exit 1;;
+    esac
+}
+
+function ec_parse_cli {
     while (( $# > 0 )); do
         case "$1" in
             -h|--help)
                 ec_help; exit 0;;
             -l|--layer)
                 EC_ENABLED_LAYERS+=("$2"); shift 2;;
+            -j|--job)
+                case ${2:-} in
+                    ''|*[!0-9]*) EC_JOBS_COUNT=$(nproc); shift 1;;
+                    *) EC_JOBS_COUNT=$2; shift 2;;
+                esac;;
+            --color)
+                EC_COLOR="${2:-}"; shift 2;;
             --proxy-server)
                 EC_PROXY_SERVER="$2"; shift 2;;
             --proxy-port)
@@ -458,11 +479,6 @@ function parse_cli {
                 EC_PROXY_USER="$2"; shift 2;;
             --no-proxy)
                 EC_NO_PROXY="$2"; shift 2;;
-            -j|--job)
-                case ${2:-} in
-                    ''|*[!0-9]*) EC_JOBS_COUNT=$(nproc); shift 1;;
-                    *) EC_JOBS_COUNT=$2; shift 2;;
-                esac;;
             --debug-sleep)
                 EC_DEBUG_SLEEP=true; shift 1;;
             -*)
@@ -480,8 +496,13 @@ function parse_cli {
     readonly EC_ENABLED_LAYERS
     readonly EC_JOBS_COUNT
 
+    ec_color_set $EC_COLOR
+    readonly EC_COLOR
+
     readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
     EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
+
+    EC_LOG_COLOR=$EC_COLOR
 }
 
 ################################################################################
@@ -522,7 +543,7 @@ function on_interrupt {
 
 function main {
 
-    parse_cli "$@"
+    ec_parse_cli "$@"
     declare -a all=()
 
     ec_log_note "Running env-config v4..."
