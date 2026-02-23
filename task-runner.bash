@@ -140,10 +140,10 @@ function ec_execute_tasks {
         if (( running_count == 0 )); then
             if (( tasks_started == 0 )); then
                 echo "ERROR: No tasks can be started. Possible circular dependency!" >&2
-                echo "Remaining tasks:" >&2
+                echo "Blocked tasks (unmet dependencies):" >&2
                 for task in "${!TASK_SCRIPTS[@]}"; do
                     if [[ ! -v TASK_COMPLETED[$task] ]]; then
-                        echo "  - $task (waiting for: ${TASK_DEPENDENCIES[$task]})" >&2
+                        echo "  - $task (depends on: ${TASK_DEPENDENCIES[$task]:-none})" >&2
                     fi
                 done
                 exit 1

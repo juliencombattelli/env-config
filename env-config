@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
+################################################################################
+### Global shell options
+################################################################################
+
 set -euo pipefail
 
 shopt -s dotglob # We want glob to match hidden files too
-shopt -s globstar # We want to match files recursivelly using **
+shopt -s globstar # We want to match files recursively using **
 shopt -s nullglob # We want glob to return nothing of there is no match
 shopt -s sourcepath # We want source to search for files in PATH
+
+
+################################################################################
+### Global context variables
+################################################################################
 
 function ec_root_dir {
     # From https://stackoverflow.com/a/246128
@@ -41,7 +50,11 @@ ec_log_note  "- this is a note"
 ec_log_warn  "- this is a warning"
 ec_log_error "- this is an error"
 
-# Global variables
+
+################################################################################
+### Global variables
+################################################################################
+
 # Declared upfront for better linting in the functions below
 # Some of them are marked readonly later-on after their proper initialization
 
@@ -50,14 +63,15 @@ EC_PROXY_PORT=""
 EC_PROXY_USER=""
 EC_NO_PROXY=""
 
-EC_POSITIONAL_ARGS=()
-
 EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
+EC_JOBS_COUNT=1
+EC_DEBUG_SLEEP=false
 
 function ec_into_layer_path {
     # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
     # The path printed into stdout as the form //<layer-name>/<subpath>
     local path="$1"
+    local layer_path
     for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         if [[ "$path" == "$layer_path"/* ]]; then
             local parent_dir
@@ -71,8 +85,13 @@ function ec_into_layer_path {
     return 1
 }
 
+################################################################################
+### Core functions
+################################################################################
+
 function ec_validate_layers {
     local invalid_layer=false
+    local layer_dir
     for layer_dir in "$@"; do
         if [[ ! -d "$layer_dir" ]]; then
             ec_log_error "Layer directory \`$layer_dir\` does not exist."
@@ -89,6 +108,7 @@ function ec_validate_layers {
 
 function ec_source_and_validate_distro {
     local valid=false
+    local layer_path
     for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         local distro_file="$layer_path/distros/$EC_DISTRO.bash"
         ec_log_debug "Checking distro file $distro_file"
@@ -107,6 +127,7 @@ function ec_source_and_validate_distro {
 
 function ec_source_and_validate_platform {
     local valid=false
+    local layer_path
     for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         local platform_file="$layer_path/platforms/$EC_PLATFORM.bash"
         ec_log_debug "Checking platform file $platform_file"
@@ -121,56 +142,6 @@ function ec_source_and_validate_platform {
         ec_log_error "Unsupported platform \`$EC_PLATFORM\`"
         return 1
     fi
-}
-
-function ec_help {
-    cat << 'EOH'
-Usage:
-    env-config [OPTIONS] COMMAND
-
-Commands:
-    install [PKG...]        Install and configure packages
-    remove  [PKG...]        Completely uninstall packages (package itself and its configuration)
-    diff    [PKG...]        List the diffs between the deployed config files and ones in the repo
-    backup  [PKG...]        Copy the deployed files back into the repo
-
-Options:
-    -h, --help              Display this message
-    -l, --layer             Path to a layer root directory (can be repeated, layer-core is always included)
-    --proxy-server=URL      Proxy server URL
-    --proxy-port=PORT       Proxy port number (requires --proxy-server)
-    --proxy-user=USER       Proxy user (requires --proxy-server)
-    --no-proxy=URL,...      URLs not served by the proxy (requires --proxy-server)
-
-The arguments `PKG` must be the basename of one of the recipes available across all the layers
-(ie. the recipe file `layer-core/recipes/shell/zsh.sh` provides the package `zsh`).
-
-If `all` is provided as package env-config will install and configure all applicable packages
-for the current distribution and platform.
-
-If no package is provided `all` is used as default.
-EOH
-}
-
-function ec_print_context {
-    ec_log_debug "################################################################################"
-    ec_log_debug "### Context"
-    ec_log_debug "################################################################################"
-    ec_log_debug "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
-    ec_log_debug "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
-    ec_log_debug "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
-}
-
-function ec_print_cli_args {
-    ec_log_debug "################################################################################"
-    ec_log_debug "### CLI arguments"
-    ec_log_debug "################################################################################"
-    ec_log_debug "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
-    ec_log_debug "EC_PROXY_SERVER=$EC_PROXY_SERVER"
-    ec_log_debug "EC_PROXY_PORT=$EC_PROXY_PORT"
-    ec_log_debug "EC_PROXY_USER=$EC_PROXY_USER"
-    ec_log_debug "EC_NO_PROXY=$EC_NO_PROXY"
-    ec_log_debug "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
 }
 
 function ec_source_distro_and_platform {
@@ -198,180 +169,209 @@ function ec_get_recipe_file_for_package {
     echo "${recipe_file[@]}"
 }
 
-while (( $# > 0 )); do
-    case "$1" in
-        -h|--help)
-            ec_help; exit 0;;
-        -l|--layer)
-            EC_ENABLED_LAYERS+=("$2"); shift 2;;
-        --proxy-server)
-            EC_PROXY_SERVER="$2"; shift 2;;
-        --proxy-port)
-            EC_PROXY_PORT="$2"; shift 2;;
-        --proxy-user)
-            EC_PROXY_USER="$2"; shift 2;;
-        --no-proxy)
-            EC_NO_PROXY="$2"; shift 2;;
-        -*)
-            echo "Error: unknown option \`$1\`"; exit 1;;
-        *)
-            EC_POSITIONAL_ARGS+=("$1"); shift;;
-    esac
-done
+# Associative arrays to store task information
+declare -A TASK_DEPENDENCIES=() # task -> space-separated list of dependencies
+declare -A TASK_RECIPES=()      # task -> path to task script
+declare -A TASK_COMPLETED=()    # task -> 1 if completed
+declare -A TASK_RUNNING=()      # task -> PID if running
 
-readonly EC_PROXY_SERVER
-readonly EC_PROXY_PORT
-readonly EC_PROXY_USER
-readonly EC_NO_PROXY
-readonly EC_POSITIONAL_ARGS
-readonly EC_ENABLED_LAYERS
-
-readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
-EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
-declare -A EC_PACKAGES_DEPENDS=()
-declare -A EC_PACKAGES_HIGHEST_DEPEND_RANK=()
-declare -a all=()
-
-# Cleanup functions
-
-function progress_deinit_term {
-    echo "progress_deinit_term"
-}
-
-bg_tasks_pid=()
-
-function kill_background_processes {
-    kill "${bg_tasks_pid[@]}" 2>/dev/null || true
-}
-
-function wait_background_processes {
-    local silent="${1:-}"
-    local remaining=${#bg_tasks_pid[@]}
-    while [[ $remaining -gt 0 ]]; do
-        if [[ "$silent" != "silent" ]]; then
-            echo "Waiting for $remaining background process(es) to complete..."
-        fi
-        wait -n 2>/dev/null || true
+function ec_wait_background_processes {
+    local remaining=${#TASK_RUNNING[@]}
+    while (( remaining > 0 )); do
+        ec_log_note "Waiting for $remaining background process(es) to complete..."
+        # Ignore the tasks exit status as we just want them to finish
+        wait -n -p awaited_pid 2>/dev/null || true
+        if [[ -v awaited_pid ]]; then
+            for task in "${!TASK_RUNNING[@]}"; do
+                if (( TASK_RUNNING[$task] == awaited_pid )); then
+                    unset "TASK_RUNNING[$task]"
+                    break
+                fi
+            done
+        fi 
         remaining=$((remaining - 1))
     done
 }
 
-function reset_terminal {
-    echo "Resetting terminal"
-}
-
-function at_exit {
-    echo "[EXIT] at_exit"
-    reset_terminal
-}
-
-function on_interrupt {
-    sigint_code=$?
-    echo ""
-    echo "[SIGINT] on_interrupt"
-
-    if [[ "${ON_INTERRUPT:-0}" == 1 ]]; then
-        echo "[SIGINT] Second interrupt, aborting."
-        kill_background_processes
-    else
-        echo "[SIGINT] First interrupt, waiting."
-        ON_INTERRUPT=1
-        wait_background_processes
+function ec_kill_background_processes {
+    local -a background_jobs
+    readarray -t background_jobs < <(jobs -p)
+    if (( ${#background_jobs[@]} > 0 )); then
+        ec_log_warn "Killing all background jobs" >&2
+        kill "${background_jobs[@]}" >&2
+        TASK_RUNNING=()
     fi
-
-    exit $sigint_code
 }
 
-trap on_interrupt SIGINT
-trap at_exit EXIT
+function ec_discover_tasks {
+    local tasks_dir="$1"
+    ec_log_debug "Discovering tasks in $tasks_dir..."
 
-function ec_source_recipes_recursively {
-    # Source all packages from the global EC_TARGET_PACKAGES and all their
-    # dependencies recursively and populate the global EC_PACKAGES_DEPENDS
-    local recipe_file
-    declare -a depends
-    for package in "${EC_TARGET_PACKAGES[@]}"; do
-        if ! ec_contains "$package" "${!EC_PACKAGES_DEPENDS[@]}"; then
-            depends=()
-            recipe_file=$(ec_get_recipe_file_for_package "$package")
+    for task_file in "$tasks_dir"/recipes/*/*.bash; do
+        [[ -f "$task_file" ]] || continue
+
+        # Get task name from filename (remove .bash extension)
+        local task_name="${task_file##*/}"
+        task_name="${task_name%.bash}"
+
+        # Store the script path
+        TASK_RECIPES["$task_name"]="$task_file"
+
+        # Source the file in a subshell to extract DEPENDS array
+        local deps
+        deps=$(
+            DEPENDS=()
+            # TODO handle error when sourcing the recipes
             # shellcheck disable=SC1090
-            source "$recipe_file"
-            echo "Adding $package with depends \`${depends[*]}\`"
-            EC_PACKAGES_DEPENDS[$package]="${depends[*]}"
-            ec_source_recipes_recursively "${depends[@]}"
-        fi
+            source "$task_file" 2>/dev/null || true
+            echo "${DEPENDS[*]}"
+        )
+
+        # Store dependencies
+        TASK_DEPENDENCIES["$task_name"]="$deps"
+
+        ec_log_debug "  Found task: $task_name (dependencies: ${deps:-none})"
     done
 }
 
-function ec_max {
-    # Return the maximum value between two arguments
-    local a=$1
-    local b=$2
-    echo $(( a > b ? a : b ))
-    return 0
-}
+# Check if all dependencies of a task are completed
+function ec_dependencies_satisfied {
+    local task=$1
+    local deps="${TASK_DEPENDENCIES[$task]}"
 
-function ec_highest_depend_rank_for_package {
-    local package="$1"
-    local highest_rank=0
-    local depend_rank
-    local package_depends
-    # Split the DEPENDS string into an array
-    eval "package_depends=(${EC_PACKAGES_DEPENDS[$package]})"
-    for depend in "${package_depends[@]}"; do
-        if [[ ! -v EC_PACKAGES_HIGHEST_DEPEND_RANK[$depend] ]]; then
-            # The rank of one of the package dependencies is unknown,
-            # cannot get highest rank for this package yet
-            return 1
-        fi
-        depend_rank="${EC_PACKAGES_HIGHEST_DEPEND_RANK[$depend]}"
-        highest_rank=$(ec_max "$highest_rank" "$depend_rank")
-    done
-    echo "$highest_rank"
-}
+    # No dependencies means ready to run
+    [[ -z "$deps" ]] && return 0
 
-function ec_compute_dependency_chain {
-    local package
-    local rank
-    local package_queue=("${!EC_PACKAGES_DEPENDS[@]}")
-    local it=0
-    while (( ${#package_queue[@]} )); do
-        ((++it))
-        # TODO detect if we iterated over all items and make no progress instead
-        if (( it > 100 )); then
-            ec_log_error "Infinite loop detected, aborting."
-            exit 1
-        fi
-        # pop the first package from the queue
-        package="${package_queue[0]}"
-        package_queue=("${package_queue[@]:1}")
-        if rank=$(ec_highest_depend_rank_for_package "$package"); then
-            EC_PACKAGES_HIGHEST_DEPEND_RANK[$package]="$((rank+1))"
-        else
-            # push back the package into the queue as rank cannot be known yet
-            package_queue+=("$package")
+    # Check each dependency
+    for dep in $deps; do
+        if [[ ! -v TASK_COMPLETED[$dep] ]]; then
+            return 1 # Dependency not completed
         fi
     done
+
+    return 0 # All dependencies completed
 }
 
-function ec_do_install {
-    # Iterate over all packages ranks and do the installation of all packages
-    # of rank 1, then rank 2, etc
-    # TODO make a visitor taking the callback as argument
-    local rank=1
-    local packages_rank_decl
-    packages_rank_decl="$(declare -p EC_PACKAGES_HIGHEST_DEPEND_RANK)"
-    declare -A packages_rank="${packages_rank_decl#*=}"
-    while (( ${#packages_rank[@]} )); do
-        for package in "${!packages_rank[@]}"; do
-            if (( packages_rank[$package] == rank )); then
-                echo "Installing \`$package\`"
-                unset "packages_rank[$package]"
+# Execute a task in the background
+function _ec_execute_task {
+    local task=$1
+    local script="${TASK_RECIPES[$task]}"
+
+    (
+        # Ignore interrupt signals so task continues even when parent is interrupted
+        trap '' SIGINT
+
+        # Source the task script and call do_install
+        DEPENDS=()
+        # shellcheck disable=SC1090
+        source "$script"
+
+        ec_log_note "Starting: $task"
+        do_install
+        if $EC_DEBUG_SLEEP; then
+            sleep $(( (RANDOM % 5) + 1))
+        fi
+        ec_log_note "Completed: $task"
+    ) &
+
+    # Store the PID
+    TASK_RUNNING["$task"]=$!
+}
+
+# Main execution loop with dynamic dependency resolution
+function ec_execute_tasks {
+    ec_log_note "Executing tasks..."
+
+    local total_tasks=${#TASK_RECIPES[@]}
+    local completed_count=0
+
+    # Reverse mapping: PID -> task name
+    declare -A pid_to_task=()
+
+    while (( completed_count < total_tasks )); do
+        # Start all tasks whose dependencies are satisfied
+        local tasks_started=0
+        for task in "${!TASK_RECIPES[@]}"; do
+            # Skip if already completed or running
+            [[ -v TASK_COMPLETED[$task] ]] && continue
+            [[ -v TASK_RUNNING[$task] ]] && continue
+            (( ${#TASK_RUNNING[@]} >= EC_JOBS_COUNT )) && continue
+
+            # Check if dependencies are satisfied
+            if ec_dependencies_satisfied "$task"; then
+                _ec_execute_task "$task"
+                pid_to_task["${TASK_RUNNING[$task]}"]="$task"
+                tasks_started=1
             fi
         done
-        ((++rank))
+
+        # If no tasks are running and none could start, we have a problem
+        local running_count=${#TASK_RUNNING[@]}
+        if (( running_count == 0 )); then
+            if (( tasks_started == 0 )); then
+                ec_log_error "No tasks can be started. Possible circular dependency!"
+                ec_log_error "Blocked tasks (unmet dependencies):"
+                for task in "${!TASK_RECIPES[@]}"; do
+                    if [[ ! -v TASK_COMPLETED[$task] ]]; then
+                        ec_log_error "  - $task (depends on: ${TASK_DEPENDENCIES[$task]:-none})"
+                    fi
+                done
+                exit 1
+            fi
+            continue
+        fi
+
+        # Wait for any single task to complete
+        local completed_pid
+        if wait -n -p completed_pid; then
+            # Find which task completed
+            if [[ -v pid_to_task[$completed_pid] ]]; then
+                local completed_task="${pid_to_task[$completed_pid]}"
+                TASK_COMPLETED["$completed_task"]=1
+                unset "TASK_RUNNING[$completed_task]"
+                unset "pid_to_task[$completed_pid]"
+                completed_count=$((completed_count + 1))
+            fi
+        else
+            # A task failed
+            local failed_task="${pid_to_task[$completed_pid]:-unknown}"
+            ec_log_error "ERROR: Task '$failed_task' (PID: $completed_pid) failed!"
+            exit 1
+        fi
+
+        # Loop continues immediately to check for newly ready tasks
     done
 
+    # ec_wait_background_processes
+    ec_log_note "All tasks completed successfully!"
+}
+
+# Validate that all dependencies exist
+function ec_validate_dependencies {
+    local validation_failed=0
+
+    for task in "${!TASK_DEPENDENCIES[@]}"; do
+        local deps="${TASK_DEPENDENCIES[$task]}"
+
+        for dep in $deps; do
+            if [[ ! -v TASK_RECIPES[$dep] ]]; then
+                ec_log_error "Task '$task' depends on '$dep', but '$dep' does not exist!"
+                validation_failed=1
+            fi
+        done
+    done
+
+    if (( validation_failed == 1 )); then
+        exit 1
+    fi
+}
+
+################################################################################
+### Operations
+################################################################################
+
+function ec_do_install {
+    :
 }
 
 function ec_do_remove {
@@ -386,46 +386,204 @@ function ec_do_backup {
     echo "Backing up \`${EC_PACKAGES[*]}\`"
 }
 
-ec_log_note "Running env-config v4..."
+################################################################################
+### Command line interface
+################################################################################
 
-ec_print_cli_args
-ec_print_context
-ec_log_debug "################################################################################"
+EC_POSITIONAL_ARGS=()
 
-case "$EC_COMMAND" in
-    install)
-        EC_COMMAND_FUNCTION=ec_do_install;;
-    remove)
-        EC_COMMAND_FUNCTION=ec_do_remove;;
-    diff)
-        EC_COMMAND_FUNCTION=ec_do_diff;;
-    backup)
-        EC_COMMAND_FUNCTION=ec_do_backup;;
-    "")
-        ec_log_error "Missing command"; exit 1;;
-    *)
-        ec_log_error "Unsupported command \`$EC_COMMAND\`"; exit 1;;
-esac
-readonly EC_COMMAND_FUNCTION
+function ec_print_context {
+    ec_log_debug "################################################################################"
+    ec_log_debug "### Context"
+    ec_log_debug "################################################################################"
+    ec_log_debug "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
+    ec_log_debug "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
+    ec_log_debug "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
+}
 
-declare EC_LAYER_DIR="${EC_ENABLED_LAYERS[0]}"
+function ec_print_cli_args {
+    ec_log_debug "################################################################################"
+    ec_log_debug "### CLI arguments"
+    ec_log_debug "################################################################################"
+    ec_log_debug "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
+    ec_log_debug "EC_PROXY_SERVER=$EC_PROXY_SERVER"
+    ec_log_debug "EC_PROXY_PORT=$EC_PROXY_PORT"
+    ec_log_debug "EC_PROXY_USER=$EC_PROXY_USER"
+    ec_log_debug "EC_NO_PROXY=$EC_NO_PROXY"
+    ec_log_debug "EC_JOBS_COUNT=$EC_JOBS_COUNT"
+    ec_log_debug "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
+}
 
-ec_validate_layers "${EC_ENABLED_LAYERS[@]}" || exit 1
+function ec_help {
+    cat << 'EOH'
+Usage:
+    env-config [OPTIONS] COMMAND
 
-EC_DISTRO="$(which-distro)"
-readonly EC_DISTRO
+Commands:
+    install [PKG...]        Install and configure packages
+    remove  [PKG...]        Completely uninstall packages (package itself and its configuration)
+    diff    [PKG...]        List the diffs between the deployed config files and ones in the repo
+    backup  [PKG...]        Copy the deployed files back into the repo
 
-EC_PLATFORM="$(which-platform)"
-readonly EC_PLATFORM
+Options:
+    -h, --help              Display this message
+    -l, --layer             Path to a layer root directory (can be repeated, layer-core is always included)
+    -j, --job [N]           Number of concurrent jobs to run (N defaults to CPU count)
+    --proxy-server URL      Proxy server URL
+    --proxy-port   PORT     Proxy port number (requires --proxy-server)
+    --proxy-user   USER     Proxy user (requires --proxy-server)
+    --no-proxy     URL,...  URLs not served by the proxy (requires --proxy-server)
 
-ec_source_distro_and_platform || exit 1
+The arguments `PKG` must be the basename of one of the recipes available across all the layers
+(ie. the recipe file `layer-core/recipes/shell/zsh.sh` provides the package `zsh`).
 
-if [[ ! -v EC_TARGET_PACKAGES ]]; then
-    EC_TARGET_PACKAGES=("${all[@]}")
-fi
+If `all` is provided as package env-config will install and configure all applicable packages
+for the current distribution and platform.
 
-ec_source_recipes_recursively 
-ec_compute_dependency_chain
+If no package is provided `all` is used as default.
+EOH
+}
 
-# Execute the user provided command
-$EC_COMMAND_FUNCTION
+function parse_cli {
+    while (( $# > 0 )); do
+        case "$1" in
+            -h|--help)
+                ec_help; exit 0;;
+            -l|--layer)
+                EC_ENABLED_LAYERS+=("$2"); shift 2;;
+            --proxy-server)
+                EC_PROXY_SERVER="$2"; shift 2;;
+            --proxy-port)
+                EC_PROXY_PORT="$2"; shift 2;;
+            --proxy-user)
+                EC_PROXY_USER="$2"; shift 2;;
+            --no-proxy)
+                EC_NO_PROXY="$2"; shift 2;;
+            -j|--job)
+                case ${2:-} in
+                    ''|*[!0-9]*) EC_JOBS_COUNT=$(nproc); shift 1;;
+                    *) EC_JOBS_COUNT=$2; shift 2;;
+                esac;;
+            --debug-sleep)
+                EC_DEBUG_SLEEP=true; shift 1;;
+            -*)
+                ec_log_error "Unknown option \`$1\`"; exit 1;;
+            *)
+                EC_POSITIONAL_ARGS+=("$1"); shift;;
+        esac
+    done
+
+    readonly EC_PROXY_SERVER
+    readonly EC_PROXY_PORT
+    readonly EC_PROXY_USER
+    readonly EC_NO_PROXY
+    readonly EC_POSITIONAL_ARGS
+    readonly EC_ENABLED_LAYERS
+    readonly EC_JOBS_COUNT
+
+    readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
+    EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
+}
+
+################################################################################
+### Cleanup handling
+################################################################################
+
+function reset_terminal {
+    ec_log_debug "Resetting terminal"
+}
+
+function at_exit {
+    ec_log_debug "[EXIT] at_exit"
+    ec_wait_background_processes
+    reset_terminal
+}
+
+function on_interrupt {
+    local sigint_code=$?
+    # Add a newline after the interrupt echo char ^C
+    echo ""
+    ec_log_debug "[SIGINT] on_interrupt"
+
+    if [[ "${ON_INTERRUPT:-0}" == 1 ]]; then
+        ec_log_debug "[SIGINT] Second interrupt, aborting."
+        ec_kill_background_processes
+    else
+        ec_log_debug "[SIGINT] First interrupt, waiting."
+        ON_INTERRUPT=1
+        ec_wait_background_processes
+    fi
+
+    exit $sigint_code
+}
+
+trap on_interrupt SIGINT
+trap at_exit EXIT
+
+
+################################################################################
+### Main execution
+################################################################################
+
+function main {
+
+    parse_cli "$@"
+    declare -a all=()
+
+    ec_log_note "Running env-config v4..."
+
+    ec_print_cli_args
+    ec_print_context
+    ec_log_debug "################################################################################"
+
+    case "$EC_COMMAND" in
+        install)
+            EC_COMMAND_FUNCTION=ec_do_install;;
+        remove)
+            EC_COMMAND_FUNCTION=ec_do_remove;;
+        diff)
+            EC_COMMAND_FUNCTION=ec_do_diff;;
+        backup)
+            EC_COMMAND_FUNCTION=ec_do_backup;;
+        '')
+            ec_log_error "Missing command"; exit 1;;
+        *)
+            ec_log_error "Unsupported command \`$EC_COMMAND\`"; exit 1;;
+    esac
+    readonly EC_COMMAND_FUNCTION
+
+    ec_validate_layers "${EC_ENABLED_LAYERS[@]}" || exit 1
+
+    EC_LAYER_DIR="$EC_LAYER_CORE_DIR"
+
+    EC_DISTRO="$(which-distro)"
+    readonly EC_DISTRO
+
+    EC_PLATFORM="$(which-platform)"
+    readonly EC_PLATFORM
+
+    ec_source_distro_and_platform || exit 1
+
+    if [[ ! -v EC_TARGET_PACKAGES ]]; then
+        EC_TARGET_PACKAGES=("${all[@]}")
+    fi
+
+    local layer_dir
+    for layer_dir in "${EC_ENABLED_LAYERS[@]}"; do
+        ec_discover_tasks "$layer_dir"
+    done
+
+    if (( ${#TASK_RECIPES[@]} == 0 )); then
+        ec_log_error "No task found in '${EC_ENABLED_LAYERS[*]}'!"
+        exit 0
+    fi
+
+    ec_validate_dependencies
+    ec_execute_tasks
+
+    # # Execute the user provided command
+    # $EC_COMMAND_FUNCTION
+}
+
+# TODO execute main if not sourced
+main "$@"
