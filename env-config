@@ -466,20 +466,6 @@ If no package is provided `all` is used as default.
 EOH
 }
 
-function ec_color_set {
-    local when=$1
-    case $when in
-        auto)
-            [[ -n "${NO_COLOR:-}" ]] && EC_COLOR=false && return
-            [[ "${TERM:-dump}" == "dumb" ]] && EC_COLOR=false && return
-            [[ -t 1 ]] && EC_COLOR=true || EC_COLOR=false;;
-        never) EC_COLOR=false;;
-        always) EC_COLOR=true;;
-        '') ec_log_error "Missing value for option --color"; exit 1;;
-        *) ec_log_error "Invalid value \`$when\` for option --color, possible values: auto, never, always "; exit 1;;
-    esac
-}
-
 function ec_parse_cli {
     while (( $# > 0 )); do
         case "$1" in
@@ -493,7 +479,13 @@ function ec_parse_cli {
                     *) EC_JOBS_COUNT=$2; shift 2;;
                 esac;;
             --color)
-                EC_COLOR="${2:-}"; shift 2;;
+                case ${2:-} in
+                    auto) EC_COLOR=auto; shift 2;;
+                    never) EC_COLOR=false; shift 2;;
+                    always) EC_COLOR=true; shift 2;;
+                    '') ec_log_error "Missing value for option --color"; exit 1;;
+                    *) ec_log_error "Invalid value \`$2\` for option --color, possible values: auto, never, always"; exit 1;;
+                esac;;
             --proxy-server)
                 EC_PROXY_SERVER="$2"; shift 2;;
             --proxy-port)
@@ -519,13 +511,21 @@ function ec_parse_cli {
     readonly EC_ENABLED_LAYERS
     readonly EC_JOBS_COUNT
 
-    ec_color_set $EC_COLOR
+    if [[ "$EC_COLOR" == auto ]]; then
+        EC_COLOR=true
+        if [[ -n "${NO_COLOR:-}" ]]; then
+            EC_COLOR=false
+        elif [[ "${TERM:-dump}" == "dumb" ]]; then
+            EC_COLOR=false
+        elif [[ ! -t 1 ]]; then
+            EC_COLOR=false
+        fi
+    fi
     readonly EC_COLOR
+    EC_LOG_COLOR=$EC_COLOR
 
     readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
     EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
-
-    EC_LOG_COLOR=$EC_COLOR
 }
 
 ################################################################################
