@@ -468,6 +468,13 @@ EOH
 
 function ec_parse_cli {
     while (( $# > 0 )); do
+        if [[ "$1" == -*=* ]]; then
+            opt="${1%%=*}"
+            val="${1#*=}"
+            shift
+            set -- "$opt" "$val" "$@"
+        fi
+
         case "$1" in
             -h|--help)
                 ec_help; exit 0;;
