@@ -513,13 +513,14 @@ function reset_terminal {
     ec_log_debug "Resetting terminal"
 }
 
-function at_exit {
+function ec_at_exit {
     ec_log_debug "[EXIT] at_exit"
     ec_wait_background_processes
+    # TODO call ec_progress_deinit_term
     reset_terminal
 }
 
-function on_interrupt {
+function ec_on_interrupt {
     local sigint_code=$?
     # Add a newline after the interrupt echo char ^C
     echo ""
@@ -548,8 +549,8 @@ function main {
 
     ec_log_note "Running env-config v4..."
 
-    trap on_interrupt SIGINT
-    trap at_exit EXIT
+    trap ec_on_interrupt SIGINT
+    trap ec_at_exit EXIT
 
     ec_print_cli_args
     ec_print_context
