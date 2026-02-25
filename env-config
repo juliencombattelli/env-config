@@ -50,14 +50,23 @@ source utils.bash
 # Declared upfront for better linting in the functions below
 # Some of them are marked readonly later-on after their proper initialization
 
+# HTTP proxy configuration
 EC_PROXY_SERVER=""
 EC_PROXY_PORT=""
 EC_PROXY_USER=""
 EC_NO_PROXY=""
 
+# Path to enabled layers
 EC_ENABLED_LAYERS=("$EC_LAYER_CORE_DIR")
+# Path of the currently parsed recipe, distro or platform file
+EC_LAYER_DIR="${EC_ENABLED_LAYERS[0]}"
+export EC_LAYER_DIR # used by recipes
+# Number of tasks running concurrently
 EC_JOBS_COUNT=1
+# Whether to use colors
 EC_COLOR=auto
+
+# TODO remove those debug features
 EC_DEBUG_SLEEP=false
 
 function ec_into_layer_path {
@@ -106,6 +115,7 @@ function ec_source_and_validate_distro {
         local distro_file="$layer_path/distros/$EC_DISTRO.bash"
         ec_log_debug "Checking distro file $distro_file"
         if [[ -f $distro_file ]]; then
+            EC_LAYER_DIR="$layer_path"
             # shellcheck disable=SC1090
             source "$distro_file" || valid=false
             # TODO add validation
@@ -125,6 +135,7 @@ function ec_source_and_validate_platform {
         local platform_file="$layer_path/platforms/$EC_PLATFORM.bash"
         ec_log_debug "Checking platform file $platform_file"
         if [[ -f $platform_file ]]; then
+            EC_LAYER_DIR="$layer_path"
             # shellcheck disable=SC1090
             source "$platform_file" || valid=false
             # TODO add validation
@@ -197,10 +208,11 @@ function ec_kill_background_processes {
 }
 
 function ec_discover_tasks {
-    local tasks_dir="$1"
-    ec_log_debug "Discovering tasks in $tasks_dir..."
+    local layer_dir="$1"
+    ec_log_debug "Discovering tasks in $layer_dir..."
 
-    for task_file in "$tasks_dir"/recipes/*/*.bash; do
+    EC_LAYER_DIR="$layer_dir"
+    for task_file in "$layer_dir"/recipes/*/*.bash; do
         [[ -f "$task_file" ]] || continue
 
         # Get task name from filename (remove .bash extension)
@@ -364,7 +376,18 @@ function ec_validate_dependencies {
 ################################################################################
 
 function ec_do_install {
-    :
+    local layer_dir
+    for layer_dir in "${EC_ENABLED_LAYERS[@]}"; do
+        ec_discover_tasks "$layer_dir"
+    done
+
+    if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
+        ec_log_error "No task found in '${EC_ENABLED_LAYERS[*]}'!"
+        exit 0
+    fi
+
+    ec_validate_dependencies
+    ec_execute_tasks
 }
 
 function ec_do_remove {
@@ -574,8 +597,6 @@ function main {
 
     ec_validate_layers "${EC_ENABLED_LAYERS[@]}" || exit 1
 
-    EC_LAYER_DIR="$EC_LAYER_CORE_DIR"
-
     EC_DISTRO="$(which-distro)"
     readonly EC_DISTRO
 
@@ -588,21 +609,8 @@ function main {
         EC_TARGET_PACKAGES=("${all[@]}")
     fi
 
-    local layer_dir
-    for layer_dir in "${EC_ENABLED_LAYERS[@]}"; do
-        ec_discover_tasks "$layer_dir"
-    done
-
-    if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
-        ec_log_error "No task found in '${EC_ENABLED_LAYERS[*]}'!"
-        exit 0
-    fi
-
-    ec_validate_dependencies
-    ec_execute_tasks
-
-    # # Execute the user provided command
-    # $EC_COMMAND_FUNCTION
+    # Execute the user provided command
+    $EC_COMMAND_FUNCTION
 }
 
 # TODO execute main if not sourced
