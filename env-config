@@ -207,35 +207,56 @@ function ec_kill_background_processes {
     fi
 }
 
+function ec_discover_task {
+    local task_name="$1"
+    local layer_dir="$2"
+    
+    # Skip if already discovered
+    [[ -v EC_TASK_RECIPES[$task_name] ]] && return 0
+    
+    # Find the task file
+    local task_file
+    task_file="$(ec_get_recipe_file_for_package "$task_name")" || return 1
+    
+    ec_log_debug "  Discovering task: $task_name from $task_file"
+    
+    # Store the script path
+    EC_TASK_RECIPES["$task_name"]="$task_file"
+    
+    # Source the file in a subshell to extract DEPENDS array
+    local deps
+    deps=$(
+        DEPENDS=()
+        # TODO handle error when sourcing the recipes
+        # shellcheck disable=SC1090
+        source "$task_file" 2>/dev/null || true
+        echo "${DEPENDS[*]}"
+    )
+    
+    # Store dependencies
+    EC_TASK_DEPENDENCIES["$task_name"]="$deps"
+    
+    ec_log_debug "    Dependencies: ${deps:-none}"
+    
+    # Recursively discover dependencies
+    for dep in $deps; do
+        ec_discover_task "$dep" "$layer_dir"
+    done
+}
+
 function ec_discover_tasks {
     local layer_dir="$1"
-    ec_log_debug "Discovering tasks in $layer_dir..."
-
+    shift
+    local -a target_packages=("$@")
+    
+    ec_log_debug "Discovering tasks in $layer_dir for packages: ${target_packages[*]}"
+    
     EC_LAYER_DIR="$layer_dir"
-    for task_file in "$layer_dir"/recipes/*/*.bash; do
-        [[ -f "$task_file" ]] || continue
-
-        # Get task name from filename (remove .bash extension)
-        local task_name="${task_file##*/}"
-        task_name="${task_name%.bash}"
-
-        # Store the script path
-        EC_TASK_RECIPES["$task_name"]="$task_file"
-
-        # Source the file in a subshell to extract DEPENDS array
-        local deps
-        deps=$(
-            DEPENDS=()
-            # TODO handle error when sourcing the recipes
-            # shellcheck disable=SC1090
-            source "$task_file" 2>/dev/null || true
-            echo "${DEPENDS[*]}"
-        )
-
-        # Store dependencies
-        EC_TASK_DEPENDENCIES["$task_name"]="$deps"
-
-        ec_log_debug "  Found task: $task_name (dependencies: ${deps:-none})"
+    
+    # Discover each target package and its dependencies
+    local package
+    for package in "${target_packages[@]}"; do
+        ec_discover_task "$package" "$layer_dir"
     done
 }
 
@@ -378,11 +399,11 @@ function ec_validate_dependencies {
 function ec_do_install {
     local layer_dir
     for layer_dir in "${EC_ENABLED_LAYERS[@]}"; do
-        ec_discover_tasks "$layer_dir"
+        ec_discover_tasks "$layer_dir" "${EC_TARGET_PACKAGES[@]}"
     done
 
     if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
-        ec_log_error "No task found in '${EC_ENABLED_LAYERS[*]}'!"
+        ec_log_error "No task found for packages: ${EC_TARGET_PACKAGES[*]}"
         exit 0
     fi
 
@@ -612,7 +633,7 @@ function main {
 
     ec_source_distro_and_platform || exit 1
 
-    if [[ ! -v EC_TARGET_PACKAGES ]]; then
+    if (( ${#EC_TARGET_PACKAGES[@]} == 0 )); then
         EC_TARGET_PACKAGES=("${all[@]}")
     fi
 
