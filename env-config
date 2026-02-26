@@ -65,6 +65,8 @@ export EC_LAYER_DIR # used by recipes
 EC_JOBS_COUNT=1
 # Whether to use colors
 EC_COLOR=auto
+# Whether to skip installing dependencies
+EC_SKIP_DEPENDENCIES=false
 
 # TODO remove those debug features
 EC_DEBUG_SLEEP=false
@@ -192,7 +194,7 @@ function ec_wait_background_processes {
                     break
                 fi
             done
-        fi 
+        fi
         remaining=$((remaining - 1))
     done
 }
@@ -210,19 +212,19 @@ function ec_kill_background_processes {
 function ec_discover_task {
     local task_name="$1"
     local layer_dir="$2"
-    
+
     # Skip if already discovered
     [[ -v EC_TASK_RECIPES[$task_name] ]] && return 0
-    
+
     # Find the task file
     local task_file
     task_file="$(ec_get_recipe_file_for_package "$task_name")" || return 1
-    
+
     ec_log_debug "  Discovering task: $task_name from $task_file"
-    
+
     # Store the script path
     EC_TASK_RECIPES["$task_name"]="$task_file"
-    
+
     # Source the file in a subshell to extract DEPENDS array
     local deps
     deps=$(
@@ -232,27 +234,31 @@ function ec_discover_task {
         source "$task_file" 2>/dev/null || true
         echo "${DEPENDS[*]}"
     )
-    
-    # Store dependencies
-    EC_TASK_DEPENDENCIES["$task_name"]="$deps"
-    
-    ec_log_debug "    Dependencies: ${deps:-none}"
-    
-    # Recursively discover dependencies
-    for dep in $deps; do
-        ec_discover_task "$dep" "$layer_dir"
-    done
+
+    # Store dependencies (unless --no-deps is set)
+    if $EC_SKIP_DEPENDENCIES; then
+        EC_TASK_DEPENDENCIES["$task_name"]=""
+        ec_log_debug "    Dependencies: ${deps:-none} (skipped)"
+    else
+        EC_TASK_DEPENDENCIES["$task_name"]="$deps"
+        ec_log_debug "    Dependencies: ${deps:-none}"
+
+        # Recursively discover dependencies
+        for dep in $deps; do
+            ec_discover_task "$dep" "$layer_dir"
+        done
+    fi
 }
 
 function ec_discover_tasks {
     local layer_dir="$1"
     shift
     local -a target_packages=("$@")
-    
+
     ec_log_debug "Discovering tasks in $layer_dir for packages: ${target_packages[*]}"
-    
+
     EC_LAYER_DIR="$layer_dir"
-    
+
     # Discover each target package and its dependencies
     local package
     for package in "${target_packages[@]}"; do
@@ -453,6 +459,7 @@ function ec_print_cli_args {
     ec_log_debug "EC_PROXY_USER=$EC_PROXY_USER"
     ec_log_debug "EC_NO_PROXY=$EC_NO_PROXY"
     ec_log_debug "EC_JOBS_COUNT=$EC_JOBS_COUNT"
+    ec_log_debug "EC_SKIP_DEPENDENCIES=$EC_SKIP_DEPENDENCIES"
     ec_log_debug "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
 }
 
@@ -472,6 +479,7 @@ Options:
     -l, --layer             Path to a layer root directory (can be repeated, layer-core is always included)
     -j, --job [N]           Number of concurrent jobs to run (N defaults to CPU count)
     --color WHEN            Control when to use color in output (auto, never or always)
+    --no-deps               Skip installing dependencies (useful for reinstalling/reconfiguring)
     --proxy-server URL      Proxy server URL
     --proxy-port   PORT     Proxy port number (requires --proxy-server)
     --proxy-user   USER     Proxy user (requires --proxy-server)
@@ -514,6 +522,8 @@ function ec_parse_cli {
                     '') ec_log_error "Missing value for option --color"; exit 1;;
                     *) ec_log_error "Invalid value \`$2\` for option --color, possible values: auto, never, always"; exit 1;;
                 esac;;
+            --no-deps)
+                EC_SKIP_DEPENDENCIES=true; shift 1;;
             --proxy-server)
                 EC_PROXY_SERVER="$2"; shift 2;;
             --proxy-port)
@@ -538,6 +548,7 @@ function ec_parse_cli {
     readonly EC_POSITIONAL_ARGS
     readonly EC_ENABLED_LAYERS
     readonly EC_JOBS_COUNT
+    readonly EC_SKIP_DEPENDENCIES
 
     if [[ "$EC_COLOR" == auto ]]; then
         EC_COLOR=true
