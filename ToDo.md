@@ -54,6 +54,7 @@ separated in three categories:
   - [ ] vscode folders (not sure if this is doable)
   - [ ] .dotnet (needed only for that CMake VSCode extension...)
   - [x] env-config (should be in .config/env-config)
+- [ ] nslookup in proxy.sh might need to be explicitly installed (bind9-dnsutils on Ubuntu)
 
 ## TO EVALUATE
 
