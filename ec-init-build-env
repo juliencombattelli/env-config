@@ -141,7 +141,7 @@ fi
 
 # BitBake and associated Poky version
 # Refer to https://wiki.yoctoproject.org/wiki/Releases
-BITBAKEVER="2.2.4"
+BITBAKEVER="2.2.0"
 POKYVER="langdale-4.1.4"
 
 # Download BitBake
