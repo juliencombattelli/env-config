@@ -52,7 +52,7 @@ do_compile() {
 do_configure() {
     if [ ! -d ${EC_CONFIG_DIR}/nvim ]; then
         bbplain "Downloading and installing Neovim configuration."
-        git clone https://github.com/juliencombattelli/neovim-config ${EC_CONFIG_DIR}/nvim
+        git clone https://github.com/juliencombattelli/neovim-config ${EC_CONFIG_DIR}/nvim -b v2
         git -C ${EC_CONFIG_DIR}/nvim remote set-url origin git@github.com:juliencombattelli/neovim-config
     else
         bbplain "Neovim configuration already installed, nothing to do."
