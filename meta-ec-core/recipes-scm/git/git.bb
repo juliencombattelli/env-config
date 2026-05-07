@@ -15,4 +15,5 @@ do_configure() {
     git config --global user.email "julien.combattelli@gmail.com"
     git config --global user.name "Julien Combattelli"
     git config --global color.ui "always"
+    git config --global init.defaultBranch main
 }
