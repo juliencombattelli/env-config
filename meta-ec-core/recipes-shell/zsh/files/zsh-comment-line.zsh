@@ -7,6 +7,6 @@ function jucom-comment-line() {
 }
 zle -N jucom-comment-line
 
-# FIXME This seems to reset the last arg history using the Alt+. shortcut
+# For some weird historical BS, both Ctrl+_ and Ctrl+/ send '^_' on Linux using
+# an AZERTY keyboard
 bindkey $'^_' jucom-comment-line
-
