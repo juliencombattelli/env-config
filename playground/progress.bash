@@ -156,16 +156,46 @@ function vt100_style_reset {
     printf "\e[m"
 }
 
-function seconds_to_hms {
-    local h=$(( $1 / 3600 ))
-    local m=$(( ($1 % 3600) / 60 ))
-    local s=$(( $1 % 60 ))
-    printf "%02d:%02d:%02d\n" $h $m $s
+function timer_supports_epochrealtime {
+    [[ "$EPOCHREALTIME" =~ ^[0-9]+\.[0-9]+$ ]]
+}
+
+function timer_reset {
+    local timer_var=${1:-TIMER_START}
+    if timer_supports_epochrealtime; then
+        # Bash 5+: store microseconds since epoch (strip the dot)
+        printf -v "$timer_var" '%s' "${EPOCHREALTIME/.}"
+    else
+        # Bash 4: second resolution only
+        printf -v "$timer_var" '%s' "$SECONDS"
+    fi
+}
+
+function timer_elapsed {
+    local timer_var=${1:-TIMER_START}
+    local timer_start=${!timer_var}
+    local elapsed_sec
+    local ms=""
+    if timer_supports_epochrealtime; then
+        local elapsed_us=$(( ${EPOCHREALTIME/.} - timer_start ))
+        elapsed_sec=$(( elapsed_us / 1000000 ))
+        ms=$(printf ".%03d" $(( ( elapsed_us / 1000 ) % 1000 )))
+    else
+        elapsed_sec=$(( SECONDS - timer_start ))
+    fi
+    local h=$(( elapsed_sec / 3600 ))
+    local m=$(( ( elapsed_sec % 3600 ) / 60 ))
+    local s=$(( elapsed_sec % 60 ))
+    printf "%02d:%02d:%02d%s\n" $h $m $s $ms
 }
 
 function progress_bar {
-    # Progress: xxx% ████████░░░░░░░ HH:MM:SS<blank>
-    local BAR_LEN=$(( COLUMNS - 10 - 5 - 10 ))
+    local ms=0
+    if timer_supports_epochrealtime; then
+        ms=4
+    fi
+    # Progress: xxx% ████████░░░░░░░ HH:MM:SS.mmm<blank>
+    local BAR_LEN=$(( COLUMNS - 10 - 5 - 10 - $ms ))
     local progress_percent=$(( $1 * 100 / $2 ))
     local done=$(( progress_percent * BAR_LEN / 100 ))
     local left=$(( BAR_LEN - done ))
@@ -173,7 +203,7 @@ function progress_bar {
     local fill=$(printf "%${done}s")
     # shellcheck disable=SC2155
     local empty=$(printf "%${left}s")
-    printf "Progress: %3s%% %s%s %s " "$progress_percent" "${fill// /█}" "${empty// /░}" "$(seconds_to_hms $SECONDS)"
+    printf "Progress: %3s%% %s%s %s " "$progress_percent" "${fill// /█}" "${empty// /░}" "$(timer_elapsed GLOBAL_TIMER)"
 }
 
 function print_bottom_progress_bar {
@@ -199,7 +229,7 @@ function print_task_status {
         FAILED)  STATUS="$(printf "%s FAILED%s" "$(vt100_style_set $VT100_STYLE_FG_RED)" "$(vt100_style_reset)")";;
         *) echo "Unexpected task status \`$1\`, exiting."; exit 1;;
     esac
-    local -r ELAPSED=$(seconds_to_hms $(( SECONDS - SECONDS_CURRENT_TASK )))
+    local -r ELAPSED="$(timer_elapsed CURRENT_TASK_TIMER)"
     printf "%s%s [%${tasks_count_len}s/$tasks_count] [%s] %s" \
         "$NEWLINE" "$STATUS" "$i" "$ELAPSED" "$TASK"
 }
@@ -388,7 +418,7 @@ function main {
     trap deinit_term EXIT
     init_term
 
-    SECONDS=0
+    timer_reset GLOBAL_TIMER
 
     task_succeeded=0
     task_failed=0
@@ -404,7 +434,7 @@ function main {
         RUNFILE="$WORK_DIR/$PACKAGE_NAME/$PACKAGE_TASK.run"
         prepare_execution_environment "$FIFO" "$LOGFILE" "$RUNFILE"
 
-        SECONDS_CURRENT_TASK=$SECONDS
+        timer_reset CURRENT_TASK_TIMER
 
         vt100_cursor_save
         vt100_scroll_region_set "$COMMAND_OUTPUT_PREVIEW_START_LINE" "$COMMAND_OUTPUT_PREVIEW_END_LINE"
@@ -434,7 +464,7 @@ function main {
         vt100_cursor_restore
 
         vt100_cursor_position_set "$PREVIOUSLY_COMPLETED_TASK_LINE"
-        TIME_TOOK="$(seconds_to_hms $(( SECONDS - SECONDS_CURRENT_TASK )))"
+        TIME_TOOK="$(timer_elapsed CURRENT_TASK_TIMER)"
         if wait %1; then
             VERDICT=DONE
             (( task_succeeded += 1 ))
