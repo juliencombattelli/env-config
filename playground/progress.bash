@@ -224,14 +224,14 @@ function print_task_status {
     fi
     local STATUS
     case "$1" in
-        RUNNING) STATUS="$(printf "%sRunning%s" "$(vt100_style_set $VT100_STYLE_BOLD)" "$(vt100_style_reset)")";;
+        RUNNING) STATUS="$(printf "%sRunning%s" "$(vt100_style_set $VT100_STYLE_BOLD)")";;
         DONE)    STATUS="$(printf "%s   DONE%s" "$(vt100_style_set $VT100_STYLE_FG_GREEN)" "$(vt100_style_reset)")";;
         FAILED)  STATUS="$(printf "%s FAILED%s" "$(vt100_style_set $VT100_STYLE_FG_RED)" "$(vt100_style_reset)")";;
         *) echo "Unexpected task status \`$1\`, exiting."; exit 1;;
     esac
     local -r ELAPSED="$(timer_elapsed CURRENT_TASK_TIMER)"
-    printf "%s%s [%${tasks_count_len}s/$tasks_count] [%s] %s" \
-        "$NEWLINE" "$STATUS" "$i" "$ELAPSED" "$TASK"
+    printf "%s%s [%${tasks_count_len}s/$tasks_count] [%s] %s%s" \
+        "$NEWLINE" "$STATUS" "$i" "$ELAPSED" "$TASK" "$(vt100_style_reset)"
 }
 
 function print_running_task {
