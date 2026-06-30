@@ -139,7 +139,7 @@ Colors:
 Styles:
     $styles
 EOH
-}
+    }
     declare -a attributes=()
     local color
     while (( $# > 0 )); do
