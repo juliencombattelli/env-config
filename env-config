@@ -313,6 +313,41 @@ function _ec_execute_task {
     EC_TASK_RUNNING["$task"]=$!
 }
 
+# Report tasks that can't start because dependencies are unmet or failed
+function _ec_report_blocked_tasks {
+    local -a blocked_lines=()
+    local any_failed_dep=false
+    for task in "${!EC_TASK_RECIPES[@]}"; do
+        [[ -v EC_TASK_COMPLETED[$task] ]] && continue
+
+        local deps="${EC_TASK_DEPENDENCIES[$task]}"
+        local -a failed_deps=()
+        for dep in $deps; do
+            if [[ -v EC_TASK_COMPLETED[$dep] ]] && (( EC_TASK_COMPLETED[$dep] != 0 )); then
+                failed_deps+=("$dep")
+            fi
+        done
+
+        if (( ${#failed_deps[@]} > 0 )); then
+            any_failed_dep=true
+            blocked_lines+=("  - $task cannot run because dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y) failed: ${failed_deps[*]}")
+        else
+            blocked_lines+=("  - $task (depends on: ${deps:-none})")
+        fi
+    done
+
+    if $any_failed_dep; then
+        ec_log_error "Some tasks cannot run because their dependencies failed:"
+    else
+        ec_log_error "No tasks can be started. Possible circular dependency!"
+        ec_log_error "Blocked tasks (unmet dependencies):"
+    fi
+    local blocked_line
+    for blocked_line in "${blocked_lines[@]}"; do
+        ec_log_error "$blocked_line"
+    done
+}
+
 # Main execution loop with dynamic dependency resolution
 function ec_execute_tasks {
     ec_log_note "Executing tasks..."
@@ -344,37 +379,7 @@ function ec_execute_tasks {
         local running_count=${#EC_TASK_RUNNING[@]}
         if (( running_count == 0 )); then
             if (( tasks_started == 0 )); then
-                local -a blocked_lines=()
-                local any_failed_dep=false
-                for task in "${!EC_TASK_RECIPES[@]}"; do
-                    [[ -v EC_TASK_COMPLETED[$task] ]] && continue
-
-                    local deps="${EC_TASK_DEPENDENCIES[$task]}"
-                    local -a failed_deps=()
-                    for dep in $deps; do
-                        if [[ -v EC_TASK_COMPLETED[$dep] ]] && (( EC_TASK_COMPLETED[$dep] != 0 )); then
-                            failed_deps+=("$dep")
-                        fi
-                    done
-
-                    if (( ${#failed_deps[@]} > 0 )); then
-                        any_failed_dep=true
-                        blocked_lines+=("  - $task cannot run because dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y) failed: ${failed_deps[*]}")
-                    else
-                        blocked_lines+=("  - $task (depends on: ${deps:-none})")
-                    fi
-                done
-
-                if $any_failed_dep; then
-                    ec_log_error "Some tasks cannot run because their dependencies failed:"
-                else
-                    ec_log_error "No tasks can be started. Possible circular dependency!"
-                    ec_log_error "Blocked tasks (unmet dependencies):"
-                fi
-                local blocked_line
-                for blocked_line in "${blocked_lines[@]}"; do
-                    ec_log_error "$blocked_line"
-                done
+                _ec_report_blocked_tasks
                 exit 1
             fi
             continue
