@@ -178,7 +178,7 @@ function ec_get_recipe_file_for_package {
 # Associative arrays to store task information
 declare -A EC_TASK_DEPENDENCIES=() # task -> space-separated list of dependencies
 declare -A EC_TASK_RECIPES=()      # task -> path to task script
-declare -A EC_TASK_COMPLETED=()    # task -> 1 if completed
+declare -A EC_TASK_COMPLETED=()    # task -> exit status (0 on success, non-zero on failure)
 declare -A EC_TASK_RUNNING=()      # task -> PID if running
 
 function ec_wait_background_processes {
@@ -278,6 +278,8 @@ function ec_dependencies_satisfied {
     for dep in $deps; do
         if [[ ! -v EC_TASK_COMPLETED[$dep] ]]; then
             return 1 # Dependency not completed
+        elif (( EC_TASK_COMPLETED[$dep] != 0 )); then
+            return 1 # Dependency failed
         fi
     done
 
@@ -300,6 +302,7 @@ function _ec_execute_task {
 
         ec_log_note "Starting: $task"
         do_install
+        bash ./tests/layer-random/recipes/random/random.bash &>/dev/null # |& tee "$FIFO" &>"$LOGFILE"
         if $EC_DEBUG_SLEEP; then
             sleep $(( (RANDOM % 5) + 1))
         fi
@@ -324,7 +327,7 @@ function ec_execute_tasks {
         # Start all tasks whose dependencies are satisfied
         local tasks_started=0
         for task in "${!EC_TASK_RECIPES[@]}"; do
-            # Skip if already completed or running
+            # Skip if already completed (successfully or not) or running
             [[ -v EC_TASK_COMPLETED[$task] ]] && continue
             [[ -v EC_TASK_RUNNING[$task] ]] && continue
             (( ${#EC_TASK_RUNNING[@]} >= EC_JOBS_COUNT )) && continue
@@ -341,12 +344,36 @@ function ec_execute_tasks {
         local running_count=${#EC_TASK_RUNNING[@]}
         if (( running_count == 0 )); then
             if (( tasks_started == 0 )); then
-                ec_log_error "No tasks can be started. Possible circular dependency!"
-                ec_log_error "Blocked tasks (unmet dependencies):"
+                local -a blocked_lines=()
+                local any_failed_dep=false
                 for task in "${!EC_TASK_RECIPES[@]}"; do
-                    if [[ ! -v EC_TASK_COMPLETED[$task] ]]; then
-                        ec_log_error "  - $task (depends on: ${EC_TASK_DEPENDENCIES[$task]:-none})"
+                    [[ -v EC_TASK_COMPLETED[$task] ]] && continue
+
+                    local deps="${EC_TASK_DEPENDENCIES[$task]}"
+                    local -a failed_deps=()
+                    for dep in $deps; do
+                        if [[ -v EC_TASK_COMPLETED[$dep] ]] && (( EC_TASK_COMPLETED[$dep] != 0 )); then
+                            failed_deps+=("$dep")
+                        fi
+                    done
+
+                    if (( ${#failed_deps[@]} > 0 )); then
+                        any_failed_dep=true
+                        blocked_lines+=("  - $task cannot run because dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y) failed: ${failed_deps[*]}")
+                    else
+                        blocked_lines+=("  - $task (depends on: ${deps:-none})")
                     fi
+                done
+
+                if $any_failed_dep; then
+                    ec_log_error "Some tasks cannot run because their dependencies failed:"
+                else
+                    ec_log_error "No tasks can be started. Possible circular dependency!"
+                    ec_log_error "Blocked tasks (unmet dependencies):"
+                fi
+                local blocked_line
+                for blocked_line in "${blocked_lines[@]}"; do
+                    ec_log_error "$blocked_line"
                 done
                 exit 1
             fi
@@ -355,26 +382,32 @@ function ec_execute_tasks {
 
         # Wait for any single task to complete
         local completed_pid
-        if wait -n -p completed_pid; then
-            # Find which task completed
-            if [[ -v pid_to_task[$completed_pid] ]]; then
-                local completed_task="${pid_to_task[$completed_pid]}"
-                EC_TASK_COMPLETED["$completed_task"]=1
-                unset "EC_TASK_RUNNING[$completed_task]"
-                unset "pid_to_task[$completed_pid]"
-                completed_count=$((completed_count + 1))
+        local task_status=0
+        # || is important here as errexit option is set
+        wait -n -p completed_pid || task_status=$?
+        if [[ -v pid_to_task[$completed_pid] ]]; then
+            local completed_task="${pid_to_task[$completed_pid]}"
+            EC_TASK_COMPLETED["$completed_task"]=$task_status
+            unset "EC_TASK_RUNNING[$completed_task]"
+            unset "pid_to_task[$completed_pid]"
+            completed_count=$((completed_count + 1))
+            if (( task_status != 0 )); then
+                ec_log_error "Task '$completed_task' (PID: $completed_pid) failed!"
             fi
-        else
-            # A task failed
-            local failed_task="${pid_to_task[$completed_pid]:-unknown}"
-            ec_log_error "Task '$failed_task' (PID: $completed_pid) failed!"
-            exit 1
         fi
 
         # Loop continues immediately to check for newly ready tasks
     done
 
     # ec_wait_background_processes
+    local -a failed_tasks=()
+    for task in "${!EC_TASK_COMPLETED[@]}"; do
+        (( EC_TASK_COMPLETED[$task] != 0 )) && failed_tasks+=("$task")
+    done
+    if (( ${#failed_tasks[@]} > 0 )); then
+        ec_log_error "Some tasks failed: ${failed_tasks[*]}"
+        exit 1
+    fi
     ec_log_note "All tasks completed successfully!"
 }
 
