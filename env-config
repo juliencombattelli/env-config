@@ -273,7 +273,7 @@ function ec_discover_tasks {
     shift
     local -a target_packages=("$@")
 
-    ec_log_debug "Discovering tasks in $layer_dir for packages $(ec_join_affix ', ' \` \` ${target_packages[@]})..."
+    ec_log_debug "Discovering tasks in $layer_dir for packages $(ec_join_affix ', ' \` \` "${target_packages[@]}")..."
 
     EC_LAYER_DIR="$layer_dir"
 
@@ -352,7 +352,7 @@ function _ec_report_blocked_tasks {
         done
 
         if (( ${#unmet_deps[@]} > 0 )); then
-            blocked_lines+=("  - \`$task\` cannot run because dependencies did not complete: $(ec_join_affix ', ' \` \` ${unmet_deps[@]})")
+            blocked_lines+=("  - \`$task\` cannot run because dependencies did not complete: $(ec_join_affix ', ' \` \` "${unmet_deps[@]}")")
         else
             stuck_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
         fi
@@ -382,6 +382,7 @@ function ec_execute_tasks {
     local total_tasks=${#EC_TASK_RECIPES[@]}
     local completed_count=0
     local blocked=false
+    local task
 
     # Reverse mapping: PID -> task name
     declare -A pid_to_task=()
@@ -389,7 +390,6 @@ function ec_execute_tasks {
     while (( completed_count < total_tasks )); do
         # Start all tasks whose dependencies are satisfied
         local tasks_started=false
-        local task
         for task in "${!EC_TASK_RECIPES[@]}"; do
             # Skip if already completed (successfully or not) or running
             [[ -v EC_TASK_COMPLETED[$task] ]] && continue
@@ -435,12 +435,11 @@ function ec_execute_tasks {
 
     # ec_wait_background_processes
     local -a failed_tasks=()
-    local task
     for task in "${!EC_TASK_COMPLETED[@]}"; do
         (( EC_TASK_COMPLETED[$task] != 0 )) && failed_tasks+=("$task")
     done
     if (( ${#failed_tasks[@]} > 0 )); then
-        ec_log_error "Some tasks failed: $(ec_join_affix ', ' \` \` ${failed_tasks[@]})."
+        ec_log_error "Some tasks failed: $(ec_join_affix ', ' \` \` "${failed_tasks[@]}")."
     fi
 
     if $blocked; then
@@ -487,8 +486,8 @@ function ec_do_install {
     done
 
     if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
-        ec_log_error "No task found for packages: $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})."
-        exit 0
+        ec_log_error "No task found for packages: $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")."
+        exit 1
     fi
 
     ec_validate_dependencies
@@ -496,15 +495,15 @@ function ec_do_install {
 }
 
 function ec_do_remove {
-    ec_log_note "Removing $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})..."
+    ec_log_note "Removing $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
 }
 
 function ec_do_diff {
-    ec_log_note "Diffing $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})..."
+    ec_log_note "Diffing $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
 }
 
 function ec_do_backup {
-    ec_log_note "Backing up $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})..."
+    ec_log_note "Backing up $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
 }
 
 ################################################################################
