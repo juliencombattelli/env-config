@@ -334,33 +334,34 @@ function _ec_execute_task {
 
 # Report tasks that can't start because dependencies are unmet or failed
 function _ec_report_blocked_tasks {
-    local -a failed_dep_lines=()
+    local -a blocked_lines=()
     local -a stuck_lines=()
     local task
     for task in "${!EC_TASK_RECIPES[@]}"; do
         [[ -v EC_TASK_COMPLETED[$task] ]] && continue
 
         local deps="${EC_TASK_DEPENDENCIES[$task]}"
-        local -a failed_deps=()
+        local -a unmet_deps=()
         local dep
         for dep in $deps; do
-            if [[ -v EC_TASK_COMPLETED[$dep] ]] && (( EC_TASK_COMPLETED[$dep] != 0 )); then
-                failed_deps+=("$dep")
+            if [[ -v EC_TASK_COMPLETED[$dep] ]]; then
+                (( EC_TASK_COMPLETED[$dep] != 0 )) && unmet_deps+=("$dep")
+            else
+                unmet_deps+=("$dep")
             fi
         done
 
-        if (( ${#failed_deps[@]} > 0 )); then
-            local dependencies="dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y)"
-            failed_dep_lines+=("  - \`$task\` cannot run because $dependencies failed: $(ec_join_affix ', ' \` \` ${failed_deps[@]})")
+        if (( ${#unmet_deps[@]} > 0 )); then
+            blocked_lines+=("  - \`$task\` cannot run because dependencies did not complete: $(ec_join_affix ', ' \` \` ${unmet_deps[@]})")
         else
             stuck_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
         fi
     done
 
-    if (( ${#failed_dep_lines[@]} > 0 )); then
-        ec_log_error "Some tasks cannot run because their dependencies failed:"
+    if (( ${#blocked_lines[@]} > 0 )); then
+        ec_log_error "Some tasks cannot run because one or more dependencies did not complete:"
         local line
-        for line in "${failed_dep_lines[@]}"; do
+        for line in "${blocked_lines[@]}"; do
             ec_log_error "$line"
         done
     fi
@@ -380,6 +381,7 @@ function ec_execute_tasks {
 
     local total_tasks=${#EC_TASK_RECIPES[@]}
     local completed_count=0
+    local blocked=false
 
     # Reverse mapping: PID -> task name
     declare -A pid_to_task=()
@@ -406,8 +408,8 @@ function ec_execute_tasks {
         local running_count=${#EC_TASK_RUNNING[@]}
         if (( running_count == 0 )); then
             if ! $tasks_started; then
-                _ec_report_blocked_tasks
-                exit 1
+                blocked=true
+                break
             fi
             continue
         fi
@@ -439,8 +441,16 @@ function ec_execute_tasks {
     done
     if (( ${#failed_tasks[@]} > 0 )); then
         ec_log_error "Some tasks failed: $(ec_join_affix ', ' \` \` ${failed_tasks[@]})."
+    fi
+
+    if $blocked; then
+        _ec_report_blocked_tasks
+    fi
+
+    if $blocked || (( ${#failed_tasks[@]} > 0 )); then
         exit 1
     fi
+
     ec_log_note "All tasks completed successfully!"
 }
 
