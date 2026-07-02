@@ -6,9 +6,9 @@
 
 set -euo pipefail
 
-shopt -s dotglob # We want glob to match hidden files too
-shopt -s globstar # We want to match files recursively using **
-shopt -s nullglob # We want glob to return nothing of there is no match
+shopt -s dotglob    # We want glob to match hidden files too
+shopt -s globstar   # We want to match files recursively using **
+shopt -s nullglob   # We want glob to return nothing of there is no match
 shopt -s sourcepath # We want source to search for files in PATH
 
 ################################################################################
@@ -67,6 +67,8 @@ EC_JOBS_COUNT=1
 EC_COLOR=auto
 # Whether to skip installing dependencies
 EC_SKIP_DEPENDENCIES=false
+# List of packages to operate on
+EC_TARGET_PACKAGES=()
 
 # TODO remove those debug features
 EC_DEBUG_SLEEP=false
@@ -159,7 +161,8 @@ function ec_source_distro_and_platform {
 
 function ec_get_recipe_file_for_package {
     local package="$1"
-    local recipe_file=()
+    local -a recipe_file=()
+    local layer_path
     for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         shopt -s nullglob
         recipe_file+=("$layer_path"/recipes/*/"$package".bash)
@@ -188,6 +191,7 @@ function ec_wait_background_processes {
         # Ignore the tasks exit status as we just want them to finish
         wait -n -p awaited_pid 2>/dev/null || true
         if [[ -v awaited_pid ]]; then
+            local task
             for task in "${!EC_TASK_RUNNING[@]}"; do
                 if (( EC_TASK_RUNNING[$task] == awaited_pid )); then
                     unset "EC_TASK_RUNNING[$task]"
@@ -244,6 +248,7 @@ function ec_discover_task {
         ec_log_debug "    Dependencies: ${deps:-none}"
 
         # Recursively discover dependencies
+        local dep
         for dep in $deps; do
             ec_discover_task "$dep" "$layer_dir"
         done
@@ -255,26 +260,27 @@ function ec_discover_tasks {
     shift
     local -a target_packages=("$@")
 
-    ec_log_debug "Discovering tasks in $layer_dir for packages: ${target_packages[*]}"
+    ec_log_debug "Discovering tasks in $layer_dir for packages $(ec_join_affix ', ' \` \` ${target_packages[@]})..."
 
     EC_LAYER_DIR="$layer_dir"
 
     # Discover each target package and its dependencies
     local package
     for package in "${target_packages[@]}"; do
-        ec_discover_task "$package" "$layer_dir"
+        ec_discover_task "$package" "$layer_dir" || continue
     done
 }
 
 # Check if all dependencies of a task are completed
 function ec_dependencies_satisfied {
-    local task=$1
+    local task="$1"
     local deps="${EC_TASK_DEPENDENCIES[$task]}"
 
     # No dependencies means ready to run
     [[ -z "$deps" ]] && return 0
 
     # Check each dependency
+    local dep
     for dep in $deps; do
         if [[ ! -v EC_TASK_COMPLETED[$dep] ]]; then
             return 1 # Dependency not completed
@@ -288,7 +294,7 @@ function ec_dependencies_satisfied {
 
 # Execute a task in the background
 function _ec_execute_task {
-    local task=$1
+    local task="$1"
     local script="${EC_TASK_RECIPES[$task]}"
 
     (
@@ -317,11 +323,13 @@ function _ec_execute_task {
 function _ec_report_blocked_tasks {
     local -a blocked_lines=()
     local any_failed_dep=false
+    local task
     for task in "${!EC_TASK_RECIPES[@]}"; do
         [[ -v EC_TASK_COMPLETED[$task] ]] && continue
 
         local deps="${EC_TASK_DEPENDENCIES[$task]}"
         local -a failed_deps=()
+        local dep
         for dep in $deps; do
             if [[ -v EC_TASK_COMPLETED[$dep] ]] && (( EC_TASK_COMPLETED[$dep] != 0 )); then
                 failed_deps+=("$dep")
@@ -330,9 +338,10 @@ function _ec_report_blocked_tasks {
 
         if (( ${#failed_deps[@]} > 0 )); then
             any_failed_dep=true
-            blocked_lines+=("  - $task cannot run because dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y) failed: ${failed_deps[*]}")
+            local dependencies="dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y)"
+            blocked_lines+=("  - \`$task\` cannot run because $dependencies failed: $(ec_join_affix ', ' \` \` ${failed_deps[@]})")
         else
-            blocked_lines+=("  - $task (depends on: ${deps:-none})")
+            blocked_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
         fi
     done
 
@@ -360,7 +369,8 @@ function ec_execute_tasks {
 
     while (( completed_count < total_tasks )); do
         # Start all tasks whose dependencies are satisfied
-        local tasks_started=0
+        local tasks_started=false
+        local task
         for task in "${!EC_TASK_RECIPES[@]}"; do
             # Skip if already completed (successfully or not) or running
             [[ -v EC_TASK_COMPLETED[$task] ]] && continue
@@ -371,14 +381,14 @@ function ec_execute_tasks {
             if ec_dependencies_satisfied "$task"; then
                 _ec_execute_task "$task"
                 pid_to_task["${EC_TASK_RUNNING[$task]}"]="$task"
-                tasks_started=1
+                tasks_started=true
             fi
         done
 
         # If no tasks are running and none could start, we have a problem
         local running_count=${#EC_TASK_RUNNING[@]}
         if (( running_count == 0 )); then
-            if (( tasks_started == 0 )); then
+            if ! $tasks_started; then
                 _ec_report_blocked_tasks
                 exit 1
             fi
@@ -397,7 +407,7 @@ function ec_execute_tasks {
             unset "pid_to_task[$completed_pid]"
             completed_count=$((completed_count + 1))
             if (( task_status != 0 )); then
-                ec_log_error "Task '$completed_task' (PID: $completed_pid) failed!"
+                ec_log_error "Task \`$completed_task\` (PID: $completed_pid) failed!"
             fi
         fi
 
@@ -406,11 +416,12 @@ function ec_execute_tasks {
 
     # ec_wait_background_processes
     local -a failed_tasks=()
+    local task
     for task in "${!EC_TASK_COMPLETED[@]}"; do
         (( EC_TASK_COMPLETED[$task] != 0 )) && failed_tasks+=("$task")
     done
     if (( ${#failed_tasks[@]} > 0 )); then
-        ec_log_error "Some tasks failed: ${failed_tasks[*]}"
+        ec_log_error "Some tasks failed: $(ec_join_affix ', ' \` \` ${failed_tasks[@]})."
         exit 1
     fi
     ec_log_note "All tasks completed successfully!"
@@ -420,12 +431,14 @@ function ec_execute_tasks {
 function ec_validate_dependencies {
     local validation_failed=0
 
+    local task
     for task in "${!EC_TASK_DEPENDENCIES[@]}"; do
         local deps="${EC_TASK_DEPENDENCIES[$task]}"
 
+        local dep
         for dep in $deps; do
             if [[ ! -v EC_TASK_RECIPES[$dep] ]]; then
-                ec_log_error "Task '$task' depends on '$dep', but '$dep' does not exist!"
+                ec_log_error "Task \`$task\` depends on \`$dep\`, but \`$dep\` could not be found!"
                 validation_failed=1
             fi
         done
@@ -447,7 +460,7 @@ function ec_do_install {
     done
 
     if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
-        ec_log_error "No task found for packages: ${EC_TARGET_PACKAGES[*]}"
+        ec_log_error "No task found for packages: $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})."
         exit 0
     fi
 
@@ -456,15 +469,15 @@ function ec_do_install {
 }
 
 function ec_do_remove {
-    echo "Removing \`${EC_PACKAGES[*]}\`"
+    ec_log_note "Removing $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})..."
 }
 
 function ec_do_diff {
-    echo "Diffing \`${EC_PACKAGES[*]}\`"
+    ec_log_note "Diffing $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})..."
 }
 
 function ec_do_backup {
-    echo "Backing up \`${EC_PACKAGES[*]}\`"
+    ec_log_note "Backing up $(ec_join_affix ', ' \` \` ${EC_TARGET_PACKAGES[@]})..."
 }
 
 ################################################################################
@@ -536,8 +549,8 @@ EOH
 function ec_parse_cli {
     while (( $# > 0 )); do
         if [[ "$1" == -*=* ]]; then
-            opt="${1%%=*}"
-            val="${1#*=}"
+            local opt="${1%%=*}"
+            local val="${1#*=}"
             shift
             set -- "$opt" "$val" "$@"
         fi
@@ -548,12 +561,12 @@ function ec_parse_cli {
             -l|--layer)
                 EC_ENABLED_LAYERS+=("$2"); shift 2;;
             -j|--job)
-                case ${2:-} in
+                case "${2:-}" in
                     ''|*[!0-9]*) EC_JOBS_COUNT=$(nproc); shift 1;;
-                    *) EC_JOBS_COUNT=$2; shift 2;;
+                    *) EC_JOBS_COUNT="$2"; shift 2;;
                 esac;;
             --color)
-                case ${2:-} in
+                case "${2:-}" in
                     auto) EC_COLOR=auto; shift 2;;
                     never) EC_COLOR=false; shift 2;;
                     always) EC_COLOR=true; shift 2;;
@@ -599,7 +612,7 @@ function ec_parse_cli {
         fi
     fi
     readonly EC_COLOR
-    EC_LOG_COLOR=$EC_COLOR
+    EC_LOG_COLOR="$EC_COLOR"
 
     readonly EC_COMMAND="${EC_POSITIONAL_ARGS[0]:-}"
     EC_TARGET_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
@@ -626,12 +639,12 @@ function ec_on_interrupt {
     echo ""
     ec_log_debug "[SIGINT] on_interrupt"
 
-    if [[ "${ON_INTERRUPT:-0}" == 1 ]]; then
+    if [[ "${EC_ON_INTERRUPT:-0}" == 1 ]]; then
         ec_log_debug "[SIGINT] Second interrupt, aborting."
         ec_kill_background_processes
     else
         ec_log_debug "[SIGINT] First interrupt, waiting."
-        ON_INTERRUPT=1
+        EC_ON_INTERRUPT=1
         ec_wait_background_processes
     fi
 
@@ -645,7 +658,7 @@ function ec_on_interrupt {
 function main {
 
     ec_parse_cli "$@"
-    declare -a all=()
+    local -a all=()
 
     ec_log_note "Running env-config v4..."
 
@@ -685,6 +698,8 @@ function main {
     if (( ${#EC_TARGET_PACKAGES[@]} == 0 )); then
         EC_TARGET_PACKAGES=("${all[@]}")
     fi
+
+    readonly EC_TARGET_PACKAGES
 
     # Execute the user provided command
     $EC_COMMAND_FUNCTION
