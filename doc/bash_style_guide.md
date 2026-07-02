@@ -30,12 +30,12 @@ Spaces (4 spaces per level of indentation).
 
 ### Columns
 
-Not to exceed 80.
+Not to exceed 80, unless exceeding makes readability easier.
 
 ### Semicolons
 
 Avoid using semicolons in scripts, except for control statements to save some
-lines (e.g., if, while).
+lines (eg. if, while).
 
 ```bash
 # wrong
@@ -52,9 +52,6 @@ if do_hello; then
 fi
 ```
 
-The exception to this rule is outlined in the `Block Statements` section below.
-Namely, semicolons should be used for control statements like `if` or `while`.
-
 ### Functions
 
 Use the `function` keyword, and don't use the optional `()` after the function
@@ -65,7 +62,8 @@ is easier to grep for.
 
 When using the `function` keyword, the empty parens pair `()` becomes optional
 and introduces more confusion as parens are usually used to declare arguments in
-other languages but POSIX-based shells don't take any arguments in those parens.
+other languages but POSIX-based shells don't take any arguments inside those
+parens, so it is better to just omit them.
 
 ```bash
 # wrong
@@ -125,15 +123,24 @@ then
     ...
 fi
 
-# also wrong, prefer the `if` conditional construct
+# right
+if true; then
+    ...
+fi
+```
+
+Conditional statements should prefer to use the `if` statement instead of the
+short-circuiting operators `&&` and `||`, unless for simple one-liners.
+
+```bash
+# wrong
 true && {
     ...
 }
 
 # right
-if true; then
-    ...
-fi
+[[ -z "$foo" ]] && return 1
+foo || true
 ```
 
 ### Spacing
@@ -450,23 +457,29 @@ When in doubt; [quote all expansions](http://mywiki.wooledge.org/Quotes).
 
 ### Variable Declaration
 
-Avoid uppercase variable names unless they 1. are constants or 2. are exported
-to the environment using `export`.  Don't use `let` or `readonly` to create
-variables.  `declare` should *only* be used for associative arrays.  `local`
-should *always* be used in functions.
+Every variable should be confined to the smallest scope it needs, and any
+variable that never changes past a specific point in its lifetime should be
+marked `readonly`.  Local variables should use `snake_case`, while global
+variables should use `UPPER_SNAKE_CASE`.  Global variables that are shared
+across multiple functions should be declared once, upfront, in a global
+context variables section rather than implicitly introduced wherever they are
+first assigned.
 
 ```bash
 # wrong
-declare -i foo=5
-let foo++
-readonly bar='something'
-FOOBAR=baz
+counter=0 # global, but declared ad-hoc and lowercase
+
+function foo {
+    max_retries=3 # leaks as a global instead of staying local
+    i=5           # local in intent, but not snake_case-scoped nor local
+}
 
 # right
-i=5
-((i++))
-bar='something'
-export FOOBAR=baz
+readonly MAX_RETRIES=3 # global constant, declared upfront, UPPER_SNAKE_CASE
+
+function foo {
+    local i=5 # local variable, smallest scope, snake_case
+}
 ```
 
 ### shebang
@@ -481,6 +494,10 @@ Unless you’re intentionally targeting a specific environment (e.g. `/bin/bash`
 on Linux servers with restricted PATHs).
 
 - [Shebangs are Weird](https://www.youtube.com/watch?v=aoHMiCzqCNw)
+
+Don't think too much about shebangs anyway, as any user can use the interpreter
+of their choice explicitly to run a given script
+(ie. `/my/awesome/sh/interpreter my_script.sh`).
 
 ### Error Checking
 
@@ -499,6 +516,7 @@ rm file
 
 ### Using `set -e`
 
+~~
 Don't set `errexit`.  Like in C, sometimes you want an error, or you expect
 something to fail, and that doesn't necessarily mean you want the program
 to exit.
@@ -509,6 +527,10 @@ implications.
 
 - [The Problem with Bash "strict mode"](https://www.youtube.com/watch?v=4Jo3Ml53kvc)
 - [BashFAQ105](http://mywiki.wooledge.org/BashFAQ/105)
+~~
+
+Set `errexit` in your scripts but read the BashFAQ105 post each time you open
+your editor to work on a bash script.
 
 ### Using `eval`
 
@@ -523,14 +545,14 @@ or proper quoting.
 Common Mistakes
 ---------------
 
-### Using {} instead of quotes.
+### Using $var instead of quotes.
 
-Using `${f}` is potentially different than `"$f"` because of how word-splitting
-is performed.  For example.
+Using `$var` is potentially different than `"$var"` because of how
+word-splitting is performed. For example.
 
 ```bash
 for f in '1 space' '2  spaces' '3   spaces'; do
-    echo ${f}
+    echo $f
 done
 ```
 
