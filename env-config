@@ -216,6 +216,18 @@ function ec_kill_background_processes {
 function ec_discover_task {
     local task_name="$1"
     local layer_dir="$2"
+    local chain="${3-}"
+
+    # Detect circular dependency: task_name is already an ancestor in the
+    # current discovery chain. Bail out immediately, before any task runs.
+    local -a chain_array=($chain)
+    local i
+    for ((i = 0; i < ${#chain_array[@]}; i++)); do
+        if [[ "${chain_array[$i]}" == "$task_name" ]]; then
+            ec_log_error "Circular dependency detected: $(ec_join_affix ' -> ' \` \` "${chain_array[@]:i}" "$task_name")"
+            exit 1
+        fi
+    done
 
     # Skip if already discovered
     [[ -v EC_TASK_RECIPES[$task_name] ]] && return 0
@@ -247,10 +259,11 @@ function ec_discover_task {
         EC_TASK_DEPENDENCIES["$task_name"]="$deps"
         ec_log_debug "    Dependencies: ${deps:-none}"
 
-        # Recursively discover dependencies
+        # Recursively discover dependencies, extending the chain so any
+        # cycle further down can be detected against the full ancestry
         local dep
         for dep in $deps; do
-            ec_discover_task "$dep" "$layer_dir"
+            ec_discover_task "$dep" "$layer_dir" "$chain $task_name"
         done
     fi
 }
@@ -321,8 +334,8 @@ function _ec_execute_task {
 
 # Report tasks that can't start because dependencies are unmet or failed
 function _ec_report_blocked_tasks {
-    local -a blocked_lines=()
-    local any_failed_dep=false
+    local -a failed_dep_lines=()
+    local -a stuck_lines=()
     local task
     for task in "${!EC_TASK_RECIPES[@]}"; do
         [[ -v EC_TASK_COMPLETED[$task] ]] && continue
@@ -337,24 +350,28 @@ function _ec_report_blocked_tasks {
         done
 
         if (( ${#failed_deps[@]} > 0 )); then
-            any_failed_dep=true
             local dependencies="dependenc$( (( ${#failed_deps[@]} > 1 )) && echo ies || echo y)"
-            blocked_lines+=("  - \`$task\` cannot run because $dependencies failed: $(ec_join_affix ', ' \` \` ${failed_deps[@]})")
+            failed_dep_lines+=("  - \`$task\` cannot run because $dependencies failed: $(ec_join_affix ', ' \` \` ${failed_deps[@]})")
         else
-            blocked_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
+            stuck_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
         fi
     done
 
-    if $any_failed_dep; then
+    if (( ${#failed_dep_lines[@]} > 0 )); then
         ec_log_error "Some tasks cannot run because their dependencies failed:"
-    else
-        ec_log_error "No tasks can be started. Possible circular dependency!"
-        ec_log_error "Blocked tasks (unmet dependencies):"
+        local line
+        for line in "${failed_dep_lines[@]}"; do
+            ec_log_error "$line"
+        done
     fi
-    local blocked_line
-    for blocked_line in "${blocked_lines[@]}"; do
-        ec_log_error "$blocked_line"
-    done
+
+    if (( ${#stuck_lines[@]} > 0 )); then
+        ec_log_error "No tasks can be started, but none of their dependencies failed. This should not happen and is likely a bug in the task scheduler:"
+        local line
+        for line in "${stuck_lines[@]}"; do
+            ec_log_error "$line"
+        done
+    fi
 }
 
 # Main execution loop with dynamic dependency resolution
