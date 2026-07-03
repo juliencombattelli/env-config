@@ -31,7 +31,7 @@ function ansi_cursor_position_get {
 function ansi_cursor_position_set {
     # https://vt100.net/docs/vt510-rm/CUP.html
     local -r line=${1:-}
-    local -r column=${1:-}
+    local -r column=${2:-}
     printf "\e[%d;%dH" "$line" "$column"
 }
 
