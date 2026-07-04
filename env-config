@@ -42,6 +42,8 @@ source ansi.bash
 source log.bash
 # shellcheck source-path=lib
 source utils.bash
+# shellcheck source-path=lib
+source progress.bash
 
 ################################################################################
 ### Global variables
