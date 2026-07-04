@@ -185,6 +185,7 @@ declare -A EC_TASK_DEPENDENCIES=() # task -> space-separated list of dependencie
 declare -A EC_TASK_RECIPES=()      # task -> path to task script
 declare -A EC_TASK_COMPLETED=()    # task -> exit status (0 on success, non-zero on failure)
 declare -A EC_TASK_RUNNING=()      # task -> PID if running
+declare -A EC_TASK_TIMER=()        # task -> duration time points
 
 function ec_wait_background_processes {
     local remaining=${#EC_TASK_RUNNING[@]}
@@ -321,13 +322,7 @@ function _ec_execute_task {
         # shellcheck disable=SC1090
         source "$script"
 
-        ec_log_note "Starting: $task"
-        do_install
         bash ./tests/layer-random/recipes/random/random.bash &>/dev/null # |& tee "$FIFO" &>"$LOGFILE"
-        if $EC_DEBUG_SLEEP; then
-            sleep $(( (RANDOM % 5) + 1))
-        fi
-        ec_log_note "Completed: $task"
     ) &
 
     # Store the PID
@@ -377,9 +372,79 @@ function _ec_report_blocked_tasks {
     fi
 }
 
+readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO=progress_rendering_event_pipe
+EC_TASK_EXECUTION_PROGRESS_RENDERING_FD=
+EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=
+
+function ec_create_task_execution_rendering_process {
+    # TODO create fifo into build directory
+    mkfifo $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO 2>/dev/null || true
+
+    ec_render_tasks_execution_progress &
+    EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
+    readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_PID
+
+    # Keep a persistent writer fd open on the FIFO for the whole duration of this
+    # function. Without this, every write into the fifo independently opens and
+    # then closes the FIFO for writing. Since the reader keeps its read end open
+    # across the whole loop, the moment a writer closes and no other writer is
+    # currently open, the reader's `read` gets EOF and its `while` loop exits
+    # (without ever seeing the "shutdown" event). Any later write then blocks
+    # forever trying to open the FIFO, since there is no reader left to pair with.
+    exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}> "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+    readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_FD
+}
+
+function ec_terminate_task_execution_rendering_process {
+    ec_post_rendering_event shutdown
+    exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}>&-
+    wait "$EC_TASK_EXECUTION_PROGRESS_RENDERING_PID"
+}
+
+function ec_post_rendering_event {
+    local event="$1"
+    local payload="${2:-}"
+    echo "$event|$payload" > "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+}
+
+function ec_render_tasks_execution_progress {
+    timer_reset GLOBAL_TIMER
+
+    function ec_render_tasks_execution_progress_loop {
+        local event_count=0
+        while IFS='|' read -r type payload; do
+            event_count=$(( event_count + 1 ))
+            case "$type" in
+                "task_started")
+                    local task=$payload
+                    ec_log_note "Starting: $payload"
+                    ;;
+                "task_completed")
+                    IFS='|' read -r task pid time status <<< "$payload"
+                    if (( status == 0 )); then
+                        ec_log_note "Task \`$task\` (PID: $pid) succeeded in $time."
+                    else
+                        ec_log_error "Task \`$task\` (PID: $pid) failed after $time!"
+                    fi
+                    ;;
+                "shutdown")
+                    ec_log_note "Renderer shutting down after $event_count events"
+                    return
+                    ;;
+            esac
+        done < "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+        ec_log_warn "ec_render_tasks_execution_progress received EOF"
+    }
+    ec_render_tasks_execution_progress_loop
+
+    ec_log_note "Execution terminated in $(timer_elapsed GLOBAL_TIMER)."
+}
+
 # Main execution loop with dynamic dependency resolution
 function ec_execute_tasks {
     ec_log_note "Executing tasks..."
+
+    ec_create_task_execution_rendering_process
 
     local total_tasks=${#EC_TASK_RECIPES[@]}
     local completed_count=0
@@ -400,6 +465,8 @@ function ec_execute_tasks {
 
             # Check if dependencies are satisfied
             if ec_dependencies_satisfied "$task"; then
+                ec_post_rendering_event task_started "$task"
+                timer_reset EC_TASK_TIMER["$task"]
                 _ec_execute_task "$task"
                 pid_to_task["${EC_TASK_RUNNING[$task]}"]="$task"
                 tasks_started=true
@@ -420,22 +487,21 @@ function ec_execute_tasks {
         local completed_pid
         local task_status=0
         # || is important here as errexit option is set
-        wait -n -p completed_pid || task_status=$?
+        wait -n -p completed_pid "${EC_TASK_RUNNING[@]}" || task_status=$?
         if [[ -v pid_to_task[$completed_pid] ]]; then
             local completed_task="${pid_to_task[$completed_pid]}"
+            local elapsed_time
+            elapsed_time=$(timer_elapsed EC_TASK_TIMER["$completed_task"])
             EC_TASK_COMPLETED["$completed_task"]=$task_status
             unset "EC_TASK_RUNNING[$completed_task]"
             unset "pid_to_task[$completed_pid]"
             completed_count=$((completed_count + 1))
-            if (( task_status != 0 )); then
-                ec_log_error "Task \`$completed_task\` (PID: $completed_pid) failed!"
-            fi
+            ec_post_rendering_event task_completed "$completed_task|$completed_pid|$elapsed_time|$task_status"
         fi
 
         # Loop continues immediately to check for newly ready tasks
     done
 
-    # ec_wait_background_processes
     local -a failed_tasks=()
     for task in "${!EC_TASK_COMPLETED[@]}"; do
         (( EC_TASK_COMPLETED[$task] != 0 )) && failed_tasks+=("$task")
@@ -447,6 +513,8 @@ function ec_execute_tasks {
     if $blocked; then
         _ec_report_blocked_tasks
     fi
+
+    ec_terminate_task_execution_rendering_process
 
     if $blocked || (( ${#failed_tasks[@]} > 0 )); then
         exit 1
@@ -656,6 +724,7 @@ function reset_terminal {
 
 function ec_at_exit {
     ec_log_debug "[EXIT] at_exit"
+    rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
     ec_wait_background_processes
     # TODO call ec_progress_deinit_term
     reset_terminal
