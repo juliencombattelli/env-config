@@ -75,6 +75,9 @@ EC_TARGET_PACKAGES=()
 # TODO remove those debug features
 EC_DEBUG_SLEEP=false
 
+# Handlers executed at exit on reverse registration order
+EC_AT_EXIT_HANDLERS=()
+
 function ec_into_layer_path {
     # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
     # The path printed into stdout as the form //<layer-name>/<subpath>
@@ -377,6 +380,7 @@ EC_TASK_EXECUTION_PROGRESS_RENDERING_FD=
 EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=
 
 function ec_create_task_execution_rendering_process {
+    EC_AT_EXIT_HANDLERS+=('rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"')
     # TODO create fifo into build directory
     mkfifo $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO 2>/dev/null || true
 
@@ -443,6 +447,8 @@ function ec_render_tasks_execution_progress {
 # Main execution loop with dynamic dependency resolution
 function ec_execute_tasks {
     ec_log_note "Executing tasks..."
+
+    EC_AT_EXIT_HANDLERS+=(ec_wait_background_processes)
 
     ec_create_task_execution_rendering_process
 
@@ -718,16 +724,12 @@ function ec_parse_cli {
 ### Cleanup handling
 ################################################################################
 
-function reset_terminal {
-    ec_log_debug "Resetting terminal"
-}
-
 function ec_at_exit {
-    ec_log_debug "[EXIT] at_exit"
-    rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
-    ec_wait_background_processes
-    # TODO call ec_progress_deinit_term
-    reset_terminal
+    for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
+        local handler="${EC_AT_EXIT_HANDLERS[i]}"
+        ec_log_debug "Running at_exit handler \`$handler\`"
+        eval "$handler"
+    done
 }
 
 function ec_on_interrupt {
