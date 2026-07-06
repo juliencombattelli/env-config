@@ -44,6 +44,8 @@ source log.bash
 source utils.bash
 # shellcheck source-path=lib
 source progress.bash
+# shellcheck source-path=lib
+source backtrace.bash
 
 ################################################################################
 ### Global variables
@@ -79,6 +81,7 @@ EC_DEBUG_SLEEP=false
 EC_AT_EXIT_HANDLERS=()
 
 function ec_at_exit {
+    local -r ec_at_exit_status=$?
     for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
         local handler="${EC_AT_EXIT_HANDLERS[i]}"
         ec_log_debug "Running at_exit handler \`$handler\`"
@@ -86,8 +89,15 @@ function ec_at_exit {
     done
 }
 
+function ec_print_backtrace {
+    if (( ec_at_exit_status != 0 )); then
+        echo "Aborting (code $ec_at_exit_status)."
+        backtrace
+    fi
+}
+
 function ec_initialize_at_exit_handler {
-    EC_AT_EXIT_HANDLERS=()
+    EC_AT_EXIT_HANDLERS=(ec_print_backtrace)
     trap ec_at_exit EXIT
 }
 
@@ -772,7 +782,6 @@ function main {
     ec_log_note "Running env-config v4..."
 
     trap ec_on_interrupt SIGINT
-
     ec_initialize_at_exit_handler
 
     ec_print_cli_args
