@@ -78,6 +78,19 @@ EC_DEBUG_SLEEP=false
 # Handlers executed at exit on reverse registration order
 EC_AT_EXIT_HANDLERS=()
 
+function ec_at_exit {
+    for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
+        local handler="${EC_AT_EXIT_HANDLERS[i]}"
+        ec_log_debug "Running at_exit handler \`$handler\`"
+        eval "$handler"
+    done
+}
+
+function ec_initialize_at_exit_handler {
+    EC_AT_EXIT_HANDLERS=()
+    trap ec_at_exit EXIT
+}
+
 function ec_into_layer_path {
     # Make a path relative to the englobing layer. Return 1 if not in an enabled layer.
     # The path printed into stdout as the form //<layer-name>/<subpath>
@@ -380,6 +393,11 @@ EC_TASK_EXECUTION_PROGRESS_RENDERING_FD=
 EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=
 
 function ec_render_tasks_execution_progress {
+    ec_initialize_at_exit_handler
+
+    EC_AT_EXIT_HANDLERS+=(ec_progress_deinit_term)
+    ec_progress_init_term
+
     timer_reset GLOBAL_TIMER
 
     function ec_render_tasks_execution_progress_loop {
@@ -416,9 +434,6 @@ function ec_create_task_execution_rendering_process {
     EC_AT_EXIT_HANDLERS+=('rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"')
     # TODO create fifo into build directory
     mkfifo $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO 2>/dev/null || true
-
-    EC_AT_EXIT_HANDLERS+=(ec_progress_deinit_term)
-    ec_progress_init_term
 
     ec_render_tasks_execution_progress &
     EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
@@ -727,14 +742,6 @@ function ec_parse_cli {
 ### Cleanup handling
 ################################################################################
 
-function ec_at_exit {
-    for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
-        local handler="${EC_AT_EXIT_HANDLERS[i]}"
-        ec_log_debug "Running at_exit handler \`$handler\`"
-        eval "$handler"
-    done
-}
-
 function ec_on_interrupt {
     local sigint_code=$?
     # Add a newline after the interrupt echo char ^C
@@ -765,7 +772,8 @@ function main {
     ec_log_note "Running env-config v4..."
 
     trap ec_on_interrupt SIGINT
-    trap ec_at_exit EXIT
+
+    ec_initialize_at_exit_handler
 
     ec_print_cli_args
     ec_print_context
