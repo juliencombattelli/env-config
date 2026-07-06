@@ -77,28 +77,29 @@ EC_TARGET_PACKAGES=()
 # TODO remove those debug features
 EC_DEBUG_SLEEP=false
 
-# Handlers executed at exit on reverse registration order
+# Handlers executed upon exit on reverse registration order
 EC_AT_EXIT_HANDLERS=()
 
 function ec_at_exit {
     local -r ec_at_exit_status=$?
+    if (( ec_at_exit_status != 0 )); then
+        if [[ -n ${EC_BACKTRACE:-} ]] || [[ -z ${ec_normal_exit:-} ]]; then
+            echo "Aborting (code $ec_at_exit_status)."
+            backtrace
+        fi
+    fi
     for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
         local handler="${EC_AT_EXIT_HANDLERS[i]}"
-        ec_log_debug "Running at_exit handler \`$handler\`"
-        eval "$handler"
+        ec_log_debug "Running at_exit handler: $handler"
+        if ! eval "$handler"; then
+            ec_log_warn "EXIT handler failed: $handler"
+        fi
     done
 }
 
-function ec_print_backtrace {
-    if (( ec_at_exit_status != 0 )); then
-        echo "Aborting (code $ec_at_exit_status)."
-        backtrace
-    fi
-}
-
-function ec_initialize_at_exit_handler {
-    EC_AT_EXIT_HANDLERS=(ec_print_backtrace)
-    trap ec_at_exit EXIT
+function ec_exit {
+    ec_normal_exit=1
+    exit $1
 }
 
 function ec_into_layer_path {
@@ -230,6 +231,7 @@ function ec_wait_background_processes {
         fi
         remaining=$((remaining - 1))
     done
+    ec_log_debug "No background process remaining."
 }
 
 function ec_kill_background_processes {
@@ -254,7 +256,7 @@ function ec_discover_task {
     for ((i = 0; i < ${#chain_array[@]}; i++)); do
         if [[ "${chain_array[$i]}" == "$task_name" ]]; then
             ec_log_error "Circular dependency detected: $(ec_join_affix ' -> ' \` \` "${chain_array[@]:i}" "$task_name")"
-            exit 1
+            ec_exit 1
         fi
     done
 
@@ -403,9 +405,10 @@ EC_TASK_EXECUTION_PROGRESS_RENDERING_FD=
 EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=
 
 function ec_render_tasks_execution_progress {
-    ec_initialize_at_exit_handler
+    trap ec_at_exit EXIT
 
-    EC_AT_EXIT_HANDLERS+=(ec_progress_deinit_term)
+    # Reset the at_exit handlers intentionally to avoid running some deinit twice
+    EC_AT_EXIT_HANDLERS=(ec_progress_deinit_term)
     ec_progress_init_term
 
     timer_reset GLOBAL_TIMER
@@ -457,14 +460,14 @@ function ec_create_task_execution_rendering_process {
     # currently open, the reader's `read` gets EOF and its `while` loop exits
     # (without ever seeing the "shutdown" event). Any later write then blocks
     # forever trying to open the FIFO, since there is no reader left to pair with.
-    exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}> "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+    exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}<>"$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
     readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_FD
 }
 
 function ec_terminate_task_execution_rendering_process {
     ec_post_rendering_event shutdown
     exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}>&-
-    wait "$EC_TASK_EXECUTION_PROGRESS_RENDERING_PID"
+    wait "$EC_TASK_EXECUTION_PROGRESS_RENDERING_PID" || true
 }
 
 function ec_post_rendering_event {
@@ -549,10 +552,8 @@ function ec_execute_tasks {
         _ec_report_blocked_tasks
     fi
 
-    ec_terminate_task_execution_rendering_process
-
     if $blocked || (( ${#failed_tasks[@]} > 0 )); then
-        exit 1
+        ec_exit 1
     fi
 
     ec_log_note "All tasks completed successfully!"
@@ -576,7 +577,7 @@ function ec_validate_dependencies {
     done
 
     if (( validation_failed == 1 )); then
-        exit 1
+        ec_exit 1
     fi
 }
 
@@ -592,7 +593,7 @@ function ec_do_install {
 
     if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
         ec_log_error "No task found for packages: $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")."
-        exit 1
+        ec_exit 1
     fi
 
     ec_validate_dependencies
@@ -688,7 +689,7 @@ function ec_parse_cli {
 
         case "$1" in
             -h|--help)
-                ec_help; exit 0;;
+                ec_help; ec_exit 0;;
             -l|--layer)
                 EC_ENABLED_LAYERS+=("$2"); shift 2;;
             -j|--job)
@@ -701,8 +702,8 @@ function ec_parse_cli {
                     auto) EC_COLOR=auto; shift 2;;
                     never) EC_COLOR=false; shift 2;;
                     always) EC_COLOR=true; shift 2;;
-                    '') ec_log_error "Missing value for option --color"; exit 1;;
-                    *) ec_log_error "Invalid value \`$2\` for option --color, possible values: auto, never, always"; exit 1;;
+                    '') ec_log_error "Missing value for option --color"; ec_exit 1;;
+                    *) ec_log_error "Invalid value \`$2\` for option --color, possible values: auto, never, always"; ec_exit 1;;
                 esac;;
             --no-deps)
                 EC_SKIP_DEPENDENCIES=true; shift 1;;
@@ -717,7 +718,7 @@ function ec_parse_cli {
             --debug-sleep)
                 EC_DEBUG_SLEEP=true; shift 1;;
             -*)
-                ec_log_error "Unknown option \`$1\`"; exit 1;;
+                ec_log_error "Unknown option \`$1\`"; ec_exit 1;;
             *)
                 EC_POSITIONAL_ARGS+=("$1"); shift;;
         esac
@@ -768,7 +769,7 @@ function ec_on_interrupt {
         ec_wait_background_processes
     fi
 
-    exit $sigint_code
+    ec_exit $sigint_code
 }
 
 ################################################################################
@@ -782,8 +783,8 @@ function main {
 
     ec_log_note "Running env-config v4..."
 
+    trap ec_at_exit EXIT
     trap ec_on_interrupt SIGINT
-    ec_initialize_at_exit_handler
 
     ec_print_cli_args
     ec_print_context
@@ -799,13 +800,13 @@ function main {
         backup)
             EC_COMMAND_FUNCTION=ec_do_backup;;
         '')
-            ec_log_error "Missing command"; exit 1;;
+            ec_log_error "Missing command"; ec_exit 1;;
         *)
-            ec_log_error "Unsupported command \`$EC_COMMAND\`"; exit 1;;
+            ec_log_error "Unsupported command \`$EC_COMMAND\`"; ec_exit 1;;
     esac
     readonly EC_COMMAND_FUNCTION
 
-    ec_validate_layers "${EC_ENABLED_LAYERS[@]}" || exit 1
+    ec_validate_layers "${EC_ENABLED_LAYERS[@]}" || ec_exit 1
 
     EC_DISTRO="$(which-distro)"
     readonly EC_DISTRO
@@ -813,7 +814,7 @@ function main {
     EC_PLATFORM="$(which-platform)"
     readonly EC_PLATFORM
 
-    ec_source_distro_and_platform || exit 1
+    ec_source_distro_and_platform || ec_exit 1
 
     if (( ${#EC_TARGET_PACKAGES[@]} == 0 )); then
         EC_TARGET_PACKAGES=("${all[@]}")
