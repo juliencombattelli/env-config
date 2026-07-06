@@ -118,7 +118,7 @@ readonly COMMAND_OUTPUT_PREVIEW_LINES=10
 readonly BUILD_DIR=build
 readonly WORK_DIR="$BUILD_DIR/work"
 
-function _progress_init_term {
+function ec_progress_init_term {
     shopt -s checkwinsize
     # Execute a non-builtin command to ensure LINES and COLUMNS are populated
     # Refer to checkwinsize option in the bash manual
@@ -141,7 +141,7 @@ function _progress_init_term {
 }
 
 
-function _progress_deinit_term {
+function ec_progress_deinit_term {
     ansi_cursor_save
     ansi_scroll_region_set
     ansi_cursor_position_set $LINES 1
