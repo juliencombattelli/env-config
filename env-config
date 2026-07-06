@@ -445,6 +445,7 @@ function ec_create_task_execution_rendering_process {
     # TODO create fifo into build directory
     mkfifo $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO 2>/dev/null || true
 
+    EC_AT_EXIT_HANDLERS+=(ec_terminate_task_execution_rendering_process)
     ec_render_tasks_execution_progress &
     EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
     readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_PID
