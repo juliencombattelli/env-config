@@ -72,9 +72,9 @@ function print_task_status {
         FAILED)  STATUS="$(printf "%s FAILED%s" "$(ansi_style fg=red)" "$(ansi_style)")";;
         *) echo "Unexpected task status \`$1\`, exiting."; exit 1;;
     esac
-    local -r ELAPSED="$(timer_elapsed CURRENT_TASK_TIMER)"
+    local -r ELAPSED="$(timer_elapsed task_timer[$task])"
     printf "%s%s [%${tasks_count_len}s/$tasks_count] [%s] %s%s" \
-        "$NEWLINE" "$STATUS" "$i" "$ELAPSED" "$TASK" "$(ansi_style)"
+        "$NEWLINE" "$STATUS" "$i" "$ELAPSED" "$task" "$(ansi_style)"
 }
 
 function print_running_task {
