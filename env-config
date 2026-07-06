@@ -507,6 +507,15 @@ function ec_execute_tasks {
     local blocked=false
     local task
 
+    # Ticker: ~50 Hz TICK events for smooth ms-precision clock refresh.
+    (
+        while sleep 0.02; do
+            ec_post_rendering_event tick
+        done
+    ) &
+    local TICKER_PID=$!
+    EC_AT_EXIT_HANDLERS+=('kill $TICKER_PID')
+
     # Reverse mapping: PID -> task name
     declare -A pid_to_task=()
 
