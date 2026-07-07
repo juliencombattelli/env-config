@@ -421,38 +421,57 @@ function ec_render_tasks_execution_progress {
         local -r tasks_count=${#EC_TASK_RECIPES[@]}
         local -r tasks_count_len=${#tasks_count}
         local tasks_completed=0
+        local task_succeeded=0
+        local task_failed=0
         local i=1
 
         local event_count=0
         while IFS='|' read -r type payload; do
+
+            ansi_cursor_save
+            ansi_scroll_region_set 1 "$PREVIOUSLY_COMPLETED_TASK_LINE"
+            ansi_cursor_restore
+            ansi_cursor_position_set "$PREVIOUSLY_COMPLETED_TASK_LINE"
+
             event_count=$(( event_count + 1 ))
             case "$type" in
                 "task_started")
                     IFS='|' read -r task pid <<< "$payload"
                     timer_reset task_timer["$task"]
                     task_running["$task"]="$pid"
-                    ec_log_note "Task \`$task\` started (PID: $pid)."
+                    # ec_log_note "Task \`$task\` started (PID: $pid)."
                     ;;
                 "task_completed")
                     IFS='|' read -r task pid time status <<< "$payload"
                     unset "task_running[$task]"
+                    if (( status == 0 )); then
+                        (( task_succeeded += 1 ))
+                        # ec_log_note "Task \`$task\` (PID: $pid) succeeded in $time."
+                        print_task_status -n DONE
+                    else
+                        (( task_failed += 1 ))
+                        # ec_log_error "Task \`$task\` (PID: $pid) failed after $time!"
+                        print_task_status -n FAILED
+                    fi
                     (( tasks_completed += 1 ))
                     i=$(( tasks_completed + 1 )) # Use one-based index for progress display
-                    if (( status == 0 )); then
-                        ec_log_note "Task \`$task\` (PID: $pid) succeeded in $time."
-                    else
-                        ec_log_error "Task \`$task\` (PID: $pid) failed after $time!"
-                    fi
                     ;;
                 "shutdown")
                     ec_log_note "Renderer shutting down after $event_count events"
                     return
                     ;;
             esac
+
+            ansi_cursor_save
+            ansi_scroll_region_set "$COMMAND_OUTPUT_PREVIEW_START_LINE" "$COMMAND_OUTPUT_PREVIEW_END_LINE"
+            ansi_cursor_restore
+            ansi_cursor_position_set "$COMMAND_OUTPUT_PREVIEW_START_LINE"
+
             for task in "${!task_running[@]}"; do
                 print_running_task "$task"
             done
             print_bottom_progress_bar "$i" "$tasks_count"
+
         done < "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
         ec_log_warn "ec_render_tasks_execution_progress received EOF"
     }
