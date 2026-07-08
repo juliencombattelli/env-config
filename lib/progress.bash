@@ -131,11 +131,16 @@ function ec_progress_init_term {
     readonly COMMAND_OUTPUT_PREVIEW_END_LINE=$(( LINES - 1 ))                                       # 59
     readonly PROGRESS_BAR_LINE=$(( LINES ))                                                         # 60
 
+    local current_line current_column
+    ansi_cursor_position_get current_cursor_line current_cursor_column
+
     # Start printing at the bottom of the screen
     ansi_cursor_position_set $LINES
-    # Clear the screen by inserting a full page of newlines to avoid overwriting the scrollback buffer
-    # TODO just print a bunch of newlines depending on the current cursor position
-    tput -x clear
+    # Make some space if needed to avoid overwriting the scrollback buffer
+    local newlines_to_print=$(( current_cursor_line - LINES + COMMAND_OUTPUT_PREVIEW_LINES ))
+    for (( i = 0; i < newlines_to_print + 1; i++ )); do # +1 for progress bar line
+        printf "\n"
+    done
     # Go to the lines where the running task message is printed
     ansi_cursor_position_set $RUNNING_TASK_LINE
 }

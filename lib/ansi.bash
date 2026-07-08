@@ -25,7 +25,16 @@ function ansi_cursor_restore {
 
 function ansi_cursor_position_get {
     # https://vt100.net/docs/vt510-rm/DSR-CPR.html
-    IFS='[;' read -p $'\e[6n' -d R -rs _ "$1" "$2" _
+    # Save current stty settings, then disable echo and canonical mode
+    local old_stty
+    old_stty=$(stty -g < /dev/tty)
+    stty -echo -icanon min 0 time 1 < /dev/tty
+    # Ask the terminal: "where is the cursor?"
+    printf '\e[6n' > /dev/tty
+    # Read the reply: ESC [ row ; col R
+    IFS='[;R' read -r -d 'R' _ "$1" "$2" _ < /dev/tty
+    # Restore terminal settings
+    stty "$old_stty" < /dev/tty
 }
 
 function ansi_cursor_position_set {

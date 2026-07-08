@@ -518,6 +518,7 @@ function ec_post_rendering_event {
 # Main execution loop with dynamic dependency resolution
 function ec_execute_tasks {
     ec_log_note "Executing tasks..."
+    echo "Executing tasks..."
 
     EC_AT_EXIT_HANDLERS+=(ec_wait_background_processes)
 
