@@ -457,6 +457,7 @@ function ec_render_tasks_execution_progress {
                     i=$(( tasks_completed + 1 )) # Use one-based index for progress display
                     ;;
                 "shutdown")
+                    ansi_cursor_position_set "$RUNNING_TASK_LINE"
                     ec_log_note "Renderer shutting down after $event_count events"
                     return
                     ;;
@@ -473,6 +474,8 @@ function ec_render_tasks_execution_progress {
             print_bottom_progress_bar "$i" "$tasks_count"
 
         done < "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+
+        ansi_cursor_position_set "$RUNNING_TASK_LINE"
         ec_log_warn "ec_render_tasks_execution_progress received EOF"
     }
     ec_render_tasks_execution_progress_loop
@@ -481,11 +484,9 @@ function ec_render_tasks_execution_progress {
 }
 
 function ec_create_task_execution_rendering_process {
-    EC_AT_EXIT_HANDLERS+=('rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"')
+    EC_AT_EXIT_HANDLERS+=(ec_terminate_task_execution_rendering_process)
     # TODO create fifo into build directory
     mkfifo $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO 2>/dev/null || true
-
-    EC_AT_EXIT_HANDLERS+=(ec_terminate_task_execution_rendering_process)
     ec_render_tasks_execution_progress &
     EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
     readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_PID
@@ -505,6 +506,7 @@ function ec_terminate_task_execution_rendering_process {
     ec_post_rendering_event shutdown
     exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}>&-
     wait "$EC_TASK_EXECUTION_PROGRESS_RENDERING_PID" || true
+    rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
 }
 
 function ec_post_rendering_event {
@@ -587,6 +589,8 @@ function ec_execute_tasks {
 
         # Loop continues immediately to check for newly ready tasks
     done
+
+    ec_terminate_task_execution_rendering_process
 
     local -a failed_tasks=()
     for task in "${!EC_TASK_COMPLETED[@]}"; do
