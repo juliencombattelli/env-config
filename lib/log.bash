@@ -1,10 +1,11 @@
 source ansi.bash
 
 EC_LOG_COLOR=true
-EC_LOG_DIR=
+EC_LOG_FILE=env-config.log
+EC_LOG_TARGETS=($EC_LOG_FILE)
 
 function _ec_log_ansi_style {
-    if $EC_LOG_COLOR; then
+    if $ec_log_color; then
         ansi_style "$@"
     fi
 }
@@ -34,12 +35,24 @@ function _ec_log_level_E {
 }
 
 function _ec_log {
+    function _ec_log_set_output {
+        ec_log_color=$EC_LOG_COLOR
+        case "$1" in
+            stdout) exec {LOG_FD}>&1;;
+            stderr) exec {LOG_FD}>&2;;
+            *)      exec {LOG_FD}>>"$1"; ec_log_color=false;;
+        esac
+    }
+    function _ec_log_close_output {
+        exec {LOG_FD}>&-
+    }
     local level="$1"
     shift
-    printf "$(_ec_time)$(_ec_log_level_"$level") %s\n" "$@" >&2
-    if [[ -d "$EC_LOG_DIR" ]]; then
-        printf "$(_ec_time) $level %s\n" "$@" >> "$EC_LOG_DIR/env-config.log"
-    fi
+    for target in "${EC_LOG_TARGETS[@]}"; do
+        _ec_log_set_output "$target"
+        printf "$(_ec_time)$(_ec_log_level_"$level") %s\n" "$@" >&"$LOG_FD"
+        _ec_log_close_output
+    done
 }
 
 function ec_log_plain {
