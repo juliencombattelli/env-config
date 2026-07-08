@@ -528,6 +528,7 @@ function ec_execute_tasks {
 
     # Ticker: ~50 Hz TICK events for smooth ms-precision clock refresh.
     (
+        trap '' SIGINT
         while sleep 0.02; do
             ec_post_rendering_event tick
         done
