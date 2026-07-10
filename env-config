@@ -482,6 +482,14 @@ function ec_render_tasks_execution_progress {
     ec_log_note "Execution terminated in $(timer_elapsed GLOBAL_TIMER)."
 }
 
+function ec_render_ticker {
+    trap '' SIGINT
+    # ~50 Hz TICK events for smooth ms-precision clock refresh.
+    while sleep 0.02; do
+        ec_post_rendering_event tick
+    done
+}
+
 function ec_create_task_execution_rendering_process {
     local -r EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO=progress_rendering_event_pipe
 
@@ -504,6 +512,10 @@ function ec_create_task_execution_rendering_process {
     ec_render_tasks_execution_progress &
     EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
     readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_PID
+
+    ec_render_ticker &
+    local -r ticker_pid=$!
+    EC_AT_EXIT_HANDLERS+=("kill $ticker_pid")
 }
 
 function ec_terminate_task_execution_rendering_process {
@@ -536,16 +548,6 @@ function ec_execute_tasks {
     local completed_count=0
     local blocked=false
     local task
-
-    # Ticker: ~50 Hz TICK events for smooth ms-precision clock refresh.
-    (
-        trap '' SIGINT
-        while sleep 0.02; do
-            ec_post_rendering_event tick
-        done
-    ) &
-    local TICKER_PID=$!
-    EC_AT_EXIT_HANDLERS+=('kill $TICKER_PID')
 
     # Reverse mapping: PID -> task name
     declare -A pid_to_task=()
