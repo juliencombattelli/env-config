@@ -532,6 +532,10 @@ implications.
 Set `errexit` in your scripts but read the BashFAQ105 post each time you open
 your editor to work on a bash script.
 
+As a reminder, never use prefix/postfix increment/decrement operators (++, --)
+as well as combining assignment operators (+=, -=, *=, /=, etc) as yielding a
+zero value will trigger an error, except in for loops.
+
 ### Using `eval`
 
 Never.
