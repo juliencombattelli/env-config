@@ -400,7 +400,6 @@ function _ec_report_blocked_tasks {
     fi
 }
 
-readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO=progress_rendering_event_pipe
 EC_TASK_EXECUTION_PROGRESS_RENDERING_FD=
 EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=
 
@@ -473,7 +472,7 @@ function ec_render_tasks_execution_progress {
             done
             print_bottom_progress_bar "$i" "$tasks_count"
 
-        done < "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+        done <&"$EC_TASK_EXECUTION_PROGRESS_RENDERING_FD"
 
         ansi_cursor_position_set "$RUNNING_TASK_LINE"
         ec_log_warn "ec_render_tasks_execution_progress received EOF"
@@ -484,12 +483,11 @@ function ec_render_tasks_execution_progress {
 }
 
 function ec_create_task_execution_rendering_process {
+    local -r EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO=progress_rendering_event_pipe
+
     EC_AT_EXIT_HANDLERS+=(ec_terminate_task_execution_rendering_process)
     # TODO create fifo into build directory
     mkfifo $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO 2>/dev/null || true
-    ec_render_tasks_execution_progress &
-    EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
-    readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_PID
 
     # Keep a persistent writer fd open on the FIFO for the whole duration of this
     # function. Without this, every write into the fifo independently opens and
@@ -500,19 +498,29 @@ function ec_create_task_execution_rendering_process {
     # forever trying to open the FIFO, since there is no reader left to pair with.
     exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}<>"$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
     readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_FD
+    # Remove the FIFO file as it is not needed anymore while both ends are opened.
+    rm -f $EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO
+
+    ec_render_tasks_execution_progress &
+    EC_TASK_EXECUTION_PROGRESS_RENDERING_PID=$!
+    readonly EC_TASK_EXECUTION_PROGRESS_RENDERING_PID
 }
 
 function ec_terminate_task_execution_rendering_process {
+    # Ensure the fifo fd is writable, guard against running twice from main logic and trap
+    if [[ ! -w "/proc/self/fd/$EC_TASK_EXECUTION_PROGRESS_RENDERING_FD" ]]; then
+        return 0
+    fi
+
     ec_post_rendering_event shutdown
-    exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}>&-
     wait "$EC_TASK_EXECUTION_PROGRESS_RENDERING_PID" || true
-    rm -f "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+    exec {EC_TASK_EXECUTION_PROGRESS_RENDERING_FD}>&-
 }
 
 function ec_post_rendering_event {
     local event="$1"
     local payload="${2:-}"
-    echo "$event|$payload" > "$EC_TASK_EXECUTION_PROGRESS_RENDERING_FIFO"
+    echo "$event|$payload" >&"$EC_TASK_EXECUTION_PROGRESS_RENDERING_FD"
 }
 
 # Main execution loop with dynamic dependency resolution
