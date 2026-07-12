@@ -90,9 +90,9 @@ function ec_at_exit {
     fi
     for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
         local handler="${EC_AT_EXIT_HANDLERS[i]}"
-        ec_log_debug "Running at_exit handler: $handler"
+        ec_log D "Running at_exit handler: $handler"
         if ! eval "$handler"; then
-            ec_log_warn "EXIT handler failed: $handler"
+            ec_log W "EXIT handler failed: $handler"
         fi
     done
 }
@@ -116,7 +116,7 @@ function ec_into_layer_path {
             return 0
         fi
     done
-    ec_log_error "Path \`$path\` is not in an enabled layer."
+    ec_log E "Path \`$path\` is not in an enabled layer."
     return 1
 }
 
@@ -129,10 +129,10 @@ function ec_validate_layers {
     local layer_dir
     for layer_dir in "$@"; do
         if [[ ! -d "$layer_dir" ]]; then
-            ec_log_error "Layer directory \`$layer_dir\` does not exist."
+            ec_log E "Layer directory \`$layer_dir\` does not exist."
             invalid_layer=true
         elif [[ ! -f "$layer_dir/layer.bash" ]]; then
-            ec_log_error "Layer file \`$layer_dir/layer.bash\` does not exist."
+            ec_log E "Layer file \`$layer_dir/layer.bash\` does not exist."
             invalid_layer=true
         fi
     done
@@ -146,7 +146,7 @@ function ec_source_and_validate_distro {
     local layer_path
     for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         local distro_file="$layer_path/distros/$EC_DISTRO.bash"
-        ec_log_debug "Checking distro file $distro_file"
+        ec_log D "Checking distro file $distro_file"
         if [[ -f $distro_file ]]; then
             EC_LAYER_DIR="$layer_path"
             # shellcheck disable=SC1090
@@ -156,7 +156,7 @@ function ec_source_and_validate_distro {
         fi
     done
     if ! $valid; then
-        ec_log_error "Unsupported distro \`$EC_DISTRO\`"
+        ec_log E "Unsupported distro \`$EC_DISTRO\`"
         return 1
     fi
 }
@@ -166,7 +166,7 @@ function ec_source_and_validate_platform {
     local layer_path
     for layer_path in "${EC_ENABLED_LAYERS[@]}"; do
         local platform_file="$layer_path/platforms/$EC_PLATFORM.bash"
-        ec_log_debug "Checking platform file $platform_file"
+        ec_log D "Checking platform file $platform_file"
         if [[ -f $platform_file ]]; then
             EC_LAYER_DIR="$layer_path"
             # shellcheck disable=SC1090
@@ -176,7 +176,7 @@ function ec_source_and_validate_platform {
         fi
     done
     if ! $valid; then
-        ec_log_error "Unsupported platform \`$EC_PLATFORM\`"
+        ec_log E "Unsupported platform \`$EC_PLATFORM\`"
         return 1
     fi
 }
@@ -197,11 +197,11 @@ function ec_get_recipe_file_for_package {
         recipe_file+=("$layer_path"/recipes/*/"$package".bash)
     done
     if (( ${#recipe_file[@]} > 1 )); then
-        ec_log_error "Found more than one recipe for package \`$package\` (total ${#recipe_file[@]}):"
-        ec_log_error "${recipe_file[@]}"
+        ec_log E "Found more than one recipe for package \`$package\` (total ${#recipe_file[@]}):"
+        ec_log E "${recipe_file[@]}"
         return 1
     elif (( ${#recipe_file[@]} == 0 )); then
-        ec_log_error "No recipe found for package \`$package\`."
+        ec_log E "No recipe found for package \`$package\`."
         return 1
     fi
     echo "${recipe_file[@]}"
@@ -217,7 +217,7 @@ declare -A EC_TASK_TIMER=()        # task -> duration time points
 function ec_wait_background_processes {
     local remaining=${#EC_TASK_RUNNING[@]}
     while (( remaining > 0 )); do
-        ec_log_note "Waiting for $remaining background process(es) to complete..."
+        ec_log N "Waiting for $remaining background process(es) to complete..."
         # Ignore the tasks exit status as we just want them to finish
         wait -n -p awaited_pid 2>/dev/null || true
         if [[ -v awaited_pid ]]; then
@@ -231,14 +231,14 @@ function ec_wait_background_processes {
         fi
         remaining=$((remaining - 1))
     done
-    ec_log_debug "No background process remaining."
+    ec_log D "No background process remaining."
 }
 
 function ec_kill_background_processes {
     local -a background_jobs
     readarray -t background_jobs < <(jobs -p)
     if (( ${#background_jobs[@]} > 0 )); then
-        ec_log_warn "Killing all background jobs" >&2
+        ec_log W "Killing all background jobs" >&2
         kill "${background_jobs[@]}" >&2
         EC_TASK_RUNNING=()
     fi
@@ -255,7 +255,7 @@ function ec_discover_task {
     local i
     for ((i = 0; i < ${#chain_array[@]}; i++)); do
         if [[ "${chain_array[$i]}" == "$task_name" ]]; then
-            ec_log_error "Circular dependency detected: $(ec_join_affix ' -> ' \` \` "${chain_array[@]:i}" "$task_name")"
+            ec_log E "Circular dependency detected: $(ec_join_affix ' -> ' \` \` "${chain_array[@]:i}" "$task_name")"
             ec_exit 1
         fi
     done
@@ -267,7 +267,7 @@ function ec_discover_task {
     local task_file
     task_file="$(ec_get_recipe_file_for_package "$task_name")" || return 1
 
-    ec_log_debug "  Discovering task: $task_name from $task_file"
+    ec_log D "  Discovering task: $task_name from $task_file"
 
     # Store the script path
     EC_TASK_RECIPES["$task_name"]="$task_file"
@@ -285,10 +285,10 @@ function ec_discover_task {
     # Store dependencies (unless --no-deps is set)
     if $EC_SKIP_DEPENDENCIES; then
         EC_TASK_DEPENDENCIES["$task_name"]=""
-        ec_log_debug "    Dependencies: ${deps:-none} (skipped)"
+        ec_log D "    Dependencies: ${deps:-none} (skipped)"
     else
         EC_TASK_DEPENDENCIES["$task_name"]="$deps"
-        ec_log_debug "    Dependencies: ${deps:-none}"
+        ec_log D "    Dependencies: ${deps:-none}"
 
         # Recursively discover dependencies, extending the chain so any
         # cycle further down can be detected against the full ancestry
@@ -304,7 +304,7 @@ function ec_discover_tasks {
     shift
     local -a target_packages=("$@")
 
-    ec_log_debug "Discovering tasks in $layer_dir for packages $(ec_join_affix ', ' \` \` "${target_packages[@]}")..."
+    ec_log D "Discovering tasks in $layer_dir for packages $(ec_join_affix ', ' \` \` "${target_packages[@]}")..."
 
     EC_LAYER_DIR="$layer_dir"
 
@@ -350,6 +350,8 @@ function _ec_execute_task {
         # shellcheck disable=SC1090
         source "$script"
 
+        # TODO create FIFO and LOGFILE for each recipe by preparing the environment
+        #      add a loop in the renderer to read that fifo and display stuff
         bash ./tests/layer-random/recipes/random/random.bash &>/dev/null # |& tee "$FIFO" &>"$LOGFILE"
     ) &
 
@@ -384,18 +386,18 @@ function _ec_report_blocked_tasks {
     done
 
     if (( ${#blocked_lines[@]} > 0 )); then
-        ec_log_error "Some tasks cannot run because one or more dependencies did not complete:"
+        ec_log E "Some tasks cannot run because one or more dependencies did not complete:"
         local line
         for line in "${blocked_lines[@]}"; do
-            ec_log_error "$line"
+            ec_log E "$line"
         done
     fi
 
     if (( ${#stuck_lines[@]} > 0 )); then
-        ec_log_error "No tasks can be started, but none of their dependencies failed. This should not happen and is likely a bug in the task scheduler:"
+        ec_log E "No tasks can be started, but none of their dependencies failed. This should not happen and is likely a bug in the task scheduler:"
         local line
         for line in "${stuck_lines[@]}"; do
-            ec_log_error "$line"
+            ec_log E "$line"
         done
     fi
 }
@@ -438,34 +440,33 @@ function ec_render_tasks_execution_progress {
                     IFS='|' read -r task pid <<< "$payload"
                     timer_reset task_timer["$task"]
                     task_running["$task"]="$pid"
-                    # ec_log_note "Task \`$task\` started (PID: $pid)."
+                    ec_log N@file "Task \`$task\` started (PID: $pid)."
                     ;;
                 "task_completed")
                     IFS='|' read -r task pid time status <<< "$payload"
                     unset "task_running[$task]"
                     if (( status == 0 )); then
                         (( task_succeeded += 1 ))
-                        # ec_log_note "Task \`$task\` (PID: $pid) succeeded in $time."
+                        ec_log N@file "Task \`$task\` (PID: $pid) succeeded in $time."
                         print_task_status -n DONE
                     else
                         (( task_failed += 1 ))
-                        # ec_log_error "Task \`$task\` (PID: $pid) failed after $time!"
+                        ec_log E@file "Task \`$task\` (PID: $pid) failed after $time!"
                         print_task_status -n FAILED
                     fi
                     (( tasks_completed += 1 ))
                     i=$(( tasks_completed + 1 )) # Use one-based index for progress display
                     ;;
                 "shutdown")
-                    ansi_cursor_position_set "$RUNNING_TASK_LINE"
-                    ec_log_note "Renderer shutting down after $event_count events"
+                    ec_log N@file "Renderer shutting down after $event_count events"
                     return
                     ;;
             esac
 
-            ansi_cursor_save
-            ansi_scroll_region_set "$COMMAND_OUTPUT_PREVIEW_START_LINE" "$COMMAND_OUTPUT_PREVIEW_END_LINE"
-            ansi_cursor_restore
-            ansi_cursor_position_set "$COMMAND_OUTPUT_PREVIEW_START_LINE"
+            # ansi_cursor_save
+            # ansi_scroll_region_set "$COMMAND_OUTPUT_PREVIEW_START_LINE" "$COMMAND_OUTPUT_PREVIEW_END_LINE"
+            # ansi_cursor_restore
+            # ansi_cursor_position_set "$COMMAND_OUTPUT_PREVIEW_START_LINE"
 
             for task in "${!task_running[@]}"; do
                 print_running_task "$task"
@@ -474,12 +475,12 @@ function ec_render_tasks_execution_progress {
 
         done <&"$EC_TASK_EXECUTION_PROGRESS_RENDERING_FD"
 
-        ansi_cursor_position_set "$RUNNING_TASK_LINE"
-        ec_log_warn "ec_render_tasks_execution_progress received EOF"
+        ec_log W@file "ec_render_tasks_execution_progress received EOF"
     }
     ec_render_tasks_execution_progress_loop
 
-    ec_log_note "Execution terminated in $(timer_elapsed GLOBAL_TIMER)."
+    ansi_cursor_position_set "$RUNNING_TASK_LINE"
+    ec_log N "Execution terminated in $(timer_elapsed GLOBAL_TIMER)."
 }
 
 function ec_render_ticker {
@@ -537,8 +538,7 @@ function ec_post_rendering_event {
 
 # Main execution loop with dynamic dependency resolution
 function ec_execute_tasks {
-    ec_log_note "Executing tasks..."
-    echo "Executing tasks..."
+    ec_log N "Executing tasks..."
 
     EC_AT_EXIT_HANDLERS+=(ec_wait_background_processes)
 
@@ -608,7 +608,7 @@ function ec_execute_tasks {
         (( EC_TASK_COMPLETED[$task] != 0 )) && failed_tasks+=("$task")
     done
     if (( ${#failed_tasks[@]} > 0 )); then
-        ec_log_error "Some tasks failed: $(ec_join_affix ', ' \` \` "${failed_tasks[@]}")."
+        ec_log E "Some tasks failed: $(ec_join_affix ', ' \` \` "${failed_tasks[@]}")."
     fi
 
     if $blocked; then
@@ -619,7 +619,7 @@ function ec_execute_tasks {
         ec_exit 1
     fi
 
-    ec_log_note "All tasks completed successfully!"
+    ec_log N "All tasks completed successfully!"
 }
 
 # Validate that all dependencies exist
@@ -633,7 +633,7 @@ function ec_validate_dependencies {
         local dep
         for dep in $deps; do
             if [[ ! -v EC_TASK_RECIPES[$dep] ]]; then
-                ec_log_error "Task \`$task\` depends on \`$dep\`, but \`$dep\` could not be found!"
+                ec_log E "Task \`$task\` depends on \`$dep\`, but \`$dep\` could not be found!"
                 validation_failed=1
             fi
         done
@@ -655,7 +655,7 @@ function ec_do_install {
     done
 
     if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
-        ec_log_error "No task found for packages: $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")."
+        ec_log E "No task found for packages: $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")."
         ec_exit 1
     fi
 
@@ -664,15 +664,15 @@ function ec_do_install {
 }
 
 function ec_do_remove {
-    ec_log_note "Removing $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
+    ec_log N "Removing $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
 }
 
 function ec_do_diff {
-    ec_log_note "Diffing $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
+    ec_log N "Diffing $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
 }
 
 function ec_do_backup {
-    ec_log_note "Backing up $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
+    ec_log N "Backing up $(ec_join_affix ', ' \` \` "${EC_TARGET_PACKAGES[@]}")..."
 }
 
 ################################################################################
@@ -682,31 +682,31 @@ function ec_do_backup {
 EC_POSITIONAL_ARGS=()
 
 function ec_print_context {
-    ec_log_plain "Displaying all variants of log levels:"
-    ec_log_debug "- this is a debug message"
-    ec_log_note  "- this is a note"
-    ec_log_warn  "- this is a warning"
-    ec_log_error "- this is an error"
-    ec_log_debug "################################################################################"
-    ec_log_debug "### Context"
-    ec_log_debug "################################################################################"
-    ec_log_debug "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
-    ec_log_debug "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
-    ec_log_debug "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
+    ec_log P "Displaying all variants of log levels:"
+    ec_log D "- this is a debug message"
+    ec_log N  "- this is a note"
+    ec_log W  "- this is a warning"
+    ec_log E "- this is an error"
+    ec_log D "################################################################################"
+    ec_log D "### Context"
+    ec_log D "################################################################################"
+    ec_log D "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
+    ec_log D "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
+    ec_log D "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
 }
 
 function ec_print_cli_args {
-    ec_log_debug "################################################################################"
-    ec_log_debug "### CLI arguments"
-    ec_log_debug "################################################################################"
-    ec_log_debug "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
-    ec_log_debug "EC_PROXY_SERVER=$EC_PROXY_SERVER"
-    ec_log_debug "EC_PROXY_PORT=$EC_PROXY_PORT"
-    ec_log_debug "EC_PROXY_USER=$EC_PROXY_USER"
-    ec_log_debug "EC_NO_PROXY=$EC_NO_PROXY"
-    ec_log_debug "EC_JOBS_COUNT=$EC_JOBS_COUNT"
-    ec_log_debug "EC_SKIP_DEPENDENCIES=$EC_SKIP_DEPENDENCIES"
-    ec_log_debug "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
+    ec_log D "################################################################################"
+    ec_log D "### CLI arguments"
+    ec_log D "################################################################################"
+    ec_log D "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
+    ec_log D "EC_PROXY_SERVER=$EC_PROXY_SERVER"
+    ec_log D "EC_PROXY_PORT=$EC_PROXY_PORT"
+    ec_log D "EC_PROXY_USER=$EC_PROXY_USER"
+    ec_log D "EC_NO_PROXY=$EC_NO_PROXY"
+    ec_log D "EC_JOBS_COUNT=$EC_JOBS_COUNT"
+    ec_log D "EC_SKIP_DEPENDENCIES=$EC_SKIP_DEPENDENCIES"
+    ec_log D "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
 }
 
 function ec_help {
@@ -765,8 +765,8 @@ function ec_parse_cli {
                     auto) EC_COLOR=auto; shift 2;;
                     never) EC_COLOR=false; shift 2;;
                     always) EC_COLOR=true; shift 2;;
-                    '') ec_log_error "Missing value for option --color"; ec_exit 1;;
-                    *) ec_log_error "Invalid value \`$2\` for option --color, possible values: auto, never, always"; ec_exit 1;;
+                    '') ec_log E "Missing value for option --color"; ec_exit 1;;
+                    *) ec_log E "Invalid value \`$2\` for option --color, possible values: auto, never, always"; ec_exit 1;;
                 esac;;
             --no-deps)
                 EC_SKIP_DEPENDENCIES=true; shift 1;;
@@ -781,7 +781,7 @@ function ec_parse_cli {
             --debug-sleep)
                 EC_DEBUG_SLEEP=true; shift 1;;
             -*)
-                ec_log_error "Unknown option \`$1\`"; ec_exit 1;;
+                ec_log E "Unknown option \`$1\`"; ec_exit 1;;
             *)
                 EC_POSITIONAL_ARGS+=("$1"); shift;;
         esac
@@ -821,13 +821,13 @@ function ec_on_interrupt {
     local sigint_code=$?
     # Add a newline after the interrupt echo char ^C
     echo ""
-    ec_log_debug "[SIGINT] on_interrupt"
+    ec_log D "[SIGINT] on_interrupt"
 
     if [[ "${EC_ON_INTERRUPT:-0}" == 1 ]]; then
-        ec_log_debug "[SIGINT] Second interrupt, aborting."
+        ec_log D "[SIGINT] Second interrupt, aborting."
         ec_kill_background_processes
     else
-        ec_log_debug "[SIGINT] First interrupt, waiting."
+        ec_log D "[SIGINT] First interrupt, waiting."
         EC_ON_INTERRUPT=1
         ec_wait_background_processes
     fi
@@ -844,14 +844,14 @@ function main {
     ec_parse_cli "$@"
     local -a all=()
 
-    ec_log_note "Running env-config v4..."
+    ec_log N "Running env-config v4..."
 
     trap ec_at_exit EXIT
     trap ec_on_interrupt SIGINT
 
     ec_print_cli_args
     ec_print_context
-    ec_log_debug "################################################################################"
+    ec_log D "################################################################################"
 
     case "$EC_COMMAND" in
         install)
@@ -863,9 +863,9 @@ function main {
         backup)
             EC_COMMAND_FUNCTION=ec_do_backup;;
         '')
-            ec_log_error "Missing command"; ec_exit 1;;
+            ec_log E "Missing command"; ec_exit 1;;
         *)
-            ec_log_error "Unsupported command \`$EC_COMMAND\`"; ec_exit 1;;
+            ec_log E "Unsupported command \`$EC_COMMAND\`"; ec_exit 1;;
     esac
     readonly EC_COMMAND_FUNCTION
 
