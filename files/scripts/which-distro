@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Returns ubuntu, manjaro or neon
+DISTRO_NAME=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2)
+
+# Returns yymm for ubuntu, nothing for manjaro and neon
+DISTRO_VERSION=$(cat /etc/os-release | grep "^VERSION_ID=" | cut -d'=' -f2 | tr -d '".')
+
+echo "${DISTRO_NAME}${DISTRO_VERSION}"

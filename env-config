@@ -1,19 +1,202 @@
+#!/usr/bin/env bash
+
+# Ensure the script is executed or sourced with Bash
+if [[ ! -v BASH_VERSINFO ]] || (( BASH_VERSINFO[0] < 4 )); then
+    echo "Bash 4+ is required ro tun env-config"
+    # Use return if possible to avoid exiting on sourcing
+    if (return 0 2>/dev/null); then
+        return 1
+    else
+        exit 1
+    fi
+fi
+
+################################################################################
+### Global shell options
+################################################################################
+
 set -euo pipefail
 
-function relink {
+shopt -s dotglob    # We want glob to match hidden files too
+shopt -s globstar   # We want to match files recursively using **
+shopt -s nullglob   # We want glob to return nothing of there is no match
+shopt -s sourcepath # We want source to search for files in PATH
+
+################################################################################
+### Global context variables
+################################################################################
+
+function ec_root_dir {
+    # From https://stackoverflow.com/a/246128
+    local SOURCE_PATH="${BASH_SOURCE[0]}"
+    local SYMLINK_DIR
+    while [ -L "$SOURCE_PATH" ]; do
+        SYMLINK_DIR="$( cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd )"
+        SOURCE_PATH="$(readlink "$SOURCE_PATH")"
+        if [[ $SOURCE_PATH != /* ]]; then
+            SOURCE_PATH=$SYMLINK_DIR/$SOURCE_PATH
+        fi
+    done
+    (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
+}
+
+EC_ROOT_DIR="$(ec_root_dir)"
+readonly EC_ROOT_DIR
+readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
+
+export PATH="$EC_ROOT_DIR/libs:$EC_ROOT_DIR/files/scripts:$PATH"
+
+# shellcheck source-path=lib
+source ansi.bash
+# shellcheck source-path=lib
+source log.bash
+# shellcheck source-path=lib
+source utils.bash
+# shellcheck source-path=lib
+source backtrace.bash
+
+################################################################################
+### Global variables
+################################################################################
+
+# Declared upfront for better linting in the functions below
+# Some of them are marked readonly later-on after their proper initialization
+
+# HTTP proxy configuration
+EC_PROXY_SERVER=""
+EC_PROXY_PORT=""
+EC_PROXY_USER=""
+EC_NO_PROXY=""
+
+# Detected distro
+EC_DISTRO=
+# Detected platform
+EC_PLATFORM=
+# Whether to use colors
+EC_COLOR=auto
+# List of all packages supported in the current environment, set from config/default.bash
+EC_ALL_PKGS=()
+# List of packages to operate on, set from command line arguments, defaults to EC_ALL_PKGS
+EC_TARGET_PKGS=()
+# List of package providers available on the current distro, set from distro files
+EC_DISTRO_PKG_PROVIDERS=()
+
+################################################################################
+### Core functions
+################################################################################
+
+function ec_detect_source_and_validate_distro {
+    local -r distro_name=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2)
+    local -r distro_version=$(cat /etc/os-release | grep "^VERSION_ID=" | cut -d'=' -f2 | tr -d '".')
+    local -r distro_file="config/distros/$distro_name.bash"
+    ec_log D "Checking distro file '$distro_file'"
+    if [[ ! -f $distro_file ]]; then
+        ec_log E "Unsupported distro '$distro_name'"
+        return 1
+    fi
+    if ! source "$distro_file" "$distro_version"; then
+        ec_log E "Error while sourcing distro file '$distro_file'"
+        return 1
+    fi
+    readonly EC_DISTRO="$distro_name"
+}
+
+function ec_detect_source_and_validate_platform {
+    local -r platform_name="$(which-platform)"
+    local -r platform_file="config/platforms/$platform_name.bash"
+    ec_log D "Checking platform file '$platform_file'"
+    if [[ ! -f $platform_file ]]; then
+        ec_log E "Unsupported platform '$platform_name'"
+        return 1
+    fi
+    if ! source "$platform_file"; then
+        ec_log E "Error while sourcing platform file '$platform_file'"
+        return 1
+    fi
+    readonly EC_PLATFORM="$platform_name"
+}
+
+function ec_source_distro_and_platform {
+    local valid=true
+    ec_detect_source_and_validate_distro || valid=false
+    ec_detect_source_and_validate_platform || valid=false
+    $valid
+}
+
+function ec_relink {
     local link="$1"
     local target="$2"
-
     if [[ ! -e "$target" ]]; then
-        echo "relink: target '$target' does not exist"
+        ec_log E "relink: target '$target' does not exist"
         return 1
     fi
-
     if [[ ! -h "$link" ]]; then
-        echo "relink: link '$link' already exist and is not a link"
+        ec_log E "relink: link '$link' already exist and is not a link"
         return 1
     fi
-
-    echo "Relinking '$link' -> '$target'"
+    ec_log N "Relinking '$link' -> '$target'"
     ln -sf "$target" "$link"
 }
+
+################################################################################
+### Main execution
+################################################################################
+
+function ec_print_env_summary {
+    ec_log N@stdout ""
+    ec_log N "Current environment configuration:"
+    ec_log N "EC_VERSION        = \"\""
+    ec_log N "EC_DISTRO         = \"$EC_DISTRO\""
+    ec_log N "EC_PLATFORM       = \"$EC_PLATFORM\""
+    ec_log N@stdout ""
+}
+
+function ec_register_pkg_providers {
+    local provider_file provider
+    for provider_file in pkg_providers/*.bash; do
+        local provider=$(basename --suffix=.bash "$provider_file")
+        if [[ ! "$provider" =~ ^[a-zA-Z_][a-zA-Z_0-9]*$ ]]; then
+            ec_log E "Provider '$provider' is not a valid Bash identifier"
+            exit 1
+        fi
+        ec_log D "Registering pkg provider '$provider'"
+        declare -gA EC_PKG_PROVIDER_${provider}_PKG_PATTERN
+    done
+}
+
+function ec_setup_pkg_providers {
+    local provider
+    for provider in "${EC_DISTRO_PKG_PROVIDERS[@]}"; do
+        ec_log D "Setting up pkg provider '$provider'"
+        source pkg_providers/$provider.bash
+        if [[ $(type -t ec_${provider}_setup) == function ]]; then
+            ( set -x; ec_${provider}_setup )
+        fi
+    done
+}
+
+function main {
+    # ec_parse_args "$@"
+
+    ec_register_pkg_providers
+
+    source config/default.bash
+
+    ec_source_distro_and_platform || exit 1
+
+    ec_print_env_summary
+
+    ec_log D "EC_ALL_PKGS=(${EC_ALL_PKGS[*]})"
+
+    if (( ${#EC_TARGET_PKGS[@]} == 0 )); then
+        EC_TARGET_PKGS=("${EC_ALL_PKGS[@]}")
+    fi
+    readonly EC_TARGET_PKGS
+
+    ec_setup_pkg_providers
+}
+
+# TODO execute main if not sourced
+if ! (return 0 2>/dev/null); then
+    main "$@"
+fi
