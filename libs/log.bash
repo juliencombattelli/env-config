@@ -1,8 +1,7 @@
 source ansi.bash
 
-EC_LOG_COLOR=true
-EC_LOG_FILE=env-config.log
-EC_LOG_TARGETS=("$EC_LOG_FILE")
+EC_LOG_COLOR_DEFAULT=true
+EC_LOG_FILE_DEFAULT=env-config.log
 
 function _ec_log_ansi_style {
     if $ec_log_color; then
@@ -35,11 +34,11 @@ function _ec_log_level_E {
 }
 
 function _ec_log_set_output {
-    ec_log_color=$EC_LOG_COLOR
+    ec_log_color=${EC_LOG_COLOR:-$EC_LOG_COLOR_DEFAULT}
     case "$1" in
         stdout) exec {LOG_FD}>&1;;
         stderr) exec {LOG_FD}>&2;;
-        file)   exec {LOG_FD}>>"$EC_LOG_FILE"; ec_log_color=false;;
+        file)   exec {LOG_FD}>>"${EC_LOG_FILE:-$EC_LOG_FILE_DEFAULT}"; ec_log_color=false;;
         *)      exec {LOG_FD}>>"$1"; ec_log_color=false;;
     esac
 }
@@ -48,7 +47,7 @@ function _ec_log_close_output {
     exec {LOG_FD}>&-
 }
 
-function ec_log {
+function _ec_log {
     local spec="$1"
     shift
 

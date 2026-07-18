@@ -41,19 +41,24 @@ function ec_root_dir {
 }
 
 EC_ROOT_DIR="$(ec_root_dir)"
-readonly EC_ROOT_DIR
-readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
+declare -rx EC_ROOT_DIR
+declare -rx EC_BUILD_DIR="$EC_ROOT_DIR/build"
+declare -rx EC_LOGS_DIR="$EC_BUILD_DIR/logs"
+declare -rx EC_WORK_DIR="$EC_BUILD_DIR/work"
+declare -rx EC_DOWNLOADS_DIR="$EC_BUILD_DIR/downloads"
+
+declare -rx EC_LOG_FILE="$EC_LOGS_DIR/env-config.log"
 
 export PATH="$EC_ROOT_DIR/libs:$EC_ROOT_DIR/files/scripts:$PATH"
 
 # shellcheck source-path=lib
 source ansi.bash
 # shellcheck source-path=lib
-source log.bash
-# shellcheck source-path=lib
 source utils.bash
 # shellcheck source-path=lib
 source backtrace.bash
+# shellcheck source-path=lib
+source task_runner.bash
 
 ################################################################################
 ### Global variables
@@ -68,22 +73,45 @@ EC_PROXY_PORT=""
 EC_PROXY_USER=""
 EC_NO_PROXY=""
 
+declare -rx EC_DISABLE_PKG_PROVIDERS_UPDATE=${EC_DISABLE_PKG_PROVIDERS_UPDATE:-}
+
 # Detected distro
 EC_DISTRO=
 # Detected platform
 EC_PLATFORM=
+# Detected CPU architecture
+EC_CPU_ARCH="$(uname --machine)"
 # Whether to use colors
 EC_COLOR=auto
+# Whether to skip installing dependencies
+EC_SKIP_DEPENDENCIES=false
 # List of all packages supported in the current environment, set from config/default.bash
-EC_ALL_PKGS=()
+declare -a EC_ALL_PKGS=()
 # List of packages to operate on, set from command line arguments, defaults to EC_ALL_PKGS
 EC_TARGET_PKGS=()
 # List of package providers available on the current distro, set from distro files
 EC_DISTRO_PKG_PROVIDERS=()
 
+readonly EC_CPU_ARCH
+
 ################################################################################
 ### Core functions
 ################################################################################
+
+function ec_ensure_core_dependencies_availability {
+    local ec_deps_detected=true
+    if ! command -v wget &>/dev/null; then
+        ec_log E "Command 'wget' is not found"
+        ec_deps_detected=false
+    fi
+    if ! command -v tar &>/dev/null; then
+        ec_log E "Command 'tar' is not found"
+        ec_deps_detected=false
+    fi
+    if ! $ec_deps_detected; then
+        exit 1
+    fi
+}
 
 function ec_detect_source_and_validate_distro {
     local -r distro_name=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2)
@@ -139,22 +167,168 @@ function ec_relink {
 }
 
 ################################################################################
+### Operations
+################################################################################
+
+function _ec_run_install {
+    source config/default.bash
+
+    ec_ensure_core_dependencies_availability
+
+    ec_register_pkg_providers
+
+    ec_source_distro_and_platform
+
+    ec_print_env_summary
+
+    ec_setup_pkg_providers
+
+    local -r pkgs=( "${EC_TARGET_PKGS[@]:-${EC_ALL_PKGS[@]}}" )
+    ec_discover_tasks "${pkgs[@]}"
+
+    if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
+        ec_log E "No task found for packages: $(ec_join_affix ', ' \` \` "${pkgs[@]}")."
+        exit 1
+    fi
+
+    ec_validate_dependencies
+
+    ec_execute_tasks
+}
+
+function _ec_run_remove {
+    # Don't use EC_ALL_PKGS if EC_TARGET_PKGS is empty as it would be too destructive
+    ec_log N "Removing $(ec_join_affix ', ' \` \` "${EC_TARGET_PKGS[@]}")..."
+}
+
+
+################################################################################
 ### Main execution
 ################################################################################
+
+function ec_prepare_build_dir {
+    mkdir -p "$EC_BUILD_DIR"
+    mkdir -p "$EC_LOGS_DIR"
+    mkdir -p "$EC_WORK_DIR"
+    mkdir -p "$EC_DOWNLOADS_DIR"
+}
+
+function ec_help {
+    cat << 'EOH'
+Usage:
+    env-config [OPTIONS] COMMAND
+
+Commands:
+    install [PKG...]        Install and configure packages
+    remove  [PKG...]        Completely uninstall packages (package itself and its configuration)
+
+Options:
+    -h, --help              Display this message
+    --color WHEN            Control when to use color in output (auto, never or always)
+    --no-deps               Skip installing dependencies (useful for reinstalling/reconfiguring)
+    --proxy-server URL      Proxy server URL
+    --proxy-port   PORT     Proxy port number (requires --proxy-server)
+    --proxy-user   USER     Proxy user (requires --proxy-server)
+    --no-proxy     URL,...  URLs not served by the proxy (requires --proxy-server)
+
+The arguments `PKG` must be the basename of one of the recipes available
+(ie. the recipe file `recipes/zsh.bash` provides the package `zsh`).
+
+If `all` is provided as package env-config will install and configure all applicable packages
+for the current distribution and platform.
+
+If no package is provided `all` is used as default.
+EOH
+}
+
+function ec_parse_args {
+    local positional_args
+    while (( $# > 0 )); do
+        if [[ "$1" == -*=* ]]; then
+            local opt="${1%%=*}"
+            local val="${1#*=}"
+            shift
+            set -- "$opt" "$val" "$@"
+        fi
+
+        case "$1" in
+            -h|--help)
+                ec_help; exit 0;;
+            --color)
+                case "${2:-}" in
+                    auto) EC_COLOR=auto; shift 2;;
+                    never) EC_COLOR=false; shift 2;;
+                    always) EC_COLOR=true; shift 2;;
+                    '') ec_log E "Missing value for option --color"; exit 1;;
+                    *) ec_log E "Invalid value \`$2\` for option --color, possible values: auto, never, always"; exit 1;;
+                esac;;
+            --no-deps)
+                EC_SKIP_DEPENDENCIES=true; shift 1;;
+            --proxy-server)
+                EC_PROXY_SERVER="$2"; shift 2;;
+            --proxy-port)
+                EC_PROXY_PORT="$2"; shift 2;;
+            --proxy-user)
+                EC_PROXY_USER="$2"; shift 2;;
+            --no-proxy)
+                EC_NO_PROXY="$2"; shift 2;;
+            -*)
+                ec_log E "Unknown option \`$1\`"; exit 1;;
+            *)
+                positional_args+=("$1"); shift;;
+        esac
+    done
+
+    readonly EC_PROXY_SERVER
+    readonly EC_PROXY_PORT
+    readonly EC_PROXY_USER
+    readonly EC_NO_PROXY
+    readonly EC_SKIP_DEPENDENCIES
+
+    if [[ "$EC_COLOR" == auto ]]; then
+        EC_COLOR=true
+        if [[ -n "${NO_COLOR:-}" ]]; then
+            EC_COLOR=false
+        elif [[ "${TERM:-dump}" == "dumb" ]]; then
+            EC_COLOR=false
+        elif [[ ! -t 1 ]]; then
+            EC_COLOR=false
+        fi
+    fi
+    readonly EC_COLOR
+    declare -rx EC_LOG_COLOR="$EC_COLOR"
+
+    readonly EC_COMMAND="${positional_args[0]:-}"
+    case "$EC_COMMAND" in
+        install)
+            EC_COMMAND_FUNCTION=_ec_run_install;;
+        remove)
+            EC_COMMAND_FUNCTION=_ec_run_remove;;
+        '')
+            ec_log E "Missing command"; exit 1;;
+        *)
+            ec_log E "Unsupported command \`$EC_COMMAND\`"; exit 1;;
+    esac
+    readonly EC_COMMAND_FUNCTION
+
+    EC_TARGET_PKGS=("${positional_args[@]:1}")
+    readonly EC_TARGET_PKGS
+}
 
 function ec_print_env_summary {
     ec_log N@stdout ""
     ec_log N "Current environment configuration:"
-    ec_log N "EC_VERSION        = \"\""
-    ec_log N "EC_DISTRO         = \"$EC_DISTRO\""
-    ec_log N "EC_PLATFORM       = \"$EC_PLATFORM\""
+    ec_log N "EC_VERSION    = \"\""
+    ec_log N "EC_DISTRO     = \"$EC_DISTRO\""
+    ec_log N "EC_PLATFORM   = \"$EC_PLATFORM\""
+    ec_log N "EC_CPU_ARCH   = \"$EC_CPU_ARCH\""
     ec_log N@stdout ""
 }
 
 function ec_register_pkg_providers {
     local provider_file provider
     for provider_file in pkg_providers/*.bash; do
-        local provider=$(basename --suffix=.bash "$provider_file")
+        provider=$(basename --suffix=.bash "$provider_file")
         if [[ ! "$provider" =~ ^[a-zA-Z_][a-zA-Z_0-9]*$ ]]; then
             ec_log E "Provider '$provider' is not a valid Bash identifier"
             exit 1
@@ -169,31 +343,28 @@ function ec_setup_pkg_providers {
     for provider in "${EC_DISTRO_PKG_PROVIDERS[@]}"; do
         ec_log D "Setting up pkg provider '$provider'"
         source pkg_providers/$provider.bash
-        if [[ $(type -t ec_${provider}_setup) == function ]]; then
-            ( set -x; ec_${provider}_setup )
+        if [[ $(type -t "ec_${provider}_setup") == function ]]; then
+            ( set -x; "ec_${provider}_setup" )
         fi
     done
 }
 
 function main {
-    # ec_parse_args "$@"
+    ec_prepare_build_dir
 
-    ec_register_pkg_providers
+    ec_parse_args "$@"
 
-    source config/default.bash
+    $EC_COMMAND_FUNCTION
 
-    ec_source_distro_and_platform || exit 1
+    # source recipes/bat.bash
+    # (
 
-    ec_print_env_summary
+    #     declare -rx D="${EC_DOWNLOADS_DIR}/bat"
+    #     declare -rx W="${EC_WORK_DIR}/bat"
+    #     set -x; ec_do_install
+    # )
 
-    ec_log D "EC_ALL_PKGS=(${EC_ALL_PKGS[*]})"
 
-    if (( ${#EC_TARGET_PKGS[@]} == 0 )); then
-        EC_TARGET_PKGS=("${EC_ALL_PKGS[@]}")
-    fi
-    readonly EC_TARGET_PKGS
-
-    ec_setup_pkg_providers
 }
 
 # TODO execute main if not sourced

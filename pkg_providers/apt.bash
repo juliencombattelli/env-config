@@ -1,5 +1,7 @@
 function ec_apt_setup {
-    sudo -E apt update
+    if [[ -z ${EC_DISABLE_PKG_PROVIDERS_UPDATE} ]]; then
+        sudo -E apt update
+    fi
 }
 
 function ec_apt_pkg_search {

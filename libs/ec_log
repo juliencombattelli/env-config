@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Use a dedicated script for the log function so that a subprocess will be
+# spawned and the log internals will not be visible in xtrace output
+
+# shellcheck source-path=lib
+source log.bash
+
+_ec_log "$@"
