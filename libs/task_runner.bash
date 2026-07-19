@@ -128,3 +128,184 @@ function ec_dependencies_satisfied {
 
     return 0 # All dependencies completed
 }
+
+function _ec_prepare_execution_environment {
+    local FIFO="$1"
+    local LOGFILE="$2"
+    local RUNFILE="$3"
+
+    mkdir -p "$(dirname "$FIFO")"
+    rm -f "$FIFO"
+    mkfifo "$FIFO"
+
+    mkdir -p "$(dirname "$LOGFILE")"
+    rm -f "$LOGFILE"
+
+    mkdir -p "$(dirname "$RUNFILE")"
+    rm -f "$RUNFILE"
+}
+
+# Execute a task in the background
+function _ec_execute_task {
+    local task="$1"
+    local script="${EC_TASK_RECIPES[$task]}"
+
+    FIFO="$EC_WORK_DIR/$task/$task.fifo"
+    LOGFILE="$EC_WORK_DIR/$task/$task.log"
+    RUNFILE="$EC_WORK_DIR/$task/$task.run"
+    _ec_prepare_execution_environment "$FIFO" "$LOGFILE" "$RUNFILE"
+
+    (
+        # Ignore interrupt signals so task continues even when parent is interrupted
+        trap '' SIGINT
+
+        exec 19>"$RUNFILE"
+        BASH_XTRACEFD=19
+        set -x -o pipefail
+
+        # Source the task script
+        EC_DEPENDS=()
+        # shellcheck disable=SC1090
+        source "$script"
+
+        # TODO relink config folder if one is present in files/
+
+        if [[ $(type -t ec_do_install) == function ]]; then
+            # ec_do_install |& tee "$FIFO" &>"$LOGFILE"
+            # Don't send anything into the fifo yet as nobody is currently reading
+            ec_do_install |& tee "$LOGFILE"
+        else
+            ec_log N "TODO Installing from package provider"
+        fi
+
+        result=$?
+        rm -f "$FIFO" &>/dev/null
+        exit $result
+    ) #&
+
+    # Store the PID
+    # EC_TASK_RUNNING["$task"]=$!
+
+    # TODO remove
+    EC_TASK_COMPLETED["$task"]=$?
+}
+
+# Report tasks that can't start because dependencies are unmet or failed
+function _ec_report_blocked_tasks {
+    local -a blocked_lines=()
+    local -a stuck_lines=()
+    local task
+    for task in "${!EC_TASK_RECIPES[@]}"; do
+        [[ -v EC_TASK_COMPLETED[$task] ]] && continue
+
+        local deps="${EC_TASK_DEPENDENCIES[$task]}"
+        local -a unmet_deps=()
+        local dep
+        for dep in $deps; do
+            if [[ -v EC_TASK_COMPLETED[$dep] ]]; then
+                (( EC_TASK_COMPLETED[$dep] != 0 )) && unmet_deps+=("$dep")
+            else
+                unmet_deps+=("$dep")
+            fi
+        done
+
+        if (( ${#unmet_deps[@]} > 0 )); then
+            blocked_lines+=("  - \`$task\` cannot run because dependencies did not complete: $(ec_join_affix ', ' \` \` "${unmet_deps[@]}")")
+        else
+            stuck_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
+        fi
+    done
+
+    if (( ${#blocked_lines[@]} > 0 )); then
+        ec_log E "Some tasks cannot run because one or more dependencies did not complete:"
+        local line
+        for line in "${blocked_lines[@]}"; do
+            ec_log E "$line"
+        done
+    fi
+
+    if (( ${#stuck_lines[@]} > 0 )); then
+        ec_log E "No tasks can be started, but none of their dependencies failed. This should not happen and is likely a bug in the task scheduler:"
+        local line
+        for line in "${stuck_lines[@]}"; do
+            ec_log E "$line"
+        done
+    fi
+}
+
+# Main execution loop with dynamic dependency resolution
+function ec_execute_tasks {
+    ec_log N "Executing tasks..."
+
+    local total_tasks=${#EC_TASK_RECIPES[@]}
+    local completed_count=0
+    local blocked=false
+    local task
+
+    # Reverse mapping: PID -> task name
+    declare -A pid_to_task=()
+
+    while (( completed_count < total_tasks )); do
+        # Start all tasks whose dependencies are satisfied
+        local tasks_started=false
+        for task in "${!EC_TASK_RECIPES[@]}"; do
+            # Skip if already completed (successfully or not) or running
+            [[ -v EC_TASK_COMPLETED[$task] ]] && continue
+            [[ -v EC_TASK_RUNNING[$task] ]] && continue
+            (( ${#EC_TASK_RUNNING[@]} >= EC_JOBS_COUNT )) && continue
+
+            # Check if dependencies are satisfied
+            if ec_dependencies_satisfied "$task"; then
+                ec_log N "Starting task '$task'..."
+                _ec_execute_task "$task"
+                # local pid="${EC_TASK_RUNNING["$task"]}"
+                # pid_to_task["$pid"]="$task"
+                tasks_started=true
+            fi
+        done
+
+        # If no tasks are running and none could start, we have a problem
+        local running_count=${#EC_TASK_RUNNING[@]}
+        if (( running_count == 0 )); then
+            if ! $tasks_started; then
+                blocked=true
+                break
+            fi
+            continue
+        fi
+
+        # Wait for any single task to complete
+        # local completed_pid
+        # local task_status=0
+        # # || is important here as errexit option is set
+        # wait -n -p completed_pid "${EC_TASK_RUNNING[@]}" || task_status=$?
+        # if [[ -v pid_to_task[$completed_pid] ]]; then
+        #     local completed_task="${pid_to_task[$completed_pid]}"
+        #     local elapsed_time
+        #     elapsed_time=$(timer_elapsed EC_TASK_TIMER["$completed_task"])
+        #     EC_TASK_COMPLETED["$completed_task"]=$task_status
+        #     unset "EC_TASK_RUNNING[$completed_task]"
+        #     unset "pid_to_task[$completed_pid]"
+        #     completed_count=$((completed_count + 1))
+        #     ec_post_rendering_event task_completed "$completed_task|$completed_pid|$elapsed_time|$task_status"
+        # fi
+    done
+
+    local -a failed_tasks=()
+    for task in "${!EC_TASK_COMPLETED[@]}"; do
+        (( EC_TASK_COMPLETED[$task] != 0 )) && failed_tasks+=("$task")
+    done
+    if (( ${#failed_tasks[@]} > 0 )); then
+        ec_log E "Some tasks failed: $(ec_join_affix ', ' \` \` "${failed_tasks[@]}")."
+    fi
+
+    if $blocked; then
+        _ec_report_blocked_tasks
+    fi
+
+    if $blocked || (( ${#failed_tasks[@]} > 0 )); then
+        exit 1
+    fi
+
+    ec_log N "All tasks completed successfully!"
+}

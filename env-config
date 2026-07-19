@@ -83,6 +83,8 @@ EC_PLATFORM=
 EC_CPU_ARCH="$(uname --machine)"
 # Whether to use colors
 EC_COLOR=auto
+# Maximum number of concurrent jobs (must be 1 at the moment)
+EC_JOBS_COUNT=1
 # Whether to skip installing dependencies
 EC_SKIP_DEPENDENCIES=false
 # List of all packages supported in the current environment, set from config/default.bash
@@ -191,6 +193,7 @@ function _ec_run_install {
         exit 1
     fi
 
+    # TODO check if this can be done during discovery
     ec_validate_dependencies
 
     ec_execute_tasks
