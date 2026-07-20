@@ -7,17 +7,20 @@ declare -A EC_TASK_TIMER=()        # task -> duration time points
 
 function ec_get_recipe_file_for_package {
     local package="$1"
+    local output_var="$2"
     local -a recipe_file=()
-    recipe_file+=(recipes/"$package".bash)
+    recipe_file+=(recipes/**/"$package".bash)
     if (( ${#recipe_file[@]} > 1 )); then
-        ec_log E "Found more than one recipe for package \`$package\` (total ${#recipe_file[@]}):"
-        ec_log E "${recipe_file[@]}"
+        ec_log E "  Found more than one recipe for package \`$package\` (total ${#recipe_file[@]}):"
+        for file in "${recipe_file[@]}"; do
+            ec_log E "    $file"
+        done
         return 1
     elif (( ${#recipe_file[@]} == 0 )); then
         ec_log E "No recipe found for package \`$package\`."
         return 1
     fi
-    echo "${recipe_file[@]}"
+    printf -v "$output_var" "%s" "${recipe_file[@]}"
 }
 
 function ec_discover_task {
@@ -40,7 +43,7 @@ function ec_discover_task {
 
     # Find the task file
     local task_file
-    task_file="$(ec_get_recipe_file_for_package "$task_name")" || return 1
+    ec_get_recipe_file_for_package "$task_name" task_file || return 1
 
     ec_log D "  Discovering task: $task_name from $task_file"
 
@@ -80,10 +83,14 @@ function ec_discover_tasks {
     ec_log D "Discovering tasks for packages $(ec_join_affix ', ' \` \` "${target_packages[@]}")..."
 
     # Discover each target package and its dependencies
+    local succeeded=true
     local package
     for package in "${target_packages[@]}"; do
-        ec_discover_task "$package" || continue
+        if ! ec_discover_task "$package"; then
+            succeeded=false
+        fi
     done
+    $succeeded
 }
 
 # Validate that all dependencies exist

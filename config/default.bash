@@ -1,1 +1,1 @@
-EC_ALL_PKGS+=(gdb git odin wget zig zsh)
+EC_ALL_PKGS+=(bash gdb git odin wget zig zsh)

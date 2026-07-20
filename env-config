@@ -186,7 +186,10 @@ function _ec_run_install {
     ec_setup_pkg_providers
 
     local -r pkgs=( "${EC_TARGET_PKGS[@]:-${EC_ALL_PKGS[@]}}" )
-    ec_discover_tasks "${pkgs[@]}"
+    if ! ec_discover_tasks "${pkgs[@]}"; then
+        ec_log E "Errors during task discovery, exiting."
+        exit 1
+    fi
 
     if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
         ec_log E "No task found for packages: $(ec_join_affix ', ' \` \` "${pkgs[@]}")."
