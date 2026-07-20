@@ -10,9 +10,9 @@ readonly urls=(
 )
 
 case ${#urls[@]} in
-    0) ec_log E "No matching GitHub release artifact found for 'bat'"; return 1;;
+    0) ec_log E "No matching GitHub release artifact found for '$repo'"; return 1;;
     1) ;;
-    *) ec_log E "Multiple matching GitHub release artifacts found for 'bat'"; return 1;;
+    *) ec_log E "Multiple matching GitHub release artifacts found for '$repo'"; return 1;;
 esac
 
 if [[ -f "$D/$(basename $urls)" ]]; then
