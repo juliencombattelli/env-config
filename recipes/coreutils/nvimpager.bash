@@ -1,5 +1,4 @@
-EC_DEPENDS=(scdoc make)
-RUNTIME_EC_DEPENDS=(neovim)
+EC_DEPENDS=(scdoc make neovim)
 
 function ec_do_install {
     echo "Installing nvimpager!"

@@ -1,1 +1,34 @@
-EC_ALL_PKGS+=(bash gdb git odin wget zig zsh)
+EC_ALL_PKGS+=(
+    bat
+    eza
+    fd
+    less
+    nvimpager
+    ripgrep
+    neovim
+    vim
+    vscode
+    ssh
+    wget
+    commit-editor
+    diff-so-fancy
+    git
+    oh-my-zsh
+    zsh
+    libfuse2
+    scdoc
+    tmux
+    ccmake
+    clang
+    clang-format
+    clang-tidy
+    cmake
+    gcc
+    gdb
+    gdb-dashboard
+    make
+    ninja
+    odin
+    rust
+    zig
+)

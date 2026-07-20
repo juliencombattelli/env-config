@@ -1,4 +1,4 @@
-EC_DEPENDS=(shell-common dircolors)
+EC_DEPENDS=()
 
 function ec_do_install {
     echo "Installing bash!"
