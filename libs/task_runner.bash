@@ -180,7 +180,7 @@ function _ec_execute_task {
         declare -rx D="${EC_DOWNLOADS_DIR}/$task"
         declare -rx W="${EC_WORK_DIR}/$task"
         cd "$W" || exit 1
-        if [[ $(type -t ec_do_install) == function ]]; then
+        if [[ $(type -t ec_do_install) == function ]] && [[ ! -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
             # ec_do_install |& tee "$FIFO" &>"$LOGFILE"
             # Don't send anything into the fifo yet as nobody is currently reading
             ec_do_install |& tee "$LOGFILE"
