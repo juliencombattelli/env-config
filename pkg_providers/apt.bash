@@ -12,6 +12,12 @@ function ec_apt_pkg_search {
         | head --lines=1
 }
 
+function ec_apt_pkg_installed {
+    local -r pattern="$1"
+    dpkg-query --show --showformat='${Package} ${Status}\n' \
+        | awk '$1 ~ /'$pattern'/ && $4 == "installed" { print $1 }'
+}
+
 function ec_apt_pkg_install {
     local -r pkg="$1"
     sudo -E apt install --yes "$pkg"
