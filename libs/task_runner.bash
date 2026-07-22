@@ -186,6 +186,22 @@ function _ec_execute_task {
             ec_do_install |& tee "$LOGFILE"
         else
             ec_log N "TODO Installing from package provider"
+            # TODO loop through all distro package providers
+            if [[ -v EC_DISTRO_PKG_PROVIDERS[0] ]]; then
+                local -r pkg_provider="${EC_DISTRO_PKG_PROVIDERS[0]}"
+                local -r pkg_pattern_ref="EC_PKG_PROVIDER_${pkg_provider}_PKG_PATTERN[$task]"
+                local -r pkg_pattern_default="^$task$"
+                local -r pkg_pattern="${!pkg_pattern_ref:-$pkg_pattern_default}"
+                local installed_pkg
+                if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern"); then
+                    readarray -t installed_pkg <<< "$installed_pkg"
+                    ec_log W "Package '$task' already installed with '${pkg_provider}': ${installed_pkg[*]}"
+                else
+                    ec_log N "TODO installing"
+                fi
+            else
+                ec_log E "No package provider set for distro '$EC_DISTRO'"
+            fi
         fi
 
         result=$?
