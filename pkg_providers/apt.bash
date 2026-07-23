@@ -14,8 +14,10 @@ function ec_apt_pkg_search {
 
 function ec_apt_pkg_installed {
     local -r pattern="$1"
-    dpkg-query --show --showformat='${Package} ${Status}\n' \
-        | awk '$1 ~ /'$pattern'/ && $4 == "installed" { print $1 }'
+    dpkg-query --show --showformat='${Package}\t${db:Status-Abbrev}\n' \
+        | grep -E $'\tii $' \
+        | cut -f1 \
+        | grep -E "$pattern"
 }
 
 function ec_apt_pkg_install {
