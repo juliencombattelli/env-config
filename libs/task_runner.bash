@@ -185,7 +185,7 @@ function _ec_execute_task {
             # Don't send anything into the fifo yet as nobody is currently reading
             ec_do_install |& tee "$LOGFILE"
         else
-            ec_log N "TODO Installing from package provider"
+            ec_log N "Installing package '$task' from package providers..."
             # TODO loop through all distro package providers
             if [[ -v EC_DISTRO_PKG_PROVIDERS[0] ]]; then
                 local -r pkg_provider="${EC_DISTRO_PKG_PROVIDERS[0]}"
@@ -195,9 +195,15 @@ function _ec_execute_task {
                 local installed_pkg
                 if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern"); then
                     readarray -t installed_pkg <<< "$installed_pkg"
-                    ec_log W "Package '$task' already installed with '${pkg_provider}': ${installed_pkg[*]}"
+                    ec_log W "Package '$task' already installed with '$pkg_provider': ${installed_pkg[*]}"
                 else
-                    ec_log N "TODO installing"
+                    local package
+                    if package=$("ec_${pkg_provider}_pkg_search" "$pkg_pattern"); then
+                        ec_log N "Installing '$package' using '$pkg_provider'..."
+                        "ec_${pkg_provider}_pkg_install" "$package"
+                    else
+                        ec_log E "No package matching pattern '$pkg_pattern' using '$pkg_provider'"
+                    fi
                 fi
             else
                 ec_log E "No package provider set for distro '$EC_DISTRO'"
