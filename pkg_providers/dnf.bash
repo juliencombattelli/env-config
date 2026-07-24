@@ -7,6 +7,11 @@ function ec_dnf_pkg_search {
     false
 }
 
+function ec_dnf_pkg_installed {
+    local -r pattern="$1"
+    false
+}
+
 function ec_dnf_pkg_install {
     local -r pkg="$1"
     false
