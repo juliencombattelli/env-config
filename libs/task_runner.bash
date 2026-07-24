@@ -152,6 +152,38 @@ function _ec_prepare_execution_environment {
     rm -f "$RUNFILE"
 }
 
+function _ec_install_from_pkg_provider {
+    local -r task="$1"
+    ec_log D "Installing package '$task' from package providers..."
+    if (( ${#EC_DISTRO_PKG_PROVIDERS[@]} == 0 )); then
+        ec_log E "No package provider set for distro '$EC_DISTRO'"
+        return 1
+    fi
+    local pkg_provider
+    for pkg_provider in "${EC_DISTRO_PKG_PROVIDERS[@]}"; do
+        local pkg_pattern_ref="EC_PKG_PROVIDER_${pkg_provider}_PKG_PATTERN[$task]"
+        local pkg_pattern="${!pkg_pattern_ref:-$task}"
+        local pkg_pattern_whole="^$pkg_pattern$"
+        local installed_pkg
+        if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern_whole"); then
+            readarray -t installed_pkg <<< "$installed_pkg"
+            ec_log N "Package '$task' already installed with '$pkg_provider': ${installed_pkg[*]}"
+            return
+        else
+            local package
+            if package=$("ec_${pkg_provider}_pkg_search" "$pkg_pattern_whole"); then
+                ec_log N "Installing '$package' using '$pkg_provider'..."
+                "ec_${pkg_provider}_pkg_install" "$package"
+                return
+            else
+                ec_log W "No package matching pattern '$pkg_pattern' using '$pkg_provider'"
+            fi
+        fi
+    done
+    ec_log E "No package matching pattern '$pkg_pattern' using any configured package providers"
+    return 1
+}
+
 # Execute a task in the background
 function _ec_execute_task {
     local task="$1"
@@ -162,6 +194,7 @@ function _ec_execute_task {
     RUNFILE="$EC_WORK_DIR/$task/$task.run"
     _ec_prepare_execution_environment "$FIFO" "$LOGFILE" "$RUNFILE"
 
+    EC_TASK_COMPLETED["$task"]=0
     (
         # Ignore interrupt signals so task continues even when parent is interrupted
         trap '' SIGINT
@@ -185,41 +218,16 @@ function _ec_execute_task {
             # Don't send anything into the fifo yet as nobody is currently reading
             ec_do_install |& tee "$LOGFILE"
         else
-            ec_log N "Installing package '$task' from package providers..."
-            # TODO loop through all distro package providers
-            if [[ -v EC_DISTRO_PKG_PROVIDERS[0] ]]; then
-                local -r pkg_provider="${EC_DISTRO_PKG_PROVIDERS[0]}"
-                local -r pkg_pattern_ref="EC_PKG_PROVIDER_${pkg_provider}_PKG_PATTERN[$task]"
-                local -r pkg_pattern_default="^$task$"
-                local -r pkg_pattern="${!pkg_pattern_ref:-$pkg_pattern_default}"
-                local installed_pkg
-                if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern"); then
-                    readarray -t installed_pkg <<< "$installed_pkg"
-                    ec_log W "Package '$task' already installed with '$pkg_provider': ${installed_pkg[*]}"
-                else
-                    local package
-                    if package=$("ec_${pkg_provider}_pkg_search" "$pkg_pattern"); then
-                        ec_log N "Installing '$package' using '$pkg_provider'..."
-                        "ec_${pkg_provider}_pkg_install" "$package"
-                    else
-                        ec_log E "No package matching pattern '$pkg_pattern' using '$pkg_provider'"
-                    fi
-                fi
-            else
-                ec_log E "No package provider set for distro '$EC_DISTRO'"
-            fi
+            _ec_install_from_pkg_provider "$task"
         fi
 
         result=$?
         rm -f "$FIFO" &>/dev/null
         exit $result
-    ) #&
+    ) || EC_TASK_COMPLETED["$task"]=$? #&
 
     # Store the PID
     # EC_TASK_RUNNING["$task"]=$!
-
-    # TODO remove
-    EC_TASK_COMPLETED["$task"]=$?
 }
 
 # Report tasks that can't start because dependencies are unmet or failed
