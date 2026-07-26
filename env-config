@@ -100,16 +100,22 @@ readonly EC_CPU_ARCH
 ### Core functions
 ################################################################################
 
+# TODO This list could be automatically installed via recipes executed during a
+# first pass as "prerequisite recipes". The list itself should be defined in the
+# default.bash config file and may be appended from distro or platform config file.
+declare -ra EC_CORE_DEPENDENCIES=(wget tar jq)
+
 function ec_ensure_core_dependencies_availability {
     local ec_deps_detected=true
-    if ! command -v wget &>/dev/null; then
-        ec_log E "Command 'wget' is not found"
-        ec_deps_detected=false
-    fi
-    if ! command -v tar &>/dev/null; then
-        ec_log E "Command 'tar' is not found"
-        ec_deps_detected=false
-    fi
+    ec_log D "Ensuring core dependencies are available..."
+    for dep in "${EC_CORE_DEPENDENCIES[@]}"; do
+        if ! command -v "$dep" &>/dev/null; then
+            ec_log E "Command '$dep' was not found"
+            ec_deps_detected=false
+        else
+            ec_log D "Command '$dep' was found"
+        fi
+    done
     if ! $ec_deps_detected; then
         exit 1
     fi
