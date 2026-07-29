@@ -40,3 +40,5 @@ if [[ -f "$D/$(basename $urls)" ]]; then
 else
     wget --directory-prefix="$D" --no-verbose --timestamping "$urls"
 fi
+
+ln -sf "$(basename $urls)" "$D/latest"
