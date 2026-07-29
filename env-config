@@ -385,19 +385,8 @@ function main {
     ec_parse_args "$@"
 
     $EC_COMMAND_FUNCTION
-
-    # source recipes/bat.bash
-    # (
-
-    #     declare -rx D="${EC_DOWNLOADS_DIR}/bat"
-    #     declare -rx W="${EC_WORK_DIR}/bat"
-    #     set -x; ec_do_install
-    # )
-
-
 }
 
-# TODO execute main if not sourced
 if ! (return 0 2>/dev/null); then
     main "$@"
 fi
