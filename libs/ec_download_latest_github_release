@@ -35,10 +35,10 @@ case ${#urls[@]} in
     *) ec_log E "Multiple matching GitHub release artifacts found for '$repo'"; exit 1;;
 esac
 
-if [[ -f "$D/$(basename $urls)" ]]; then
-    ec_log N "Reusing cached artifact '$(basename $urls)'"
+if [[ -f "$D/$(basename "$urls")" ]]; then
+    ec_log N "Reusing cached artifact '$(basename "$urls")'"
 else
     wget --directory-prefix="$D" --no-verbose --timestamping "$urls"
 fi
 
-ln -sf "$(basename $urls)" "$D/latest"
+ln -sf "$(basename "$urls")" "$D/latest"

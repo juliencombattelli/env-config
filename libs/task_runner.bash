@@ -257,7 +257,7 @@ function _ec_report_blocked_tasks {
         if (( ${#unmet_deps[@]} > 0 )); then
             blocked_lines+=("  - \`$task\` cannot run because dependencies did not complete: $(ec_join_affix ', ' \` \` "${unmet_deps[@]}")")
         else
-            stuck_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` ${deps:-none}))")
+            stuck_lines+=("  - \`$task\` (depends on: $(ec_join_affix ', ' \` \` "${deps:-none}"))")
         fi
     done
 
