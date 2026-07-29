@@ -53,7 +53,6 @@ function ec_discover_task {
     # Source the file in a subshell to extract DEPENDS array
     local deps
     deps=$(
-        EC_DEPENDS=( "${EC_BASE_DEPENDS[@]}" )
         # TODO handle error when sourcing the recipes
         # shellcheck disable=SC1090
         source "$task_file" 2>/dev/null || true
@@ -204,7 +203,6 @@ function _ec_execute_task {
         set -x -o pipefail
 
         # Source the task script
-        EC_DEPENDS=()
         # shellcheck disable=SC1090
         source "$script"
 
