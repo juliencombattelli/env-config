@@ -301,12 +301,15 @@ function ec_execute_tasks {
                 # local pid="${EC_TASK_RUNNING["$task"]}"
                 # pid_to_task["$pid"]="$task"
                 tasks_started=true
+
+                # TODO remove: temporary while the runner is sequential
+                completed_count=$((completed_count + 1))
             fi
         done
 
-        # If no tasks are running and none could start, we have a problem
+        # If no tasks are running, some tasks are still scheduled and none could start, we have a problem
         local running_count=${#EC_TASK_RUNNING[@]}
-        if (( running_count == 0 )); then
+        if (( running_count == 0 )) && (( completed_count < total_tasks )); then
             if ! $tasks_started; then
                 blocked=true
                 break
@@ -341,9 +344,10 @@ function ec_execute_tasks {
 
     if $blocked; then
         _ec_report_blocked_tasks
+        exit 1
     fi
 
-    if $blocked || (( ${#failed_tasks[@]} > 0 )); then
+    if (( ${#failed_tasks[@]} > 0 )); then
         exit 1
     fi
 
