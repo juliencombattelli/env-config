@@ -1,40 +1,48 @@
 EC_PREREQ_PKGS+=(
+    xdg-dirs
     wget
     tar
     jq
 )
 
 EC_ALL_PKGS+=(
+    bash
     bat
-    eza
-    fd
-    less
-    nvimpager
-    ripgrep
-    neovim
-    vim
-    vscode
-    ssh
-    wget-config
-    commit-editor
-    diff-so-fancy
-    git
-    oh-my-zsh
-    zsh
-    libfuse2
-    scdoc
-    tmux
     ccmake
     clang
     clang-format
     clang-tidy
     cmake
+    commit-editor
+    diff-so-fancy
+    dircolors
+    eza
+    fd
     gcc
     gdb
     gdb-dashboard
+    git
+    less
+    libfuse2
     make
+    neovim
     ninja
+    nvimpager
     odin
+    oh-my-zsh
+    proxy
+    repo-aliases
+    ripgrep
     rust
+    scdoc
+    ssh
+    tar
+    tmux
+    tree
+    vim
+    vscode
+    wget-config
+    xterm
     zig
+    zsh
 )
