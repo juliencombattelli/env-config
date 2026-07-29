@@ -100,6 +100,26 @@ readonly EC_CPU_ARCH
 ### Core functions
 ################################################################################
 
+declare -a EC_AT_EXIT_HANDLERS=()
+
+function ec_at_exit {
+    local -r ec_at_exit_status=$?
+    if (( ec_at_exit_status != 0 )); then
+        if [[ -n ${EC_BACKTRACE:-} ]] || [[ -z ${ec_normal_exit:-} ]]; then
+            echo "Aborting (code $ec_at_exit_status)."
+            backtrace
+        fi
+    fi
+    for ((i=${#EC_AT_EXIT_HANDLERS[@]}-1; i>=0; i--)); do
+        local handler="${EC_AT_EXIT_HANDLERS[i]}"
+        ec_log D "Running at_exit handler: $handler"
+        if ! eval "$handler"; then
+            ec_log W "EXIT handler failed: $handler"
+        fi
+    done
+}
+
+
 # TODO This list could be automatically installed via recipes executed during a
 # first pass as "prerequisite recipes". The list itself should be defined in the
 # default.bash config file and may be appended from distro or platform config file.
@@ -362,6 +382,8 @@ function ec_setup_pkg_providers {
 }
 
 function main {
+    trap ec_at_exit EXIT
+
     ec_prepare_build_dir
 
     ec_parse_args "$@"
