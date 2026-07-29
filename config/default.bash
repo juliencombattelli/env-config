@@ -1,3 +1,9 @@
+EC_PREREQ_PKGS+=(
+    wget
+    tar
+    jq
+)
+
 EC_ALL_PKGS+=(
     bat
     eza
@@ -9,7 +15,7 @@ EC_ALL_PKGS+=(
     vim
     vscode
     ssh
-    wget
+    wget-config
     commit-editor
     diff-so-fancy
     git

@@ -79,6 +79,12 @@ function ec_discover_task {
 function ec_discover_tasks {
     local -a target_packages=("$@")
 
+    # Reset global state
+    EC_TASK_DEPENDENCIES=()
+    EC_TASK_RECIPES=()
+    EC_TASK_COMPLETED=()
+    EC_TASK_RUNNING=()
+
     ec_log D "Discovering tasks for packages $(ec_join_affix ', ' \` \` "${target_packages[@]}")..."
 
     # Discover each target package and its dependencies

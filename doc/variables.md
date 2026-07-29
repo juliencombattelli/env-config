@@ -22,8 +22,13 @@ Those variables may be set from a recipe, distro or platform file.
 ### Variables generally set in distro and platform files
 
 DISTRO_PKG_PROVIDERS
-PKG_PROVIDER_<>_PACKAGE_PATTERN_<>
-ALIAS_<>
+PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN_<pkg>
+EC_INSTALL_FROM_DISTRO_PKG_PROVIDER_<pkg>
+
+### Variables generally set in default config file
+
+EC_PREREQ_PKGS
+EC_ALL_PKGS
 
 ### Variables generally set in recipe files
 

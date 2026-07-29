@@ -119,28 +119,6 @@ function ec_at_exit {
     done
 }
 
-
-# TODO This list could be automatically installed via recipes executed during a
-# first pass as "prerequisite recipes". The list itself should be defined in the
-# default.bash config file and may be appended from distro or platform config file.
-declare -ra EC_CORE_DEPENDENCIES=(wget tar jq)
-
-function ec_ensure_core_dependencies_availability {
-    local ec_deps_detected=true
-    ec_log D "Ensuring core dependencies are available..."
-    for dep in "${EC_CORE_DEPENDENCIES[@]}"; do
-        if ! command -v "$dep" &>/dev/null; then
-            ec_log E "Command '$dep' was not found"
-            ec_deps_detected=false
-        else
-            ec_log D "Command '$dep' was found"
-        fi
-    done
-    if ! $ec_deps_detected; then
-        exit 1
-    fi
-}
-
 function ec_detect_source_and_validate_distro {
     local -r distro_name=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2)
     local -r distro_version=$(cat /etc/os-release | grep "^VERSION_ID=" | cut -d'=' -f2 | tr -d '".')
@@ -201,8 +179,6 @@ function ec_relink {
 function _ec_run_install {
     source config/default.bash
 
-    ec_ensure_core_dependencies_availability
-
     ec_register_pkg_providers
 
     ec_source_distro_and_platform
@@ -211,7 +187,27 @@ function _ec_run_install {
 
     ec_setup_pkg_providers
 
-    local -r pkgs=( "${EC_TARGET_PKGS[@]:-${EC_ALL_PKGS[@]}}" )
+    ec_log N "Installing prerequisites"
+
+    local pkgs=( "${EC_PREREQ_PKGS[@]}" )
+    if ! ec_discover_tasks "${pkgs[@]}"; then
+        ec_log E "Errors during task discovery, exiting."
+        exit 1
+    fi
+
+    if (( ${#EC_TASK_RECIPES[@]} == 0 )); then
+        ec_log E "No task found for packages: $(ec_join_affix ', ' \` \` "${pkgs[@]}")."
+        exit 1
+    fi
+
+    # TODO check if this can be done during discovery
+    ec_validate_dependencies
+
+    ec_execute_tasks
+
+    ec_log N "Installing packages"
+
+    local pkgs=( "${EC_TARGET_PKGS[@]:-${EC_ALL_PKGS[@]}}" )
     if ! ec_discover_tasks "${pkgs[@]}"; then
         ec_log E "Errors during task discovery, exiting."
         exit 1
