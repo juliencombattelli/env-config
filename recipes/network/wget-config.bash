@@ -1,3 +1,3 @@
 function ec_do_install {
-    echo "Installing wget!"
+    echo "Installing wget-config (stubbed)"
 }

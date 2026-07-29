@@ -1,3 +1,3 @@
 function ec_do_install {
-    echo "Installing konsole!"
+    echo "Installing konsole (stubbed)"
 }

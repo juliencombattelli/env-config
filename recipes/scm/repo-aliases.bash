@@ -1,3 +1,3 @@
 function ec_do_install {
-    echo "Installing repo-aliases!"
+    echo "Installing repo-aliases (stubbed)"
 }
