@@ -1,6 +1,7 @@
 function ec_apt_setup {
     if [[ -z ${EC_DISABLE_PKG_PROVIDERS_UPDATE} ]]; then
-        sudo -E apt update
+        sudo -E DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 \
+            apt-get update
     fi
 }
 
@@ -22,5 +23,6 @@ function ec_apt_pkg_installed {
 
 function ec_apt_pkg_install {
     local -r pkg="$1"
-    sudo -E apt install --yes "$pkg"
+    sudo -E DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 \
+        apt-get install --yes --no-install-recommends "$pkg"
 }
