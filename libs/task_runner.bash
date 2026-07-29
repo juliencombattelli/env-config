@@ -170,9 +170,14 @@ function _ec_install_from_pkg_provider {
         local pkg_pattern="${!pkg_pattern_ref:-$task}"
         local pkg_pattern_whole="^$pkg_pattern$"
         local installed_pkg
-        if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern_whole"); then
-            readarray -t installed_pkg <<< "$installed_pkg"
-            ec_log N "Package '$task' already installed with '$pkg_provider': ${installed_pkg[*]}"
+        local installed_path
+        if installed_path=$(command -v "$task"); then
+            if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern_whole"); then
+                readarray -t installed_pkg <<< "$installed_pkg"
+                ec_log N "Package '$task' already installed with '$pkg_provider': ${installed_pkg[*]}"
+            else
+                ec_log N "Package '$task' already installed and available at '$installed_path'"
+            fi
             return
         else
             local package
