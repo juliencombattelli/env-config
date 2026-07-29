@@ -191,12 +191,12 @@ function _ec_install_from_pkg_provider {
 
 # Execute a task in the background
 function _ec_execute_task {
-    local task="$1"
-    local script="${EC_TASK_RECIPES[$task]}"
+    local -r task="$1"
+    local -r script="${EC_TASK_RECIPES[$task]}"
 
-    FIFO="$EC_WORK_DIR/$task/$task.fifo"
-    LOGFILE="$EC_WORK_DIR/$task/$task.log"
-    RUNFILE="$EC_WORK_DIR/$task/$task.run"
+    local -r FIFO="$EC_LOGS_DIR/$task/$task.fifo"
+    local -r LOGFILE="$EC_LOGS_DIR/$task/$task.log"
+    local -r RUNFILE="$EC_LOGS_DIR/$task/$task.run"
     _ec_prepare_execution_environment "$FIFO" "$LOGFILE" "$RUNFILE"
 
     EC_TASK_COMPLETED["$task"]=0
@@ -216,6 +216,7 @@ function _ec_execute_task {
 
         declare -rx D="${EC_DOWNLOADS_DIR}/$task"
         declare -rx W="${EC_WORK_DIR}/$task"
+        mkdir -p "$W"
         cd "$W" || exit 1
         if [[ $(type -t ec_do_install) == function ]] && [[ ! -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
             # ec_do_install |& tee "$FIFO" &>"$LOGFILE"
