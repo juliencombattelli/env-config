@@ -3,20 +3,40 @@
 readonly repo="$1"
 readonly pattern="$2"
 
-readonly urls=(
-    $(wget -qO- "https://api.github.com/repos/$repo/releases/latest" \
-        | jq -r --arg pattern "$pattern" \
-            '.assets[] | select(.name | test($pattern)) | .browser_download_url')
+# Fetch the release metadata, keeping the body even on HTTP error responses
+# (GitHub returns a JSON error message on 403 rate-limit responses).
+response=$(wget -qO- --content-on-error \
+    "https://api.github.com/repos/$repo/releases/latest")
+wget_status=$?
+
+if (( wget_status != 0 )); then
+    message=$(jq -r '.message // empty' <<< "$response" 2>/dev/null || true)
+    if [[ "$message" == *"rate limit"* || "$message" == *"secondary rate limit"* ]]; then
+        ec_log E "GitHub API rate limit exceeded while querying '$repo'. Try again later or provide an authentication token."
+    elif [[ -n "$message" ]]; then
+        ec_log E "GitHub API error for '$repo': $message"
+    else
+        ec_log E "Failed to query GitHub API for '$repo' (wget exit $wget_status)"
+    fi
+    exit 1
+fi
+
+# Read the matching download URLs one per line
+readarray -t urls < <(
+    jq -r --arg pattern "$pattern" \
+        '.assets[]? | select(.name | test($pattern)) | .browser_download_url' \
+        <<< "$response"
 )
+readonly urls
 
 case ${#urls[@]} in
-    0) ec_log E "No matching GitHub release artifact found for '$repo'"; return 1;;
+    0) ec_log E "No matching GitHub release artifact found for '$repo'"; exit 1;;
     1) ;;
-    *) ec_log E "Multiple matching GitHub release artifacts found for '$repo'"; return 1;;
+    *) ec_log E "Multiple matching GitHub release artifacts found for '$repo'"; exit 1;;
 esac
 
 if [[ -f "$D/$(basename $urls)" ]]; then
     ec_log N "Reusing cached artifact '$(basename $urls)'"
 else
-    wget --directory-prefix="$D" --no-verbose --show-progress --timestamping "$urls"
+    wget --directory-prefix="$D" --no-verbose --timestamping "$urls"
 fi
