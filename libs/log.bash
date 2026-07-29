@@ -55,10 +55,16 @@ function _ec_log {
     IFS='@' read -r level targets_spec <<< "$spec"
     IFS=',' read -ra targets <<< "$targets_spec"
 
+    local level_func="_ec_log_level_$level"
+    if [[ $(type -t "$level_func") != function ]]; then
+        printf 'ec_log: unknown log level %q\n' "$level" >&2
+        return 1
+    fi
+
     local default_targets=(file stdout)
     for target in "${targets[@]:-${default_targets[@]}}"; do
         _ec_log_set_output "$target"
-        printf "$(_ec_time)$(_ec_log_level_"$level") %s\n" "$@" >&"$LOG_FD"
+        printf "$(_ec_time)$("$level_func") %s\n" "$@" >&"$LOG_FD"
         _ec_log_close_output
     done
 }
