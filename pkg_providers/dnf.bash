@@ -2,7 +2,7 @@ function ec_dnf_setup {
     if $EC_FEDORA_ATOMIC; then
         true
     else
-        true
+        sudo -E dnf update --assumeyes
     fi
 }
 
@@ -11,7 +11,10 @@ function ec_dnf_pkg_search {
     if $EC_FEDORA_ATOMIC; then
         false
     else
-        false
+        dnf --quiet repoquery --qf '%{name}\n' '*' \
+            | grep -E "$pattern" \
+            | sort --reverse --human-numeric-sort \
+            | head --lines=1
     fi
 }
 
@@ -20,7 +23,8 @@ function ec_dnf_pkg_installed {
     if $EC_FEDORA_ATOMIC; then
         false
     else
-        false
+        rpm --query --all --queryformat='%{NAME}\n' \
+            | grep -E "$pattern"
     fi
 }
 
@@ -29,6 +33,6 @@ function ec_dnf_pkg_install {
     if $EC_FEDORA_ATOMIC; then
         false
     else
-        false
+        sudo -E dnf install --assumeyes "$pattern"
     fi
 }
