@@ -33,6 +33,6 @@ function ec_dnf_pkg_install {
     if $EC_FEDORA_ATOMIC; then
         false
     else
-        sudo -E dnf install --assumeyes "$pattern"
+        sudo -E dnf install --assumeyes "$pkg"
     fi
 }
