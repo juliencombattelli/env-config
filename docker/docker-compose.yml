@@ -1,7 +1,7 @@
 version: "3.8"
 services:
 
-  ec-ubuntu-base-full:
+  ec-base:
     build:
       context: .
     devices:
@@ -14,30 +14,42 @@ services:
       target: /env-config
     working_dir: /env-config
 
+  ec-ubuntu-base:
+    extends:
+      service: ec-base
+    build:
+      dockerfile: ubuntu.dockerfile
+
   ec-ubuntu2404:
     extends:
-      service: ec-ubuntu-base-full
+      service: ec-ubuntu-base
     build:
       args:
         UBUNTU_VERSION: "24.04"
 
   ec-ubuntu2204:
     extends:
-      service: ec-ubuntu-base-full
+      service: ec-ubuntu-base
     build:
       args:
         UBUNTU_VERSION: "22.04"
 
   ec-ubuntu2004:
     extends:
-      service: ec-ubuntu-base-full
+      service: ec-ubuntu-base
     build:
       args:
         UBUNTU_VERSION: "20.04"
 
   ec-ubuntu1804:
     extends:
-      service: ec-ubuntu-base-full
+      service: ec-ubuntu-base
     build:
       args:
         UBUNTU_VERSION: "18.04"
+
+  ec-fedora-base:
+    extends:
+      service: ec-base
+    build:
+      dockerfile: fedora.dockerfile
