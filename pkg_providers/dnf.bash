@@ -11,7 +11,7 @@ function ec_dnf_pkg_search {
     if $EC_FEDORA_ATOMIC; then
         false
     else
-        dnf --quiet repoquery --qf '%{name}\n' '*' \
+        dnf --quiet repoquery --queryformat '%{name}\n' '*' \
             | grep -E "$pattern" \
             | sort --reverse --human-numeric-sort \
             | head --lines=1
