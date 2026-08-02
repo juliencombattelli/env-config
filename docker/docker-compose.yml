@@ -20,6 +20,20 @@ services:
     build:
       dockerfile: ubuntu.dockerfile
 
+  ec-ubuntu-latest:
+    extends:
+      service: ec-ubuntu-base
+    build:
+      args:
+        UBUNTU_VERSION: "latest"
+
+  ec-ubuntu2604:
+    extends:
+      service: ec-ubuntu-base
+    build:
+      args:
+        UBUNTU_VERSION: "26.04"
+
   ec-ubuntu2404:
     extends:
       service: ec-ubuntu-base
@@ -53,3 +67,10 @@ services:
       service: ec-base
     build:
       dockerfile: fedora.dockerfile
+
+  ec-fedora-latest:
+    extends:
+      service: ec-fedora-base
+    build:
+      args:
+        FEDORA_VERSION: "latest"
