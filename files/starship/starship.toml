@@ -1,0 +1,256 @@
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Migrated from the Powerlevel10k "classic powerline" config at
+# ~/.env-config/etc/profile.d/p10k.zsh (wizard options: nerdfont-v3 + powerline,
+# small icons, classic, unicode, dark). Unlike a "rainbow" theme, p10k classic
+# uses a SINGLE background color (236) for every segment, with Powerline arrow
+# caps only where the bar starts/ends against the terminal's own background
+# (POWERLEVEL9K_BACKGROUND=236, POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR='\uE0B0',
+# POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR='\uE0B2').
+
+add_newline = false
+
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch$git_status\
+[\ue0b0](fg:236) \
+"""
+
+right_format = """
+[\ue0b2](fg:236)$status\
+$cmd_duration\
+$jobs\
+$direnv\
+$conda$python$golang$nodejs$ruby$lua$java$perl$php$scala$haskell$kubernetes$terraform$aws$azure$gcloud\
+"""
+
+# p10k only shows context (user@host) when root or over SSH
+[username]
+style_user = "bg:236 fg:180"
+style_root = "bg:236 fg:178"
+format = "[ $user]($style)[\uE0B1 ](bg:236 fg:244)"
+disabled = false
+
+[hostname]
+ssh_only = true
+style = "bg:236 fg:180"
+format = "[@$hostname ]($style)[\uE0B1 ](bg:236 fg:244)"
+disabled = false
+
+# truncate_to_unique approximated with fish-style shortening of parent dirs
+[directory]
+style = "bold bg:236 fg:39"
+truncation_length = 3
+truncate_to_repo = true
+fish_style_pwd_dir_length = 1
+home_symbol = "~"
+format = "[ $path ]($style)"
+
+[git_branch]
+symbol = ""
+style = "bg:236 fg:76"
+format = "[\uE0B1 ](bg:236 fg:244)[$symbol$branch]($style)"
+
+# Colors match p10k's my_git_formatter: ahead/behind/stash green, staged/modified yellow, untracked blue, conflicts red
+[git_status]
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇡${ahead_count}⇣${behind_count}"
+staged = "+${count}"
+modified = "!${count}"
+untracked = "?${count}"
+conflicted = "~${count}"
+stashed = "*${count}"
+format = "([ $conflicted](196 bg:236))([ $stashed](76 bg:236))([ $ahead_behind](76 bg:236))([ $staged](178 bg:236))([ $modified](178 bg:236))([ $untracked](39 bg:236))[ ](bg:236)"
+
+# p10k had prompt_char disabled; the status module on the right is the only success/error indicator
+[character]
+disabled = true
+
+[status]
+format = "[ $symbol ]($style)"
+symbol = "✘"
+success_symbol = "✓"
+success_style = "bg:236 fg:70"
+failure_style = "bg:236 fg:160"
+disabled = false
+
+[cmd_duration]
+min_time = 1000
+style = "bg:236 fg:248"
+format = "[\uE0B3 ](bg:236 fg:244)[$duration ]($style)"
+
+[jobs]
+symbol = "✦"
+style = "bg:236 fg:37"
+format = "[$symbol ]($style)"
+
+[direnv]
+disabled = false
+style = "bg:236 fg:178"
+format = "[direnv ]($style)"
+
+[conda]
+style = "bg:236 fg:37"
+ignore_base = true
+format = "[$symbol$environment ]($style)"
+
+[python]
+style = "bg:236 fg:37"
+format = "[$symbol$version ]($style)"
+
+[golang]
+style = "bg:236 fg:37"
+format = "[$symbol$version ]($style)"
+
+[nodejs]
+style = "bg:236 fg:70"
+format = "[$symbol$version ]($style)"
+
+[ruby]
+style = "bg:236 fg:168"
+format = "[$symbol$version ]($style)"
+
+[lua]
+style = "bg:236 fg:32"
+format = "[$symbol$version ]($style)"
+
+[java]
+style = "bg:236 fg:32"
+format = "[$symbol$version ]($style)"
+
+[perl]
+style = "bg:236 fg:67"
+format = "[$symbol$version ]($style)"
+
+[php]
+style = "bg:236 fg:99"
+format = "[$symbol$version ]($style)"
+
+[scala]
+style = "bg:236 fg:160"
+format = "[$symbol$version ]($style)"
+
+[haskell]
+style = "bg:236 fg:172"
+format = "[$symbol$version ]($style)"
+
+[kubernetes]
+disabled = false
+style = "bg:236 fg:134"
+format = "[$symbol$context ]($style)"
+
+[terraform]
+style = "bg:236 fg:38"
+format = "[$symbol$workspace ]($style)"
+
+[aws]
+style = "bg:236 fg:208"
+format = "[$symbol$profile ]($style)"
+
+[azure]
+disabled = false
+style = "bg:236 fg:32"
+format = "[$symbol$subscription ]($style)"
+
+[gcloud]
+style = "bg:236 fg:32"
+format = "[$symbol$account ]($style)"
+
+# Modules below are enabled by default in starship but had no equivalent
+# active segment in the p10k config, so they're disabled to avoid extra clutter.
+[rust]
+disabled = true
+[c]
+disabled = true
+[cpp]
+disabled = true
+[cmake]
+disabled = true
+[crystal]
+disabled = true
+[dart]
+disabled = true
+[deno]
+disabled = true
+[dotnet]
+disabled = true
+[elixir]
+disabled = true
+[elm]
+disabled = true
+[erlang]
+disabled = true
+[fennel]
+disabled = true
+[fortran]
+disabled = true
+[gleam]
+disabled = true
+[gradle]
+disabled = true
+[guix_shell]
+disabled = true
+[haxe]
+disabled = true
+[helm]
+disabled = true
+[julia]
+disabled = true
+[kotlin]
+disabled = true
+[maven]
+disabled = true
+[meson]
+disabled = true
+[mojo]
+disabled = true
+[nim]
+disabled = true
+[ocaml]
+disabled = true
+[odin]
+disabled = true
+[opa]
+disabled = true
+[package]
+disabled = true
+[pixi]
+disabled = true
+[pulumi]
+disabled = true
+[purescript]
+disabled = true
+[quarto]
+disabled = true
+[rlang]
+disabled = true
+[raku]
+disabled = true
+[red]
+disabled = true
+[solidity]
+disabled = true
+[spack]
+disabled = true
+[swift]
+disabled = true
+[typst]
+disabled = true
+[vagrant]
+disabled = true
+[vlang]
+disabled = true
+[xmake]
+disabled = true
+[zig]
+disabled = true
+[docker_context]
+disabled = true
+[buf]
+disabled = true
+[bun]
+disabled = true
