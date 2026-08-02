@@ -9,7 +9,7 @@ function ec_get_recipe_file_for_package {
     local package="$1"
     local output_var="$2"
     local -a recipe_file=()
-    recipe_file+=(recipes/**/"$package".bash)
+    recipe_file+=("$EC_ROOT_DIR"/recipes/**/"$package".bash)
     if (( ${#recipe_file[@]} > 1 )); then
         ec_log E "  Found more than one recipe for package \`$package\` (total ${#recipe_file[@]}):"
         for file in "${recipe_file[@]}"; do
@@ -45,7 +45,7 @@ function ec_discover_task {
     local task_file
     ec_get_recipe_file_for_package "$task_name" task_file || return 1
 
-    ec_log D "  Discovering task: $task_name from $task_file"
+    ec_log D "  Discovering task: $task_name from ${task_file#"$EC_ROOT_DIR"}"
 
     # Store the script path
     EC_TASK_RECIPES["$task_name"]="$task_file"
