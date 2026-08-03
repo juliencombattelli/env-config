@@ -204,40 +204,34 @@ function _ec_execute_task {
     local -r RUNFILE="$EC_LOGS_DIR/$task/$task.run"
     _ec_prepare_execution_environment "$FIFO" "$LOGFILE" "$RUNFILE"
 
-    EC_TASK_COMPLETED["$task"]=0
+    set +e
     (
-        # Ignore interrupt signals so task continues even when parent is interrupted
-        trap '' SIGINT
-
         exec 19>"$RUNFILE"
         BASH_XTRACEFD=19
-        set -x -o pipefail
+        set -x -euo pipefail
 
         # Source the task script
         # shellcheck disable=SC1090
         source "$script"
-
-        # TODO relink config folder if one is present in files/
 
         declare -rx D="${EC_DOWNLOADS_DIR}/$task"
         declare -rx W="${EC_WORK_DIR}/$task"
         mkdir -p "$W"
         cd "$W" || exit 1
         if [[ $(type -t ec_do_install) == function ]] && [[ ! -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
-            # ec_do_install |& tee "$FIFO" &>"$LOGFILE"
-            # Don't send anything into the fifo yet as nobody is currently reading
             ec_do_install |& tee "$LOGFILE"
         else
             _ec_install_from_pkg_provider "$task"
         fi
 
-        result=$?
-        rm -f "$FIFO" &>/dev/null
-        exit $result
-    ) || EC_TASK_COMPLETED["$task"]=$? #&
+        if [[ -d "$EC_ROOT_DIR/files/$task" ]]; then
+            ec_relink "$HOME/.config/$task" "$EC_ROOT_DIR/files/$task"
+        fi
 
-    # Store the PID
-    # EC_TASK_RUNNING["$task"]=$!
+        rm -f "$FIFO" &>/dev/null
+    )
+    EC_TASK_COMPLETED["$task"]=$?
+    set -e
 }
 
 # Report tasks that can't start because dependencies are unmet or failed
