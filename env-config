@@ -166,7 +166,7 @@ function ec_relink {
         ec_log E "relink: target '$target' does not exist"
         return 1
     fi
-    if [[ ! -h "$link" ]]; then
+    if [[ -e "$link" ]] && [[ ! -h "$link" ]]; then
         ec_log E "relink: link '$link' already exist and is not a link"
         return 1
     fi
