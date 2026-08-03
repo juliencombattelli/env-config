@@ -218,10 +218,13 @@ function _ec_execute_task {
         declare -rx W="${EC_WORK_DIR}/$task"
         mkdir -p "$W"
         cd "$W" || exit 1
-        if [[ $(type -t ec_do_install) == function ]] && [[ ! -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
-            ec_do_install |& tee "$LOGFILE"
-        else
+
+        if [[ $(type -t ec_do_install) != function ]] || [[ -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
             _ec_install_from_pkg_provider "$task"
+        fi
+
+        if [[ $(type -t ec_do_install) == function ]]; then
+            ec_do_install |& tee "$LOGFILE"
         fi
 
         if [[ -d "$EC_ROOT_DIR/files/$task" ]]; then
