@@ -41,7 +41,6 @@ EC_ALL_PKGS+=(
     tree
     vim
     vscode
-    wget-config
     xterm
     zig
     zsh
