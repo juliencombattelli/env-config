@@ -1,9 +1,11 @@
-EC_FEDORA_ATOMIC=false
-if cat /proc/mounts | grep " / " | cut -d' ' -f4 | grep -E "(^|,)ro(,|$)" &>/dev/null; then
+if [[ -n ${EC_FEDORA_ATOMIC:-} ]] || cat /proc/mounts | grep " / " | cut -d' ' -f4 | grep -E "(^|,)ro(,|$)" &>/dev/null; then
     EC_FEDORA_ATOMIC=true
+    EC_DISTRO_PKG_PROVIDERS+=(homebrew)
+    EC_PREREQ_PKGS+=(homebrew)
+else
+    EC_FEDORA_ATOMIC=false
+    EC_DISTRO_PKG_PROVIDERS+=(dnf)
 fi
-
-EC_DISTRO_PKG_PROVIDERS+=(dnf pip)
 
 EC_PKG_PROVIDER_dnf_PKG_PATTERN[clang-format]='^clang-tools-extra$'
 EC_PKG_PROVIDER_dnf_PKG_PATTERN[clang-tidy]='^clang-tools-extra$'
