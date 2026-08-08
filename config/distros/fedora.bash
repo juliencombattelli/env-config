@@ -3,11 +3,13 @@ if [[ -n ${EC_FEDORA_ATOMIC:-} ]] || cat /proc/mounts | grep " / " | cut -d' ' -
     EC_FEDORA_ATOMIC=true
     EC_DISTRO_PKG_PROVIDERS+=(homebrew)
 
-    mkdir -p "$EC_DOWNLOADS_DIR/homebrew"
-    wget --directory-prefix="$EC_DOWNLOADS_DIR/homebrew" --no-verbose --timestamping \
-        https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
-    NONINTERACTIVE=1 bash "$EC_DOWNLOADS_DIR/homebrew/install.sh"
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+    if ! command -v brew &>/dev/null; then
+        mkdir -p "$EC_DOWNLOADS_DIR/homebrew"
+        wget --directory-prefix="$EC_DOWNLOADS_DIR/homebrew" --no-verbose --timestamping \
+            https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+        NONINTERACTIVE=1 bash "$EC_DOWNLOADS_DIR/homebrew/install.sh"
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+    fi
 
     EC_PKG_PROVIDER_homebrew_PKG_PATTERN[clang]='^llvm$'
     EC_PKG_PROVIDER_homebrew_PKG_PATTERN[clang-format]='^llvm$'
