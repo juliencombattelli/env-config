@@ -1,5 +1,6 @@
 EC_PREREQ_PKGS+=(
     xdg-dirs
+    curl
     wget
     tar
     jq
