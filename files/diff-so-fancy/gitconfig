@@ -1,0 +1,5 @@
+[interactive]
+    diffFilter = diff-so-fancy --patch
+[core]
+    pager = diff-so-fancy | less --tabs=4 -RFX
+    editor = /home/jucom/.local/bin/commit-editor

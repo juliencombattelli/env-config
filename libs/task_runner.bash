@@ -171,7 +171,9 @@ function _ec_install_from_pkg_provider {
         local pkg_pattern_whole="^$pkg_pattern$"
         local installed_pkg
         local installed_path
-        if installed_path=$(command -v "$task"); then
+        local force_install_ref="EC_PKG_PROVIDER_${pkg_provider}_FORCE_INSTALL[$task]"
+        local force_install="${!force_install_ref:-}"
+        if [[ -z "$force_install" ]] && installed_path=$(command -v "$task"); then
             if installed_pkg=$("ec_${pkg_provider}_pkg_installed" "$pkg_pattern_whole"); then
                 readarray -t installed_pkg <<< "$installed_pkg"
                 ec_log N "Package '$task' already installed with '$pkg_provider': ${installed_pkg[*]}"

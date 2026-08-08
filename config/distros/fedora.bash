@@ -17,6 +17,9 @@ if [[ -n ${EC_FEDORA_ATOMIC:-} ]] || cat /proc/mounts | grep " / " | cut -d' ' -
     EC_PKG_PROVIDER_homebrew_PKG_PATTERN[ccmake]='^cmake$'
     EC_PKG_PROVIDER_homebrew_PKG_PATTERN[ssh]='^openssh$'
 
+    # The preinstalled perl is not complete
+    EC_PKG_PROVIDER_homebrew_FORCE_INSTALL[perl]=1
+
 else
 
     EC_FEDORA_ATOMIC=false

@@ -365,6 +365,7 @@ function ec_register_pkg_providers {
         fi
         ec_log D "Registering pkg provider '$provider'"
         declare -gA "EC_PKG_PROVIDER_${provider}_PKG_PATTERN"
+        declare -gA "EC_PKG_PROVIDER_${provider}_FORCE_INSTALL"
     done
 }
 
