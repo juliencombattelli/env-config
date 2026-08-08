@@ -1,5 +1,5 @@
-function ec_homebrew_setup {
-    true
+function ec_homebrew_post_prereq_setup {
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
 }
 
 function ec_homebrew_pkg_search {
