@@ -60,3 +60,11 @@ services:
     build:
       args:
         FEDORA_VERSION: "latest"
+
+  ec-fedora-atomic-latest:
+    extends:
+      service: ec-fedora-base
+    build:
+      args:
+        FEDORA_VERSION: "latest"
+        EC_FEDORA_ATOMIC: 1

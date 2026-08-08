@@ -6,11 +6,11 @@ ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Disable prompt during packages installation only for the build stage
-# ARG DEBIAN_FRONTEND=noninteractive
+ARG EC_FEDORA_ATOMIC=0
+ENV EC_FEDORA_ATOMIC=$EC_FEDORA_ATOMIC
 
-# Delete the default `ubuntu` user from newer Ubuntu docker images
-# RUN if id -u "ubuntu" >/dev/null 2>&1; then userdel --remove --force ubuntu; fi
+# The following packages are preinstalled on Fedora Atomic spins
+RUN if [ -n $EC_FEDORA_ATOMIC ]; then dnf install --assumeyes wget git jq curl; fi
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME && \
