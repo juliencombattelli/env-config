@@ -207,8 +207,6 @@ function _ec_run_install {
 
     ec_execute_tasks
 
-    ec_post_prereq_setup_pkg_providers
-
     ec_log N "Installing packages"
 
     local pkgs=( "${EC_TARGET_PKGS[@]:-${EC_ALL_PKGS[@]}}" )
@@ -379,20 +377,6 @@ function ec_setup_pkg_providers {
         if [[ $(type -t "ec_${provider}_setup") == function ]]; then
             # TODO remove subshell?
             ( set -x; "ec_${provider}_setup" )
-        fi
-    done
-}
-
-function ec_post_prereq_setup_pkg_providers {
-    local provider
-    for provider in "${EC_DISTRO_PKG_PROVIDERS[@]}"; do
-        ec_log D "Setting up pkg provider '$provider' post prerequisites installation"
-        # shellcheck disable=SC1090
-        source "$EC_ROOT_DIR/pkg_providers/$provider.bash"
-        if [[ $(type -t "ec_${provider}_post_prereq_setup") == function ]]; then
-            set -x
-            "ec_${provider}_post_prereq_setup"
-            set +x
         fi
     done
 }
