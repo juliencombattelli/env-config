@@ -212,29 +212,29 @@ function _ec_execute_task {
 
         # Source the task script
         # shellcheck disable=SC1090
-        source "$script"
+        source "$script" || exit
 
         declare -rx D="${EC_DOWNLOADS_DIR}/$task"
         declare -rx W="${EC_WORK_DIR}/$task"
         mkdir -p "$W"
-        cd "$W" || exit 1
+        cd "$W" || exit
 
         if [[ $(type -t ec_do_install) != function ]] || [[ -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
-            _ec_install_from_pkg_provider "$task"
+            _ec_install_from_pkg_provider "$task" || exit
         fi
 
         if [[ $(type -t ec_do_install) == function ]]; then
-            ec_do_install |& tee "$LOGFILE"
+            ec_do_install |& tee "$LOGFILE" || exit
         fi
 
         if [[ -d "$EC_ROOT_DIR/files/$task" ]]; then
-            ec_relink "$HOME/.config/$task" "$EC_ROOT_DIR/files/$task"
+            ec_relink "$HOME/.config/$task" "$EC_ROOT_DIR/files/$task" || exit
         fi
-
-        rm -f "$FIFO" &>/dev/null
     )
     EC_TASK_COMPLETED["$task"]=$?
     set -e
+
+    rm -f "$FIFO" &>/dev/null
 }
 
 # Report tasks that can't start because dependencies are unmet or failed
