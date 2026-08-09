@@ -16,7 +16,6 @@ EC_ALL_PKGS+=(
     cmake
     commit-editor
     diff-so-fancy
-    dircolors
     eza
     fd
     gcc
