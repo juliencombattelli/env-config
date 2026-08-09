@@ -3,6 +3,7 @@ function ec_do_install {
 
     cp "$D/latest" ~/.local/bin/nvim
     chmod +x ~/.local/bin/nvim
+    ln -sf ~/.local/bin/nvim ~/.local/bin/vim
 
     if [ ! -d ~/.config/nvim ]; then
         ec_log N "Downloading and installing Neovim configuration."
