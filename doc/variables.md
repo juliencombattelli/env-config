@@ -21,9 +21,10 @@ Those variables may be set from a recipe, distro or platform file.
 
 ### Variables generally set in distro and platform files
 
-DISTRO_PKG_PROVIDERS
-PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN_<pkg>
-EC_INSTALL_FROM_DISTRO_PKG_PROVIDER_<pkg>
+- EC_DISTRO_PKG_PROVIDERS: list of package providers available on that distro
+- EC_PKG_PROVIDER_<pkgprov>_PACKAGE_PATTERN[<pkg>]: specifies a regex pattern to find <pkg> when using <pkgprov>
+- EC_PKG_PROVIDER_<pkgprov>_FORCE_INSTALL[<pkg>]: force to install <pkg> using <pkgprov> even if the <pkg> is already available
+  (will also force the <pkgprov> to try to reinstall it, use with caution as this highly depends on the <pkgprov> implementation)
 
 ### Variables generally set in default config file
 
