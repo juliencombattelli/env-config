@@ -6,4 +6,5 @@
 [init]
         defaultBranch = main
 [include]
+    path = ~/.config/commit-editor/gitconfig
     path = ~/.config/diff-so-fancy/gitconfig
