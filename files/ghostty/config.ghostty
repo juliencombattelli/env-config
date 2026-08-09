@@ -1,0 +1,39 @@
+command = zsh
+
+keybind = ctrl+alt+up=new_split:up
+keybind = ctrl+alt+down=new_split:down
+keybind = ctrl+alt+left=new_split:left
+keybind = ctrl+alt+right=new_split:right
+
+keybind = alt+up=goto_split:up
+keybind = alt+down=goto_split:down
+keybind = alt+left=goto_split:left
+keybind = alt+right=goto_split:right
+
+# font-family = "IosevkaTerm Nerd Font Mono"
+# font-size = 14
+# font-family = "Hack Nerd Font Mono"
+# font-size = 12
+# font-family = "CaskaydiaCove Nerd Font Mono"
+# font-size = 12
+font-family = "Consolas Nerd Font"
+font-size = 14
+
+# 1GiB scrollback buffer size as unlimited is not yet supported
+scrollback-limit = 1073741824
+
+# middle-click-action = ignore
+# copy-on-select = clipboard
+
+app-notifications = no-clipboard-copy
+window-decoration = client
+gtk-titlebar = false
+gtk-titlebar-style = tabs
+gtk-wide-tabs = false
+
+config-file = themes/campbell.ghostty
+
+term = xterm-256color
+
+auto-update = check
+auto-update-channel = stable

@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+TryExec=ghostty
+Exec=ghostty
+Icon=com.mitchellh.ghostty
+Terminal=false
+Categories=System;TerminalEmulator;
+
+Name=Ghostty
+GenericName=Terminal
+Comment=A terminal emulator
+StartupNotify=true
+StartupWMClass=Ghostty
+Actions=new-window;
+
+[Desktop Action New]
+Name=New Terminal
+Exec=ghostty

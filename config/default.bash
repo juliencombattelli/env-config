@@ -20,6 +20,7 @@ EC_ALL_PKGS+=(
     fd
     gcc
     gdb
+    ghostty
     git
     less
     make

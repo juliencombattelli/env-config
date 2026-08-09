@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# refer to this Ghostty discussion about input method modules on non-GNOME environment:
+# https://github.com/ghostty-org/ghostty/discussions/8899#discussioncomment-14717979
+export GTK_IM_MODULE=simple
+export QT_IM_MODULE=simple
+
+exec ghostty.appimage
