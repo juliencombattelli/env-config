@@ -229,8 +229,8 @@ function _ec_execute_task {
             ec_do_install |& tee "$LOGFILE" || exit
         fi
 
-        if [[ -d "$EC_ROOT_DIR/files/$task" ]]; then
-            ec_relink "$HOME/.config/$task" "$EC_ROOT_DIR/files/$task" || exit
+        if [[ -d ~/.config/env-config/files/"$task" ]]; then
+            ec_relink ~/.config/"$task" ~/.config/env-config/files/"$task" || exit
         fi
     )
     EC_TASK_COMPLETED["$task"]=$?
