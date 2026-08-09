@@ -1,0 +1,12 @@
+[user]
+        email = julien.combattelli@gmail.com
+        name = Julien Combattelli
+[color]
+        ui = always
+[init]
+        defaultBranch = main
+[interactive]
+        diffFilter = diff-so-fancy --patch
+[core]
+        pager = diff-so-fancy | less --tabs=4 -RFX
+        editor = /home/jucom/.local/bin/commit-editor
