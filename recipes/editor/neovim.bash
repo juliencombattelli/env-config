@@ -1,5 +1,3 @@
-EC_DEPENDS+=(libfuse2)
-
 function ec_do_install {
     ec_download_latest_github_release "neovim/neovim" "linux.*${EC_CPU_ARCH}.*\.appimage$"
 

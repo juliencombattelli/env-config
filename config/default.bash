@@ -23,7 +23,6 @@ EC_ALL_PKGS+=(
     gdb-dashboard
     git
     less
-    libfuse2
     make
     neovim
     ninja
