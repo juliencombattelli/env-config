@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if which code >/dev/null; then
-    code --wait "$@"
-else
-    nvim "$@"
-fi

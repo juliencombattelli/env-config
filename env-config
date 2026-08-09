@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+function ec_log_plain {
+    printf "%s\n" "$@" >&2
+}
+
+function ec_log_debug {
+    printf "\x1b[1;36mDEBUG: %s\x1b[0m\n" "$@" >&2
+}
+
+function ec_log_note {
+    printf "\x1b[1mNOTE: %s\x1b[0m\n" "$@" >&2
+}
+
+function ec_log_warn {
+    printf "\x1b[1;33mWARNING: %s\x1b[0m\n" "$@" >&2
+}
+
+function ec_log_error {
+    printf "\x1b[1;31mERROR: %s\x1b[0m\n" "$@" >&2
+}
+
+function ec_root_dir {
+    # From https://stackoverflow.com/a/246128
+    local SOURCE_PATH="${BASH_SOURCE[0]}"
+    local SYMLINK_DIR
+    while [ -L "$SOURCE_PATH" ]; do
+        SYMLINK_DIR="$( cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd )"
+        SOURCE_PATH="$(readlink "$SOURCE_PATH")"
+        if [[ $SOURCE_PATH != /* ]]; then
+            SOURCE_PATH=$SYMLINK_DIR/$SOURCE_PATH
+        fi
+    done
+    (cd -P "$( dirname "$SOURCE_PATH" )" >/dev/null 2>&1 && pwd)
+}
+
+EC_ROOT_DIR="$(ec_root_dir)"
+readonly EC_ROOT_DIR
+readonly EC_LAYER_CORE_DIR="$EC_ROOT_DIR/layer-core"
+readonly EC_BUILD_DIR="$EC_ROOT_DIR/build"
+readonly EC_LIB_DIR="$EC_ROOT_DIR/lib"
+
+function ec_help {
+    cat << 'EOH'
+Usage:
+    env-config [OPTIONS] COMMAND
+
+Commands:
+    install [PKG...]        Install and configure packages
+    remove  [PKG...]        Completely uninstall packages (package itself and its configuration)
+    diff    [PKG...]        List the diffs between the deployed config files and ones in the repo
+    backup  [PKG...]        Copy the deployed files back into the repo
+
+Options:
+    -h, --help              Display this message
+    -l, --layer             Path to a layer root directory (can be repeated, layer-core is always included)
+    --proxy-server=URL      Proxy server URL
+    --proxy-port=PORT       Proxy port number (requires --proxy-server)
+    --proxy-user=USER       Proxy user (requires --proxy-server)
+    --no-proxy=URL,...      URLs not served by the proxy (requires --proxy-server)
+
+The arguments `PKG` must be the basename of one of the recipes available across all the layers
+(ie. the recipe file `layer-core/recipes/shell/zsh.sh` provides the package `zsh`).
+
+If `all` is provided as package env-config will install and configure all applicable packages
+for the current distribution and platform.
+
+If no package is provided `all` is used as default.
+EOH
+}
+
+EC_ENABLED_LAYERS=()
+
+EC_PROXY_SERVER=""
+EC_PROXY_PORT=""
+EC_PROXY_USER=""
+EC_NO_PROXY=""
+
+EC_POSITIONAL_ARGS=()
+
+function ec_print_context {
+    echo "################################################################################"
+    echo "### Context"
+    echo "################################################################################"
+    echo "EC_ROOT_DIR=\`$EC_ROOT_DIR\`"
+    echo "EC_LAYER_CORE_DIR=\`$EC_LAYER_CORE_DIR\`"
+    echo "EC_BUILD_DIR=\`$EC_BUILD_DIR\`"
+    echo "EC_LIB_DIR=\`$EC_LIB_DIR\`"
+}
+
+function ec_print_cli_args {
+    echo "################################################################################"
+    echo "### CLI arguments"
+    echo "################################################################################"
+    echo "EC_ENABLED_LAYERS=(${EC_ENABLED_LAYERS[*]})"
+    echo "EC_PROXY_SERVER=$EC_PROXY_SERVER"
+    echo "EC_PROXY_PORT=$EC_PROXY_PORT"
+    echo "EC_PROXY_USER=$EC_PROXY_USER"
+    echo "EC_NO_PROXY=$EC_NO_PROXY"
+    echo "EC_POSITIONAL_ARGS=(${EC_POSITIONAL_ARGS[*]})"
+}
+
+while (( $# > 0 )); do
+    case $1 in
+        -h|--help)
+            ec_help; exit 0;;
+        -l|--layer)
+            EC_ENABLED_LAYERS+=("$2"); shift 2;;
+        --proxy-server)
+            EC_PROXY_SERVER="$2"; shift 2;;
+        --proxy-port)
+            EC_PROXY_PORT="$2"; shift 2;;
+        --proxy-user)
+            EC_PROXY_USER="$2"; shift 2;;
+        --no-proxy)
+            EC_NO_PROXY="$2"; shift 2;;
+        -*)
+            echo "Error: unknown option \`$1\`"; exit 1;;
+        *)
+            EC_POSITIONAL_ARGS+=("$1"); shift;;
+    esac
+done
+
+readonly EC_ENABLED_LAYERS
+readonly EC_PROXY_SERVER
+readonly EC_PROXY_PORT
+readonly EC_PROXY_USER
+readonly EC_NO_PROXY
+readonly EC_POSITIONAL_ARGS
+
+declare -A EC_PACKAGES_DEPENDS
+readonly EC_COMMAND=${EC_POSITIONAL_ARGS[0]}
+readonly EC_PACKAGES=("${EC_POSITIONAL_ARGS[@]:1}")
+
+ec_print_cli_args
+ec_print_context
+echo "################################################################################"
+
+case "$EC_COMMAND" in
+    install)
+        echo "Installing \`${EC_PACKAGES[*]}\`";;
+    remove)
+        echo "Removing \`${EC_PACKAGES[*]}\`";;
+    diff)
+        echo "Diffing \`${EC_PACKAGES[*]}\`";;
+    backup)
+        echo "Backing up \`${EC_PACKAGES[*]}\`";;
+    *)
+        echo "Error: unsupported command \`$EC_COMMAND\`"; exit 1;;
+esac

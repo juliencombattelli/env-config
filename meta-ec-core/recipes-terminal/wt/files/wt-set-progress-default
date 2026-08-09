@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [ -n "$TMUX" ]; then
-    printf "\ePtmux;\e\e]9;4;1;$1\a\e\\"
-else
-    printf "\e]9;4;1;$1\a"
-fi

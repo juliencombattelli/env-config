@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for path in "$@"; do
-    "$(wslpath -u C:/Windows/explorer.exe)" $(wslpath -aw "$path")
-done

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-"$USERPROFILE/AppData/Local/Programs/Microsoft VS Code/bin/code" "$@"
