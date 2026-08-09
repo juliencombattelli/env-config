@@ -1,10 +1,10 @@
 [user]
-        email = julien.combattelli@gmail.com
-        name = Julien Combattelli
+    email = julien.combattelli@gmail.com
+    name = Julien Combattelli
 [color]
-        ui = always
+    ui = always
 [init]
-        defaultBranch = main
+    defaultBranch = main
 [include]
     path = ~/.config/commit-editor/gitconfig
     path = ~/.config/diff-so-fancy/gitconfig
