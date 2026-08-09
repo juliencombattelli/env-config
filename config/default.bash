@@ -20,7 +20,6 @@ EC_ALL_PKGS+=(
     fd
     gcc
     gdb
-    gdb-dashboard
     git
     less
     make
