@@ -25,6 +25,9 @@ scrollback-limit = 1073741824
 # middle-click-action = ignore
 # copy-on-select = clipboard
 
+window-width = 128
+window-height = 32
+
 app-notifications = no-clipboard-copy
 window-decoration = client
 gtk-titlebar = false
