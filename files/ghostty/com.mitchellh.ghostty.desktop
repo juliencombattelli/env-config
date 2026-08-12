@@ -1,0 +1,23 @@
+[Desktop Entry]
+Version=1.0
+Name=Ghostty
+Type=Application
+Comment=A terminal emulator
+Exec="/var/home/jucom/.local/bin/ghostty" --gtk-single-instance=true
+Icon=com.mitchellh.ghostty
+Categories=System;TerminalEmulator;
+Keywords=terminal;tty;pty;
+StartupNotify=true
+StartupWMClass=com.mitchellh.ghostty
+Actions=new-window;Uninstall;
+X-GNOME-UsesNotifications=true
+X-TerminalArgExec=-e
+X-TerminalArgTitle=--title=
+X-TerminalArgAppId=--class=
+X-TerminalArgDir=--working-directory=
+X-TerminalArgHold=--wait-after-command
+X-KDE-Shortcuts=Ctrl+Alt+T
+
+[Desktop Action new-window]
+Name=New Window
+Exec=/__w/ghostty-appimage/ghostty-appimage/ghostty-1.3.1/zig-out/bin/ghostty --gtk-single-instance=true
