@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+shopt -s nullglob
+
+URL='https://code.visualstudio.com/sha/download?build=stable&os=linux-x64'
+APP_DIR=~/Apps/VSCode
+DL_DIR=$APP_DIR/download
+
+mkdir -p "$APP_DIR"
+mkdir -p "$DL_DIR"
+
+cd "$DL_DIR"
+
+DL_EXISTING_FILE_HASH=
+DL_EXISTING_FILES=( * )
+if (( ${#DL_EXISTING_FILES[@]} > 1 )); then
+    echo "Fatal: Found more than one file existing in $DL_DIR. Exiting."
+    exit 1
+elif (( ${#DL_EXISTING_FILES[@]} == 1 )); then
+    DL_EXISTING_FILE_HASH="$(sha256sum ./* | cut -d' ' -f1)"
+fi
+
+echo "Downloading..."
+wget --timestamping "$URL" --no-verbose --show-progress
+
+# Wget returns 0 even when download is skipped due to equal timestamp between local and server file
+# So to skip the extraction and installation too we must compare the hash before and after a download
+DL_FILE_HASH="$(sha256sum ./* | cut -d' ' -f1)"
+if [[ "$DL_FILE_HASH" == "$DL_EXISTING_FILE_HASH" ]]; then
+    echo
+    echo "Installation is up-to-date. Nothing more to do."
+    exit 0
+fi
+
+echo
+echo "Extracting..."
+tar -xf ./*
+
+mapfile -t VSCODE_FOLDER < <(find . -maxdepth 1 -mindepth 1 -type d -not -name ".*")
+
+if (( ${#VSCODE_FOLDER[@]} == 0 )); then
+    echo "Fatal: No folder found after extracting. Exiting."
+    exit 1
+elif (( ${#VSCODE_FOLDER[@]} > 1 )); then
+    echo "Fatal: Found more than one folder after extraction. Exiting."
+    exit 1
+fi
+
+echo
+echo "Removing previous installation..."
+rm -rf "$APP_DIR/app"
+
+echo
+echo "Installing new version..."
+mv "${VSCODE_FOLDER[0]}" "$APP_DIR/app"
