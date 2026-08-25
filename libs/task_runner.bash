@@ -222,15 +222,15 @@ function _ec_execute_task {
         cd "$W" || exit
 
         if [[ $(type -t ec_do_install) != function ]] || [[ -v EC_INSTALL_FROM_DISTRO_PKG_PROVIDER ]]; then
-            _ec_install_from_pkg_provider "$task" || exit
+            _ec_install_from_pkg_provider "$task"
         fi
 
         if [[ $(type -t ec_do_install) == function ]]; then
-            ec_do_install |& tee "$LOGFILE" || exit
+            ec_do_install &> >(tee "$LOGFILE")
         fi
 
         if [[ -d ~/.config/env-config/files/"$task" ]]; then
-            ec_relink ~/.config/"$task" ~/.config/env-config/files/"$task" || exit
+            ec_relink ~/.config/"$task" ~/.config/env-config/files/"$task"
         fi
     )
     EC_TASK_COMPLETED["$task"]=$?
