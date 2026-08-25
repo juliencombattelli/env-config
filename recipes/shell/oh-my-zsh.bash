@@ -20,9 +20,13 @@ function ec_do_install {
     # Must be synchro with .zshenv
     export ZDOTDIR="$HOME/.config/zsh"
 
-    ec_log N "Installing oh-my-zsh."
-    wget --directory-prefix="$D" --no-verbose --timestamping https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-    KEEP_ZSHRC=yes sh "$D/install.sh"  --unattended
+    if [ ! -e "$ZSH" ]; then
+        ec_log N "Installing oh-my-zsh."
+        wget --directory-prefix="$D" --no-verbose --timestamping https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        KEEP_ZSHRC=yes sh "$D/install.sh" --unattended
+    else
+        ec_log N "oh-my-zsh is already installed."
+    fi
 
     ec_log N "Installing oh-my-zsh plugins."
     install_or_update theme https://github.com/romkatv/powerlevel10k.git
