@@ -236,6 +236,10 @@ function _ec_execute_task {
     EC_TASK_COMPLETED["$task"]=$?
     set -e
 
+    if (( EC_TASK_COMPLETED["$task"] != 0 )); then
+        ec_log E "Task '$task' failed."
+    fi
+
     rm -f "$FIFO" &>/dev/null
 }
 
