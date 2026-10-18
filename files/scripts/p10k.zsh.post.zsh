@@ -16,6 +16,11 @@
   POWERLEVEL9K_STATUS_OK_VISUAL_IDENTIFIER_EXPANSION='✓'
   POWERLEVEL9K_STATUS_OK_PIPE_VISUAL_IDENTIFIER_EXPANSION='✓'
 
+  # Override the color of the Toolbx icon
+  POWERLEVEL9K_TOOLBOX_FOREGROUND="mediumpurple1"
+  # You may also change the icon, but I didn't find one that was better than the default yet...
+  #POWERLEVEL9K_TOOLBOX_VISUAL_IDENTIFIER_EXPANSION="🔧" #"🛠"
+
   function prompt_aosp {
     local aosp_product
     if [ -z "${ANDROID_BUILD_TOP+x}" ] || [ -z "${TARGET_PRODUCT+x}" ]; then
