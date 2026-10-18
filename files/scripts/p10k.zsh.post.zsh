@@ -6,42 +6,42 @@
 # extension.
 
 () {
-  emulate -L zsh -o extended_glob
+    emulate -L zsh -o extended_glob
 
-  # Add aosp and tmux segment just before context segment (user@hostname)
-  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[${POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[(i)context]}]=(aosp tmux set_cursor_style context)
+    # Add aosp and tmux segment just before context segment (user@hostname)
+    POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[${POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[(i)context]}]=(aosp tmux set_cursor_style context)
 
-  # Override the status Ok symbols from recent p10k versions which is purple
-  # with the Hack-NF font for some reasons...
-  POWERLEVEL9K_STATUS_OK_VISUAL_IDENTIFIER_EXPANSION='✓'
-  POWERLEVEL9K_STATUS_OK_PIPE_VISUAL_IDENTIFIER_EXPANSION='✓'
+    # Override the status Ok symbols from recent p10k versions which is purple
+    # with the Hack-NF font for some reasons...
+    POWERLEVEL9K_STATUS_OK_VISUAL_IDENTIFIER_EXPANSION='✓'
+    POWERLEVEL9K_STATUS_OK_PIPE_VISUAL_IDENTIFIER_EXPANSION='✓'
 
-  # Override the color of the Toolbx icon
-  POWERLEVEL9K_TOOLBOX_FOREGROUND="mediumpurple1"
-  # You may also change the icon, but I didn't find one that was better than the default yet...
-  #POWERLEVEL9K_TOOLBOX_VISUAL_IDENTIFIER_EXPANSION="🔧" #"🛠"
+    # Override the color of the Toolbx icon
+    POWERLEVEL9K_TOOLBOX_FOREGROUND="mediumpurple1"
+    # You may also change the icon, but I didn't find one that was better than the default yet...
+    #POWERLEVEL9K_TOOLBOX_VISUAL_IDENTIFIER_EXPANSION="🔧" #"🛠"
 
-  function prompt_aosp {
-    local aosp_product
-    if [ -z "${ANDROID_BUILD_TOP+x}" ] || [ -z "${TARGET_PRODUCT+x}" ]; then
-      return
-    fi
-    p10k segment -f "darkolivegreen2" -ri "ANDROID_ICON" -t "${TARGET_PRODUCT}"
-  }
+    function prompt_aosp {
+        local aosp_product
+        if [ -z "${ANDROID_BUILD_TOP+x}" ] || [ -z "${TARGET_PRODUCT+x}" ]; then
+            return
+        fi
+        p10k segment -f "darkolivegreen2" -ri "ANDROID_ICON" -t "${TARGET_PRODUCT}"
+    }
 
-  function prompt_tmux {
-    if [ -z "$TMUX" ]; then
-      return
-    fi
-    p10k segment -f "green" -t "tmux"
-  }
+    function prompt_tmux {
+        if [ -z "$TMUX" ]; then
+            return
+        fi
+        p10k segment -f "green" -t "tmux"
+    }
 
-  function prompt_set_cursor_style {
-    # Workaround for a Windows Terminal bug
-    # https://github.com/microsoft/terminal/issues/10754
-    printf "\e[0 q"
-  }
+    function prompt_set_cursor_style {
+        # Workaround for a Windows Terminal bug
+        # https://github.com/microsoft/terminal/issues/10754
+        printf "\e[0 q"
+    }
 
-  (( ! $+functions[p10k] )) || p10k reload
+    (( ! $+functions[p10k] )) || p10k reload
 }
 
