@@ -23,7 +23,7 @@ keybind = ctrl+shift+right=unbind
 # font-family = "CaskaydiaCove Nerd Font Mono"
 # font-size = 12
 font-family = "Consolas Nerd Font"
-font-size = 14
+font-size = 13.5
 
 scrollback-limit-bytes = unlimited
 scrollback-limit-lines = unlimited
