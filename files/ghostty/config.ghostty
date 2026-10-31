@@ -28,6 +28,7 @@ font-size = 14
 scrollback-limit-bytes = unlimited
 scrollback-limit-lines = unlimited
 
+right-click-action = copy-or-paste
 # middle-click-action = ignore
 # copy-on-select = clipboard
 
