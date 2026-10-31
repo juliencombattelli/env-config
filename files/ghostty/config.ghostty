@@ -25,8 +25,8 @@ keybind = ctrl+shift+right=unbind
 font-family = "Consolas Nerd Font"
 font-size = 14
 
-# 1GiB scrollback buffer size as unlimited is not yet supported
-scrollback-limit = 1073741824
+scrollback-limit-bytes = unlimited
+scrollback-limit-lines = unlimited
 
 # middle-click-action = ignore
 # copy-on-select = clipboard
