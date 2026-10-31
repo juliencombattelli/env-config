@@ -10,6 +10,12 @@ keybind = alt+down=goto_split:down
 keybind = alt+left=goto_split:left
 keybind = alt+right=goto_split:right
 
+# Ghostty maps 3 groups of keybinds to display next(previous) tab!!
+# Ctrl+shift+right(left) conflicts with my personnal Zsh keybind select next(previous) word...
+# Use instead ctrl(+shift)+tab or ctrl+page_down(up) to display next(previous) tab
+keybind = ctrl+shift+left=unbind
+keybind = ctrl+shift+right=unbind
+
 # font-family = "IosevkaTerm Nerd Font Mono"
 # font-size = 14
 # font-family = "Hack Nerd Font Mono"
