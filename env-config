@@ -162,10 +162,6 @@ function ec_source_distro_and_platform {
 function ec_relink {
     local link="$1"
     local target="$2"
-    if [[ ! -e "$target" ]]; then
-        ec_log E "relink: target '$target' does not exist"
-        return 1
-    fi
     if [[ -e "$link" ]] && [[ ! -h "$link" ]]; then
         ec_log E "relink: link '$link' already exist and is not a link"
         return 1
