@@ -681,6 +681,51 @@
 				<string>#6A9955</string>
 			</dict>
 		</dict>
+		<!-- bat's Manpage grammar has scopes not covered by VS Code's token rules. -->
+		<dict>
+			<key>name</key>
+			<string>Manpage heading</string>
+			<key>scope</key>
+			<string>source.man markup.heading</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#C586C0</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Manpage option</string>
+			<key>scope</key>
+			<string>source.man entity.name.command-line-option</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#569CD6</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Manpage command</string>
+			<key>scope</key>
+			<string>source.man entity.name.command.man</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#DCDCAA</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Manpage punctuation</string>
+			<key>scope</key>
+			<string>source.man keyword.operator.man</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#CE9178</string>
+			</dict>
+		</dict>
 		<dict>
 			<key>name</key>
 			<string>GitGutter deleted</string>
