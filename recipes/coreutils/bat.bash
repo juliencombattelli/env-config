@@ -7,3 +7,9 @@ function ec_do_install {
 
     cp bat ~/.local/bin/
 }
+
+function ec_do_configure {
+    ec_log N "Rebuilding bat cache..."
+    bat cache --build
+}
+
