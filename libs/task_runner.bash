@@ -226,13 +226,19 @@ function _ec_execute_task {
         fi
 
         if [[ $(type -t ec_do_install) == function ]]; then
-            ec_do_install &> >(tee "$LOGFILE")
+            ec_log N "Running ec_do_install for package '$task'..."
+            ec_do_install
         fi
 
         if [[ -d ~/.config/env-config/files/"$task" ]]; then
             ec_relink ~/.config/"$task" ~/.config/env-config/files/"$task"
         fi
-    )
+
+        if [[ $(type -t ec_do_configure) == function ]]; then
+            ec_log N "Running ec_do_configure for package '$task'..."
+            ec_do_configure
+        fi
+        ) &> >(tee "$LOGFILE")
     EC_TASK_COMPLETED["$task"]=$?
     set -e
 
