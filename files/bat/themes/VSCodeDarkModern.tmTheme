@@ -684,6 +684,28 @@
 		<!-- bat's Manpage grammar has scopes not covered by VS Code's token rules. -->
 		<dict>
 			<key>name</key>
+			<string>Manpage title page name</string>
+			<key>scope</key>
+			<string>source.man meta.preprocessor.man</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#DCDCAA</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Manpage title section number</string>
+			<key>scope</key>
+			<string>source.man string.quoted.other.man</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#B5CEA8</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
 			<string>Manpage heading</string>
 			<key>scope</key>
 			<string>source.man markup.heading</string>
