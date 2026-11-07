@@ -22,7 +22,7 @@ function ec_do_install {
 
     if [ ! -e "$ZSH" ]; then
         ec_log N "Installing oh-my-zsh."
-        wget --directory-prefix="$D" --no-verbose --timestamping https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        wget --directory-prefix="$(realpath --relative-to=. "$D")" --no-verbose --timestamping https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         KEEP_ZSHRC=yes sh "$D/install.sh" --unattended
     else
         ec_log N "oh-my-zsh is already installed."

@@ -38,7 +38,11 @@ esac
 if [[ -f "$D/$(basename "$urls")" ]]; then
     ec_log N "Reusing cached artifact '$(basename "$urls")'"
 else
-    wget --directory-prefix="$D" --no-verbose --timestamping "$urls"
+    # Wget2 bug where an absolute path is treaded as relative to the current working directory...
+    # Workaround: converting the absolute path to a relative one from the current working directory
+    # https://github.com/rockdaboot/wget2/issues/394
+    # TODO Revert once 2.3.1 is available
+    wget --directory-prefix="$(realpath --relative-to=. "$D")" --no-verbose --timestamping "$urls"
 fi
 
 ln -sf "$(basename "$urls")" "$D/latest"
