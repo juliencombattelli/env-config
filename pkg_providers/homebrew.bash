@@ -1,7 +1,6 @@
 function ec_homebrew_pkg_search {
     local -r pattern="$1"
-    brew formulae \
-        | grep -E "$pattern" \
+    brew search --formulae --quiet "/$pattern/" \
         | sort --reverse --human-numeric-sort \
         | head --lines=1
 }
