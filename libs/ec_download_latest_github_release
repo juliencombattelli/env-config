@@ -2,11 +2,12 @@
 
 readonly repo="$1"
 readonly pattern="$2"
+readonly version="${3-latest}"
 
 # Fetch the release metadata, keeping the body even on HTTP error responses
 # (GitHub returns a JSON error message on 403 rate-limit responses).
 response=$(wget -qO- --content-on-error \
-    "https://api.github.com/repos/$repo/releases/latest")
+    "https://api.github.com/repos/$repo/releases/$version")
 wget_status=$?
 
 if (( wget_status != 0 )); then
