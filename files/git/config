@@ -5,6 +5,8 @@
     ui = always
 [init]
     defaultBranch = main
+[credential]
+    helper = store # In ~/.config/git/credentials
 [include]
     path = ~/.config/commit-editor/gitconfig
     path = ~/.config/diff-so-fancy/gitconfig
