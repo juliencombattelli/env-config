@@ -6,4 +6,4 @@ zle -N select-word-style
 bindkey '\ez' select-word-style
 # Change default word splitting style to shell tokens (useful to operate on
 # shell arguments)
-select-word-style shell
+select-word-style normal
