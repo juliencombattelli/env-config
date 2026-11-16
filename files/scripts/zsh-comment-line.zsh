@@ -11,6 +11,9 @@ function jucom-comment-line() {
 }
 zle -N jucom-comment-line
 
-# For some weird historical BS, both Ctrl+_ and Ctrl+/ send '^_' on Linux using
-# an AZERTY keyboard
+# For some weird historical BS, Ctrl+: just sends :, and both Ctrl+_ and Ctrl+/
+# send '^_' on Linux using an AZERTY keyboard.
+# To make Ctrl+: work the terminal emulator must be configured to send \e[58;5u
+# on Ctrl+:, mimicing Kitty keyboard protocol.
 bindkey $'^_' jucom-comment-line
+bindkey '\e[58;5u' jucom-comment-line
