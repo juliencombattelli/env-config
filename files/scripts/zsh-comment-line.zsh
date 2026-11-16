@@ -1,8 +1,12 @@
 function jucom-comment-line() {
     if [[ "$BUFFER[1]" == "#" ]]; then
+        local cursor=$CURSOR
         BUFFER="$BUFFER[2,-1]"
+        (( CURSOR = cursor > 0 ? cursor - 1 : 0 ))
     else
+        local cursor=$CURSOR
         BUFFER="#$BUFFER"
+        (( CURSOR = cursor + 1 ))
     fi
 }
 zle -N jucom-comment-line
